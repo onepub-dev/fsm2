@@ -5,11 +5,15 @@ class Transition<STATE, EVENT, SIDE_EFFECT> extends Coproduct2<Valid, Invalid> {
 
   final Union2<Valid<STATE, EVENT, SIDE_EFFECT>, Invalid<STATE, EVENT>> _value;
 
-  Transition.valid(Valid<STATE, EVENT, SIDE_EFFECT> value)
-      : this._(Union2.first(value));
+  Transition.valid(
+    STATE fromState,
+    EVENT event,
+    STATE toState,
+    SIDE_EFFECT sideEffect,
+  ) : this._(Union2.first(Valid(fromState, event, toState, sideEffect)));
 
-  Transition.invalid(Invalid<STATE, EVENT> value)
-      : this._(Union2.second(value));
+  Transition.invalid(STATE state, EVENT event)
+      : this._(Union2.second(Invalid(state, event)));
 
   @override
   R match<R>(

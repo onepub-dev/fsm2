@@ -44,10 +44,14 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
     final createTransitionTo = _graph
         .stateDefinitions[state.runtimeType].transitions[event.runtimeType];
     if (createTransitionTo == null) {
-      return Transition.invalid(Invalid(state, event));
+      return Transition.invalid(state, event);
     }
     final transition = createTransitionTo(state, event);
     return Transition.valid(
-        Valid(state, event, transition.toState, transition.sideEffect));
+      state,
+      event,
+      transition.toState,
+      transition.sideEffect,
+    );
   }
 }

@@ -83,14 +83,12 @@ StateMachine<State, Event, SideEffect> _createMachine(
         ..on<OnVaporized>((s, e) => b.transitionTo(Gas(), LogVaporized())))
       ..state<Gas>((b) => b
         ..on<OnCondensed>((s, e) => b.transitionTo(Liquid(), LogCondensed())))
-      ..onTransition((t) {
-        t.match((v) {
-          if (v.sideEffect is LogMelted) logger.log(onMeltedMessage);
-          if (v.sideEffect is LogFrozen) logger.log(onFrozenMessage);
-          if (v.sideEffect is LogVaporized) logger.log(onVaporizedMessage);
-          if (v.sideEffect is LogCondensed) logger.log(onCondensedMessage);
-        }, ignore);
-      }));
+      ..onTransition((t) => t.match((v) {
+            if (v.sideEffect is LogMelted) logger.log(onMeltedMessage);
+            if (v.sideEffect is LogFrozen) logger.log(onFrozenMessage);
+            if (v.sideEffect is LogVaporized) logger.log(onVaporizedMessage);
+            if (v.sideEffect is LogCondensed) logger.log(onCondensedMessage);
+          }, ignore)));
 
 const onMeltedMessage = 'onMeltedMessage';
 const onFrozenMessage = 'onFrozenMessage';
