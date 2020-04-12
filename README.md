@@ -1,4 +1,4 @@
-A library for finite state machine realization. Inspired by [Tinder StateMachine library](https://github.com/Tinder/StateMachine).
+A library for finite state machine realization in Dart. Inspired by [Tinder StateMachine library](https://github.com/Tinder/StateMachine).
 
 ## Usage
 
