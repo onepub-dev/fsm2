@@ -12,6 +12,9 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
   Transition<STATE, EVENT, SIDE_EFFECT> transition(EVENT event) {
     final fromState = _currentState;
     final transition = getTransition(fromState, event);
+    _graph.onTransitionListeners.forEach((onTransition) {
+      onTransition(transition);
+    });
     transition.match((v) {
       _currentState = v.toState;
       _controller.add(_currentState);
@@ -44,7 +47,7 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
       return Transition.invalid(Invalid(state, event));
     }
     final transition = createTransitionTo(state, event);
-    return Transition.valid(Valid(
-        state, event, transition.toState, Optional.of(transition.sideEffect)));
+    return Transition.valid(
+        Valid(state, event, transition.toState, transition.sideEffect));
   }
 }

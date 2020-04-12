@@ -5,7 +5,7 @@ class Graph<STATE, EVENT, SIDE_EFFECT> {
 
   final STATE initialState;
   final Map<Type, State<STATE, EVENT, SIDE_EFFECT>> stateDefinitions;
-  final List<void Function(Transition<STATE, EVENT, SIDE_EFFECT>)>
+  final List<TransitionListener<STATE, EVENT, SIDE_EFFECT>>
       onTransitionListeners;
 }
 
@@ -26,7 +26,7 @@ class TransitionTo<STATE, SIDE_EFFECT> {
 class GraphBuilder<STATE, EVENT, SIDE_EFFECT> {
   STATE _initialState;
   final Map<Type, State<STATE, EVENT, SIDE_EFFECT>> _stateDefinitions = {};
-  final List<void Function(Transition<STATE, EVENT, SIDE_EFFECT>)>
+  final List<TransitionListener<STATE, EVENT, SIDE_EFFECT>>
       _onTransitionListeners = [];
 
   void initialState(STATE state) => _initialState = state;
@@ -38,6 +38,9 @@ class GraphBuilder<STATE, EVENT, SIDE_EFFECT> {
     final definition = builder.build();
     _stateDefinitions[S] = definition;
   }
+
+  void onTransition(TransitionListener<STATE, EVENT, SIDE_EFFECT> listener) =>
+      _onTransitionListeners.add(listener);
 
   Graph<STATE, EVENT, SIDE_EFFECT> build() =>
       Graph(_initialState, _stateDefinitions, _onTransitionListeners);
@@ -68,3 +71,6 @@ typedef BuildState<STATE, EVENT, SIDE_EFFECT> = Function(
 
 typedef BuildGraph<STATE, EVENT, SIDE_EFFECT> = void Function(
     GraphBuilder<STATE, EVENT, SIDE_EFFECT>);
+
+typedef TransitionListener<STATE, EVENT, SIDE_EFFECT> = void Function(
+    Transition<STATE, EVENT, SIDE_EFFECT>);

@@ -25,7 +25,7 @@ class Valid<STATE, EVENT, SIDE_EFFECT> {
   final STATE fromState;
   final EVENT event;
   final STATE toState;
-  final Optional<SIDE_EFFECT> sideEffect;
+  final SIDE_EFFECT sideEffect;
 }
 
 class Invalid<STATE, EVENT> {
