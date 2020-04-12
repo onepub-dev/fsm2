@@ -1,4 +1,4 @@
-import 'package:fsm/src/state_machine.dart';
+import 'package:fsm/fsm.dart';
 import 'package:test/test.dart';
 
 abstract class State {}
@@ -57,17 +57,10 @@ void main() {
 StateMachine<State, Event, SideEffect> _createMachine(State initialState) =>
     StateMachine<State, Event, SideEffect>.create((g) => g
       ..initialState(initialState)
-      ..state<Solid>(
-          (b) => b..on<OnMelted>((s, e) => TransitionTo(Liquid(), LogMelted())))
+      ..state<Solid>((b) =>
+          b..on<OnMelted>((s, e) => b.transitionTo(Liquid(), LogMelted())))
       ..state<Liquid>((b) => b
-        ..on<OnFroze>((s, e) => TransitionTo(Solid(), LogFrozen()))
-        ..on<OnVaporized>((s, e) => TransitionTo(Gas(), LogVaporized())))
+        ..on<OnFroze>((s, e) => b.transitionTo(Solid(), LogFrozen()))
+        ..on<OnVaporized>((s, e) => b.transitionTo(Gas(), LogVaporized())))
       ..state<Gas>((b) => b
-        ..on<OnCondensed>((s, e) => TransitionTo(Liquid(), LogCondensed()))));
-
-testType<T>(object) {
-  print(object is T);
-  //              ^-- Error!
-  print(object is! T);
-  //               ^-- Error!
-}
+        ..on<OnCondensed>((s, e) => b.transitionTo(Liquid(), LogCondensed()))));

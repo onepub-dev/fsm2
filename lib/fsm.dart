@@ -4,5 +4,6 @@
 library fsm;
 
 export 'src/fsm_base.dart';
+export 'src/state_machine.dart';
 
 // TODO: Export any libraries intended for clients of this package.
