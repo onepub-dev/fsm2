@@ -1,20 +1,31 @@
+import 'dart:async';
+
 import 'package:dfunc/dfunc.dart';
 import 'package:fsm/src/graph.dart';
 import 'package:fsm/src/transition.dart';
 
 class StateMachine<STATE, EVENT, SIDE_EFFECT> {
-  StateMachine._(this._graph) : state = _graph.initialState;
+  StateMachine._(this._graph) : _currentState = _graph.initialState;
+
+  final StreamController<STATE> _controller = StreamController.broadcast();
 
   Transition<STATE, EVENT, SIDE_EFFECT> transition(EVENT event) {
-    final fromState = state;
+    final fromState = _currentState;
     final transition = getTransition(fromState, event);
-    transition.match((v) => state = v.toState, ignore);
+    transition.match((v) {
+      _currentState = v.toState;
+      _controller.add(_currentState);
+    }, ignore);
     return transition;
   }
 
+  STATE get currentState => _currentState;
+
+  Stream<STATE> get state => _controller.stream;
+
   final Graph<STATE, EVENT, SIDE_EFFECT> _graph;
 
-  STATE state;
+  STATE _currentState;
 
   factory StateMachine.create(
       BuildGraph<STATE, EVENT, SIDE_EFFECT> buildGraph) {
@@ -24,7 +35,9 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
   }
 
   Transition<STATE, EVENT, SIDE_EFFECT> getTransition(
-      STATE state, EVENT event) {
+    STATE state,
+    EVENT event,
+  ) {
     final createTransitionTo = _graph
         .stateDefinitions[state.runtimeType].transitions[event.runtimeType];
     if (createTransitionTo == null) {

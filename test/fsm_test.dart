@@ -32,25 +32,25 @@ class LogCondensed extends SideEffect {}
 void main() {
   test('initial state should be solid', () {
     final machine = _createMachine(Solid());
-    expect(machine.state, isA<Solid>());
+    expect(machine.currentState, isA<Solid>());
   });
 
   test('given state Solid with OnMelted should transition to Liquid', () {
     final machine = _createMachine(Solid());
     machine.transition(OnMelted());
-    expect(machine.state, isA<Liquid>());
+    expect(machine.currentState, isA<Liquid>());
   });
 
   test('given state Liquid with OnFroze should transition to Solid', () {
     final machine = _createMachine(Liquid());
     machine.transition(OnFroze());
-    expect(machine.state, isA<Solid>());
+    expect(machine.currentState, isA<Solid>());
   });
 
   test('given state Liquid with OnVaporized should transition to Gas', () {
     final machine = _createMachine(Liquid());
     machine.transition(OnVaporized());
-    expect(machine.state, isA<Gas>());
+    expect(machine.currentState, isA<Gas>());
   });
 }
 
