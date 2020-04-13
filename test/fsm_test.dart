@@ -2,7 +2,10 @@ import 'package:dfunc/dfunc.dart';
 import 'package:fsm/fsm.dart';
 import 'package:test/test.dart';
 
-abstract class State {}
+part 'fsm_test.g.dart';
+
+@Sealed()
+abstract class State with SealedState {}
 
 class Solid extends State {}
 
@@ -10,7 +13,8 @@ class Liquid extends State {}
 
 class Gas extends State {}
 
-abstract class Event {}
+@Sealed()
+abstract class Event with SealedEvent {}
 
 class OnMelted extends Event {}
 
@@ -20,7 +24,8 @@ class OnVaporized extends Event {}
 
 class OnCondensed extends Event {}
 
-abstract class SideEffect {}
+@Sealed()
+abstract class SideEffect with SealedSideEffect {}
 
 class LogMelted extends SideEffect {}
 
@@ -84,10 +89,13 @@ StateMachine<State, Event, SideEffect> _createMachine(
       ..state<Gas>((b) => b
         ..on<OnCondensed>((s, e) => b.transitionTo(Liquid(), LogCondensed())))
       ..onTransition((t) => t.match((v) {
-            if (v.sideEffect is LogMelted) logger.log(onMeltedMessage);
-            if (v.sideEffect is LogFrozen) logger.log(onFrozenMessage);
-            if (v.sideEffect is LogVaporized) logger.log(onVaporizedMessage);
-            if (v.sideEffect is LogCondensed) logger.log(onCondensedMessage);
+            final message = v.sideEffect?.match(
+              always(onMeltedMessage),
+              always(onFrozenMessage),
+              always(onVaporizedMessage),
+              always(onCondensedMessage),
+            );
+            if (message != null) logger.log(message);
           }, ignore)));
 
 const onMeltedMessage = 'onMeltedMessage';
