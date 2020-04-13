@@ -12,10 +12,10 @@ void main() {
         b..on<OnCondensed>((s, e) => b.transitionTo(Liquid(), LogCondensed())))
     ..onTransition((t) => t.match((v) => print(v.sideEffect), (_) {})));
 
-  machine.currentState is Solid; // TRUE
+  print(machine.currentState is Solid); // TRUE
 
   machine.transition(OnMelted());
-  machine.currentState is Liquid; // TRUE
+  print(machine.currentState is Liquid); // TRUE
 }
 
 abstract class State {}
