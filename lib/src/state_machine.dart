@@ -1,17 +1,33 @@
 import 'dart:async';
 
 import 'package:dfunc/dfunc.dart';
-import 'package:fsm/src/graph.dart';
-import 'package:fsm/src/transition.dart';
 
+part 'graph.dart';
+
+part 'transition.dart';
+
+/// Finite State Machine implementation.
+///
+/// It can be in one of states defined by [STATE]. State transitions
+/// are triggered by events of type [EVENT].
+///
+/// Base on the definition each transition can trigger side effect
+/// of type [SIDE_EFFECT].
 class StateMachine<STATE, EVENT, SIDE_EFFECT> {
+  factory StateMachine.create(
+    BuildGraph<STATE, EVENT, SIDE_EFFECT> buildGraph,
+  ) {
+    final graphBuilder = GraphBuilder<STATE, EVENT, SIDE_EFFECT>();
+    buildGraph(graphBuilder);
+    return StateMachine._(graphBuilder.build());
+  }
+
   StateMachine._(this._graph) : _currentState = _graph.initialState;
 
-  final StreamController<STATE> _controller = StreamController.broadcast();
-
+  /// Perform transition by emitting [event].
   Transition<STATE, EVENT, SIDE_EFFECT> transition(EVENT event) {
     final fromState = _currentState;
-    final transition = getTransition(fromState, event);
+    final transition = _getTransition(fromState, event);
     _graph.onTransitionListeners.forEach((onTransition) {
       onTransition(transition);
     });
@@ -22,22 +38,19 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
     return transition;
   }
 
+  /// Returns current state.
   STATE get currentState => _currentState;
 
+  /// Returns [Stream] of states.
   Stream<STATE> get state => _controller.stream;
+
+  final StreamController<STATE> _controller = StreamController.broadcast();
 
   final Graph<STATE, EVENT, SIDE_EFFECT> _graph;
 
   STATE _currentState;
 
-  factory StateMachine.create(
-      BuildGraph<STATE, EVENT, SIDE_EFFECT> buildGraph) {
-    final graphBuilder = GraphBuilder<STATE, EVENT, SIDE_EFFECT>();
-    buildGraph(graphBuilder);
-    return StateMachine._(graphBuilder.build());
-  }
-
-  Transition<STATE, EVENT, SIDE_EFFECT> getTransition(
+  Transition<STATE, EVENT, SIDE_EFFECT> _getTransition(
     STATE state,
     EVENT event,
   ) {

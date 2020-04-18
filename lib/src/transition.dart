@@ -1,5 +1,6 @@
-import 'package:dfunc/dfunc.dart';
+part of 'state_machine.dart';
 
+/// Defines FSM transition: the change from one state to another.
 class Transition<STATE, EVENT, SIDE_EFFECT> extends Coproduct2<Valid, Invalid> {
   Transition._(this._value);
 
@@ -23,6 +24,10 @@ class Transition<STATE, EVENT, SIDE_EFFECT> extends Coproduct2<Valid, Invalid> {
       _value.match(ifFirst, ifSecond);
 }
 
+/// Valid transition meaning that machine goes from [fromState]
+/// to [toState]. Transition is caused by [event].
+///
+/// It contains optional [sideEffect].
 class Valid<STATE, EVENT, SIDE_EFFECT> {
   Valid(this.fromState, this.event, this.toState, this.sideEffect);
 
@@ -32,6 +37,7 @@ class Valid<STATE, EVENT, SIDE_EFFECT> {
   final SIDE_EFFECT sideEffect;
 }
 
+/// Invalid transition called by [event]. Machine stays in [state].
 class Invalid<STATE, EVENT> {
   Invalid(this.fromState, this.event);
 
