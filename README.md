@@ -2,10 +2,13 @@ A library for finite state machine realization in Dart. Inspired by [Tinder Stat
 
 ## Usage
 
-A simple usage example:
+A simple usage example (using [dfunc](https://pub.dev/packages/dfunc) library for generating sealed classes):
 
 ```dart
+import 'package:dfunc/dfunc.dart';
 import 'package:fsm/fsm.dart';
+
+part 'fsm_example.g.dart';
 
 void main() {
   final machine = StateMachine<State, Event, SideEffect>.create((g) => g
@@ -19,13 +22,14 @@ void main() {
         b..on<OnCondensed>((s, e) => b.transitionTo(Liquid(), LogCondensed())))
     ..onTransition((t) => t.match((v) => print(v.sideEffect), (_) {})));
 
-  machine.currentState is Solid; // TRUE
+  print(machine.currentState is Solid); // TRUE
 
   machine.transition(OnMelted());
-  machine.currentState is Liquid; // TRUE
+  print(machine.currentState is Liquid); // TRUE
 }
 
-abstract class State {}
+@sealed
+abstract class State with _$State {}
 
 class Solid extends State {}
 
@@ -33,7 +37,8 @@ class Liquid extends State {}
 
 class Gas extends State {}
 
-abstract class Event {}
+@sealed
+abstract class Event with _$Event {}
 
 class OnMelted extends Event {}
 
@@ -43,7 +48,8 @@ class OnVaporized extends Event {}
 
 class OnCondensed extends Event {}
 
-abstract class SideEffect {}
+@sealed
+abstract class SideEffect with _$SideEffect {}
 
 class LogMelted extends SideEffect {}
 
@@ -52,7 +58,6 @@ class LogFrozen extends SideEffect {}
 class LogVaporized extends SideEffect {}
 
 class LogCondensed extends SideEffect {}
-
 ```
 
 ## Features and bugs

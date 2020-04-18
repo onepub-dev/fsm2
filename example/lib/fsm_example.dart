@@ -21,8 +21,8 @@ void main() {
   print(machine.currentState is Liquid); // TRUE
 }
 
-@Sealed()
-abstract class State with SealedState {}
+@sealed
+abstract class State with _$State {}
 
 class Solid extends State {}
 
@@ -30,8 +30,8 @@ class Liquid extends State {}
 
 class Gas extends State {}
 
-@Sealed()
-abstract class Event with SealedEvent {}
+@sealed
+abstract class Event with _$Event {}
 
 class OnMelted extends Event {}
 
@@ -41,8 +41,8 @@ class OnVaporized extends Event {}
 
 class OnCondensed extends Event {}
 
-@Sealed()
-abstract class SideEffect with SealedSideEffect {}
+@sealed
+abstract class SideEffect with _$SideEffect {}
 
 class LogMelted extends SideEffect {}
 

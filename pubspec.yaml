@@ -1,6 +1,6 @@
 name: fsm
 description: A library for finite state machine realization in Dart. Inspired by Tinder StateMachine for Kotlin.
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/ookami-kb/fsm
 
 environment:
@@ -13,4 +13,3 @@ dev_dependencies:
   build_runner: ^1.7.4
   pedantic: ^1.8.0
   test: ^1.6.0
-  dfunc_builder: '>=0.0.1 <0.1.0'
