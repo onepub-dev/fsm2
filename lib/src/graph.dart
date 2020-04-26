@@ -70,14 +70,14 @@ class StateBuilder<S extends STATE, STATE, EVENT, SIDE_EFFECT> {
         (STATE s, EVENT e) => createTransitionTo(s, e);
   }
 
-  /// Set callback that will be called right after machine enters this state.
-  void onEnter(void Function(S) doOnEnter) {
-    _stateDefinition.onEnter = (STATE s) => doOnEnter(s);
+  /// Sets callback that will be called right after machine enters this state.
+  void onEnter(void Function(S) callback) {
+    _stateDefinition.onEnter = (STATE s) => callback(s);
   }
 
-  /// Set callback that will be called right before machine exits this state.
-  void onExit(void Function(S) doOnEnter) {
-    _stateDefinition.onExit = (STATE s) => doOnEnter(s);
+  /// Sets callback that will be called right before machine exits this state.
+  void onExit(void Function(S) callback) {
+    _stateDefinition.onExit = (STATE s) => callback(s);
   }
 
   /// Creates transition.
