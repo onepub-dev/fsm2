@@ -14,6 +14,9 @@ class _State<STATE, EVENT, SIDE_EFFECT> {
 
   final Map<Type, TransitionTo<STATE, SIDE_EFFECT> Function(STATE, EVENT)>
       transitions = {};
+
+  VoidCallback<STATE> onEnter = (_) {};
+  VoidCallback<STATE> onExit = (_) {};
 }
 
 class TransitionTo<STATE, SIDE_EFFECT> {
@@ -67,6 +70,14 @@ class StateBuilder<S extends STATE, STATE, EVENT, SIDE_EFFECT> {
         (STATE s, EVENT e) => createTransitionTo(s, e);
   }
 
+  void onEnter(void Function(S) doOnEnter) {
+    _stateDefinition.onEnter = (STATE s) => doOnEnter(s);
+  }
+
+  void onExit(void Function(S) doOnEnter) {
+    _stateDefinition.onExit = (STATE s) => doOnEnter(s);
+  }
+
   /// Creates transition.
   TransitionTo<STATE, SIDE_EFFECT> transitionTo(
     STATE toState, [
@@ -89,3 +100,5 @@ typedef BuildGraph<STATE, EVENT, SIDE_EFFECT> = void Function(
 
 typedef TransitionListener<STATE, EVENT, SIDE_EFFECT> = void Function(
     Transition<STATE, EVENT, SIDE_EFFECT>);
+
+typedef VoidCallback<T> = void Function(T);

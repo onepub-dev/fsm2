@@ -1,3 +1,7 @@
+## 0.0.5
+- Introduced stronger typing in builder methods.
+- Added onEnter and onExits state listeners.
+
 ## 0.0.4
 - Restructured code.
 - Updated documentation.

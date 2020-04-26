@@ -10,6 +10,8 @@ void main() {
       ..on<OnMelted>(
           (Solid s, OnMelted e) => b.transitionTo(Liquid(), LogMelted())))
     ..state<Liquid>((b) => b
+      ..onEnter((s) => print('Entering ${s.runtimeType} state'))
+      ..onExit((s) => print('Exiting ${s.runtimeType} state'))
       ..on<OnFroze>(
           (Liquid s, OnFroze e) => b.transitionTo(Solid(), LogFrozen()))
       ..on<OnVaporized>(
@@ -23,6 +25,9 @@ void main() {
 
   machine.transition(OnMelted());
   print(machine.currentState is Liquid); // TRUE
+
+  machine.transition(OnFroze());
+  print(machine.currentState is Solid); // TRUE
 }
 
 @sealed

@@ -32,7 +32,9 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
       onTransition(transition);
     });
     transition.match((v) {
+      _getOnStateExit(fromState)(fromState);
       _currentState = v.toState;
+      _getOnStateEnter(v.toState)(v.toState);
       _controller.add(_currentState);
     }, ignore);
     return transition;
@@ -64,4 +66,10 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
       transition.sideEffect,
     );
   }
+
+  VoidCallback<S> _getOnStateEnter<S extends STATE>(S state) =>
+      _graph.stateDefinitions[state.runtimeType].onEnter;
+
+  VoidCallback<S> _getOnStateExit<S extends STATE>(S state) =>
+      _graph.stateDefinitions[state.runtimeType].onExit;
 }

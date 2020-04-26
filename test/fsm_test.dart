@@ -1,5 +1,6 @@
 import 'package:dfunc/dfunc.dart';
 import 'package:fsm/fsm.dart';
+import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 part 'fsm_test.g.dart';
@@ -41,6 +42,12 @@ class Logger {
   void log(String message) => messages.add(message);
 }
 
+class StateWatcher extends Mock {
+  void onEnter(Type t);
+
+  void onExit(Type t);
+}
+
 void main() {
   Logger logger;
 
@@ -73,17 +80,36 @@ void main() {
     expect(machine.currentState, isA<Gas>());
     expect(logger.messages, [onVaporizedMessage]);
   });
+
+  test('calls onEnter, but not onExit', () {
+    final watcher = StateWatcher();
+    final machine = _createMachine(Solid(), logger, watcher);
+    machine.transition(OnMelted());
+    verify(watcher.onEnter(Liquid));
+    verifyNever(watcher.onExit(Liquid));
+  });
+
+  test('calls onExit', () {
+    final watcher = StateWatcher();
+    final machine = _createMachine(Solid(), logger, watcher);
+    machine.transition(OnMelted());
+    machine.transition(OnVaporized());
+    verify(watcher.onExit(Liquid));
+  });
 }
 
 StateMachine<State, Event, SideEffect> _createMachine(
   State initialState,
-  Logger logger,
-) =>
+  Logger logger, [
+  StateWatcher stateWatcher,
+]) =>
     StateMachine<State, Event, SideEffect>.create((g) => g
       ..initialState(initialState)
       ..state<Solid>((b) =>
           b..on<OnMelted>((s, e) => b.transitionTo(Liquid(), LogMelted())))
       ..state<Liquid>((b) => b
+        ..onEnter((s) => stateWatcher?.onEnter(s.runtimeType))
+        ..onExit((s) => stateWatcher?.onExit(s.runtimeType))
         ..on<OnFroze>((s, e) => b.transitionTo(Solid(), LogFrozen()))
         ..on<OnVaporized>((s, e) => b.transitionTo(Gas(), LogVaporized())))
       ..state<Gas>((b) => b
