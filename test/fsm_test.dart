@@ -36,62 +36,58 @@ class LogVaporized extends SideEffect {}
 
 class LogCondensed extends SideEffect {}
 
-class Logger {
-  final List<String> messages = [];
-
-  void log(String message) => messages.add(message);
-}
-
-class StateWatcher extends Mock {
+class Watcher extends Mock {
   void onEnter(Type t);
 
   void onExit(Type t);
+
+  void log(String message);
 }
 
 void main() {
-  Logger logger;
+  Watcher watcher;
 
   setUp(() {
-    logger = Logger();
+    watcher = Watcher();
   });
 
   test('initial state should be solid', () {
-    final machine = _createMachine(Solid(), logger);
+    final machine = _createMachine(Solid(), watcher);
     expect(machine.currentState, isA<Solid>());
   });
 
   test('state Solid with OnMelted should transition to Liquid and log', () {
-    final machine = _createMachine(Solid(), logger);
+    final machine = _createMachine(Solid(), watcher);
     machine.transition(OnMelted());
     expect(machine.currentState, isA<Liquid>());
-    expect(logger.messages, [onMeltedMessage]);
+    verifyInOrder([watcher.log(onMeltedMessage)]);
   });
 
   test('state Liquid with OnFroze should transition to Solid and log', () {
-    final machine = _createMachine(Liquid(), logger);
+    final machine = _createMachine(Liquid(), watcher);
     machine.transition(OnFroze());
     expect(machine.currentState, isA<Solid>());
-    expect(logger.messages, [onFrozenMessage]);
+    verifyInOrder([watcher.log(onFrozenMessage)]);
   });
 
   test('state Liquid with OnVaporized should transition to Gas and log', () {
-    final machine = _createMachine(Liquid(), logger);
+    final machine = _createMachine(Liquid(), watcher);
     machine.transition(OnVaporized());
     expect(machine.currentState, isA<Gas>());
-    expect(logger.messages, [onVaporizedMessage]);
+    verifyInOrder([watcher.log(onVaporizedMessage)]);
   });
 
   test('calls onEnter, but not onExit', () {
-    final watcher = StateWatcher();
-    final machine = _createMachine(Solid(), logger, watcher);
+    final watcher = Watcher();
+    final machine = _createMachine(Solid(), watcher);
     machine.transition(OnMelted());
     verify(watcher.onEnter(Liquid));
     verifyNever(watcher.onExit(Liquid));
   });
 
   test('calls onExit', () {
-    final watcher = StateWatcher();
-    final machine = _createMachine(Solid(), logger, watcher);
+    final watcher = Watcher();
+    final machine = _createMachine(Solid(), watcher);
     machine.transition(OnMelted());
     machine.transition(OnVaporized());
     verify(watcher.onExit(Liquid));
@@ -100,16 +96,15 @@ void main() {
 
 StateMachine<State, Event, SideEffect> _createMachine(
   State initialState,
-  Logger logger, [
-  StateWatcher stateWatcher,
-]) =>
+  Watcher watcher,
+) =>
     StateMachine<State, Event, SideEffect>.create((g) => g
       ..initialState(initialState)
       ..state<Solid>((b) =>
           b..on<OnMelted>((s, e) => b.transitionTo(Liquid(), LogMelted())))
       ..state<Liquid>((b) => b
-        ..onEnter((s) => stateWatcher?.onEnter(s.runtimeType))
-        ..onExit((s) => stateWatcher?.onExit(s.runtimeType))
+        ..onEnter((s) => watcher?.onEnter(s.runtimeType))
+        ..onExit((s) => watcher?.onExit(s.runtimeType))
         ..on<OnFroze>((s, e) => b.transitionTo(Solid(), LogFrozen()))
         ..on<OnVaporized>((s, e) => b.transitionTo(Gas(), LogVaporized())))
       ..state<Gas>((b) => b
@@ -121,7 +116,7 @@ StateMachine<State, Event, SideEffect> _createMachine(
               always(onVaporizedMessage),
               always(onCondensedMessage),
             );
-            if (message != null) logger.log(message);
+            if (message != null) watcher.log(message);
           }, ignore)));
 
 const onMeltedMessage = 'onMeltedMessage';
