@@ -6,19 +6,28 @@ part 'fsm_example.g.dart';
 void main() {
   final machine = StateMachine<State, Event, SideEffect>.create((g) => g
     ..initialState(Solid())
-    ..state<Solid>(
-        (b) => b..on<OnMelted>((s, e) => b.transitionTo(Liquid(), LogMelted())))
+    ..state<Solid>((b) => b
+      ..on<OnMelted>(
+          (Solid s, OnMelted e) => b.transitionTo(Liquid(), LogMelted())))
     ..state<Liquid>((b) => b
-      ..on<OnFroze>((s, e) => b.transitionTo(Solid(), LogFrozen()))
-      ..on<OnVaporized>((s, e) => b.transitionTo(Gas(), LogVaporized())))
-    ..state<Gas>((b) =>
-        b..on<OnCondensed>((s, e) => b.transitionTo(Liquid(), LogCondensed())))
+      ..onEnter((s) => print('Entering ${s.runtimeType} state'))
+      ..onExit((s) => print('Exiting ${s.runtimeType} state'))
+      ..on<OnFroze>(
+          (Liquid s, OnFroze e) => b.transitionTo(Solid(), LogFrozen()))
+      ..on<OnVaporized>(
+          (Liquid s, OnVaporized e) => b.transitionTo(Gas(), LogVaporized())))
+    ..state<Gas>((b) => b
+      ..on<OnCondensed>(
+          (Gas s, OnCondensed e) => b.transitionTo(Liquid(), LogCondensed())))
     ..onTransition((t) => t.match((v) => print(v.sideEffect), (_) {})));
 
   print(machine.currentState is Solid); // TRUE
 
   machine.transition(OnMelted());
   print(machine.currentState is Liquid); // TRUE
+
+  machine.transition(OnFroze());
+  print(machine.currentState is Solid); // TRUE
 }
 
 @sealed
