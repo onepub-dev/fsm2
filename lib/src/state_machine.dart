@@ -50,15 +50,12 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
 
   STATE _currentState;
 
-  Transition<STATE, EVENT, SIDE_EFFECT> _getTransition(
-    STATE state,
-    EVENT event,
-  ) {
+  Transition<S, E, SIDE_EFFECT>
+      _getTransition<S extends STATE, E extends EVENT>(S state, E event) {
     final createTransitionTo = _graph
         .stateDefinitions[state.runtimeType].transitions[event.runtimeType];
-    if (createTransitionTo == null) {
-      return Transition.invalid(state, event);
-    }
+    if (createTransitionTo == null) return Transition.invalid(state, event);
+
     final transition = createTransitionTo(state, event);
     return Transition.valid(
       state,

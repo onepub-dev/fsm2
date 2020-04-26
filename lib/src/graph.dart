@@ -37,9 +37,9 @@ class GraphBuilder<STATE, EVENT, SIDE_EFFECT> {
 
   /// Adds state definition.
   void state<S extends STATE>(
-    BuildState<STATE, EVENT, SIDE_EFFECT> buildState,
+    BuildState<S, STATE, EVENT, SIDE_EFFECT> buildState,
   ) {
-    final builder = StateBuilder<STATE, EVENT, SIDE_EFFECT>();
+    final builder = StateBuilder<S, STATE, EVENT, SIDE_EFFECT>();
     buildState(builder);
     final definition = builder.build();
     _stateDefinitions[S] = definition;
@@ -56,15 +56,15 @@ class GraphBuilder<STATE, EVENT, SIDE_EFFECT> {
 /// State builder.
 ///
 /// Instance of this class is passed to [GraphBuilder.state] method.
-class StateBuilder<STATE, EVENT, SIDE_EFFECT> {
+class StateBuilder<S extends STATE, STATE, EVENT, SIDE_EFFECT> {
   final _State<STATE, EVENT, SIDE_EFFECT> _stateDefinition = _State();
 
   /// Sets transition that will be called when event of type [E]
   /// is sent to machine via [StateMachine.transition] method.
   void on<E extends EVENT>(
-    CreateTransitionTo<STATE, EVENT, SIDE_EFFECT> createTransitionTo,
-  ) {
-    _stateDefinition.transitions[E] = createTransitionTo;
+      CreateTransitionTo<S, STATE, E, EVENT, SIDE_EFFECT> createTransitionTo) {
+    _stateDefinition.transitions[E] =
+        (STATE s, EVENT e) => createTransitionTo(s, e);
   }
 
   /// Creates transition.
@@ -77,11 +77,12 @@ class StateBuilder<STATE, EVENT, SIDE_EFFECT> {
   _State<STATE, EVENT, SIDE_EFFECT> build() => _stateDefinition;
 }
 
-typedef CreateTransitionTo<STATE, EVENT, SIDE_EFFECT>
-    = TransitionTo<STATE, SIDE_EFFECT> Function(STATE s, EVENT e);
+typedef CreateTransitionTo<S extends STATE, STATE, E extends EVENT, EVENT,
+        SIDE_EFFECT>
+    = TransitionTo<STATE, SIDE_EFFECT> Function(S s, E e);
 
-typedef BuildState<STATE, EVENT, SIDE_EFFECT> = Function(
-    StateBuilder<STATE, EVENT, SIDE_EFFECT>);
+typedef BuildState<S extends STATE, STATE, EVENT, SIDE_EFFECT> = Function(
+    StateBuilder<S, STATE, EVENT, SIDE_EFFECT>);
 
 typedef BuildGraph<STATE, EVENT, SIDE_EFFECT> = void Function(
     GraphBuilder<STATE, EVENT, SIDE_EFFECT>);
