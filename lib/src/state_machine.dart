@@ -34,6 +34,8 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
     transition.match((v) {
       _getOnStateExit(fromState)(fromState);
       _currentState = v.toState;
+      assert(_graph.stateDefinitions[v.toState.runtimeType] != null,
+          'The State ${v.toState.runtimeType} does not existing in the StateMachine');
       _getOnStateEnter(v.toState)(v.toState);
       _controller.add(_currentState);
     }, ignore);
@@ -52,10 +54,8 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
 
   STATE _currentState;
 
-  Transition<S, E, SIDE_EFFECT>
-      _getTransition<S extends STATE, E extends EVENT>(S state, E event) {
-    final createTransitionTo = _graph
-        .stateDefinitions[state.runtimeType].transitions[event.runtimeType];
+  Transition<S, E, SIDE_EFFECT> _getTransition<S extends STATE, E extends EVENT>(S state, E event) {
+    final createTransitionTo = _graph.stateDefinitions[state.runtimeType].transitions[event.runtimeType];
     if (createTransitionTo == null) return Transition.invalid(state, event);
 
     final transition = createTransitionTo(state, event);
@@ -67,9 +67,7 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
     );
   }
 
-  VoidCallback<S> _getOnStateEnter<S extends STATE>(S state) =>
-      _graph.stateDefinitions[state.runtimeType].onEnter;
+  VoidCallback<S> _getOnStateEnter<S extends STATE>(S state) => _graph.stateDefinitions[state.runtimeType].onEnter;
 
-  VoidCallback<S> _getOnStateExit<S extends STATE>(S state) =>
-      _graph.stateDefinitions[state.runtimeType].onExit;
+  VoidCallback<S> _getOnStateExit<S extends STATE>(S state) => _graph.stateDefinitions[state.runtimeType].onExit;
 }
