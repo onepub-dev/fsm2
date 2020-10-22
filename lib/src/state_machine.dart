@@ -55,8 +55,10 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
 
   STATE _currentState;
 
-  Transition<S, E, SIDE_EFFECT> _getTransition<S extends STATE, E extends EVENT>(S state, E event) {
-    final createTransitionTo = _graph.stateDefinitions[state.runtimeType].transitions[event.runtimeType];
+  Transition<S, E, SIDE_EFFECT>
+      _getTransition<S extends STATE, E extends EVENT>(S state, E event) {
+    final createTransitionTo = _graph
+        .stateDefinitions[state.runtimeType].transitions[event.runtimeType];
     if (createTransitionTo == null) return Transition.invalid(state, event);
 
     final transition = createTransitionTo(state, event);
@@ -68,9 +70,11 @@ class StateMachine<STATE, EVENT, SIDE_EFFECT> {
     );
   }
 
-  VoidCallback<S> _getOnStateEnter<S extends STATE>(S state) => _graph.stateDefinitions[state.runtimeType].onEnter;
+  VoidCallback<S> _getOnStateEnter<S extends STATE>(S state) =>
+      _graph.stateDefinitions[state.runtimeType].onEnter;
 
-  VoidCallback<S> _getOnStateExit<S extends STATE>(S state) => _graph.stateDefinitions[state.runtimeType].onExit;
+  VoidCallback<S> _getOnStateExit<S extends STATE>(S state) =>
+      _graph.stateDefinitions[state.runtimeType].onExit;
 }
 
 class UnregisteredState implements Exception {
