@@ -1,4 +1,4 @@
-import 'package:fsm/fsm.dart';
+import 'package:fsm2/fsm2.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 

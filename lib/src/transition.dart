@@ -1,6 +1,5 @@
-import 'package:fsm/src/state_builder.dart';
+import 'state_builder.dart';
 
-import '../fsm.dart';
 import 'graph.dart';
 import 'state_definition.dart';
 import 'state_machine.dart';

@@ -1,5 +1,5 @@
-import 'package:fsm/src/state_machine.dart';
-import 'package:fsm/src/transition.dart';
+import 'state_machine.dart';
+import 'transition.dart';
 
 import 'state_definition.dart';
 

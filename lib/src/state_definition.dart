@@ -1,4 +1,4 @@
-import 'package:fsm/src/transition.dart';
+import 'transition.dart';
 
 import 'event_choices.dart';
 import 'exceptions.dart';

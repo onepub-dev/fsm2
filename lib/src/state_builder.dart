@@ -1,7 +1,7 @@
-import 'package:fsm/src/event_choices.dart';
-import 'package:fsm/src/graph_builder.dart';
-import 'package:fsm/src/state_machine.dart';
-import 'package:fsm/src/transition.dart';
+import 'event_choices.dart';
+import 'graph_builder.dart';
+import 'state_machine.dart';
+import 'transition.dart';
 
 import 'exceptions.dart';
 import 'state_definition.dart';
@@ -26,19 +26,19 @@ class StateBuilder<S extends State> {
   ///   ..on<UserFound>((state, event) => builder.transitionTo(Login())))
   /// ```
   ///
-  /// The [condition] argument allows you to register multiple transitions for a
-  /// single Event.
+  /// The [condition] argument implements the UML concept a 'guard condition' and
+  /// allows you to register multiple transitions for a single Event.
   /// When the Event is fired each transition will be evaluated in the order
   /// they are added to the State.
-  /// The first transition whose [condition] method returns true will be triggered, any additional
-  /// choices will not be evaluated.
+  /// The first transition whose guard [condition] method returns true will be triggered, any later
+  /// conditions will not be evaluated.
   ///
   /// ```dart
   /// ..state<MobileNoAcquired>((builder) => builder
   ///   ..on<UserFound>((state, event) => builder.transitionTo(Login())
-  ///       , choice: (state, event) => event.subscribed == true))
+  ///       , condition: (state, event) => event.subscribed == true))
   ///   ..on<UserFound>((state, event) => builder.transitionTo(AskForSubscription())
-  ///       , choice: (state, event) => event.subscribed == false))
+  ///       , condition: (state, event) => event.subscribed == false))
   /// ```
   ///
   /// There MAY be only one transition with a null [condition] and it MUST be the last

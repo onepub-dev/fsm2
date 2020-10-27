@@ -1,4 +1,4 @@
-import 'package:fsm/fsm.dart';
+import 'package:fsm2/fsm2.dart';
 
 void main() {
   final machine = StateMachine.create((g) => g

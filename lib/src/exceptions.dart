@@ -1,4 +1,4 @@
-import 'package:fsm/src/state_machine.dart';
+import 'state_machine.dart';
 
 class NullChoiceMustBeLastException implements Exception {
   Type eventType;

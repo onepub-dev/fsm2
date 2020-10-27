@@ -1,5 +1,6 @@
-import '../fsm.dart';
 import 'state_definition.dart';
+import 'state_machine.dart';
+import 'transition.dart';
 
 class Graph {
   Graph(this.initialState, this.stateDefinitions, this.onTransitionListeners);

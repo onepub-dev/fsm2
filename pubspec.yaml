@@ -1,7 +1,11 @@
-name: fsm
-description: A library for finite State machine realization in Dart. Inspired by Tinder StateMachine for Kotlin.
-version: 0.1.0
-homepage: https://github.com/ookami-kb/fsm
+name: fsm2
+description: FMS2 provides an implementation of the core design aspects of the UML state diagrams.
+  FMS2 is derived from the FSM library which in turn was inspired by [Tinder StateMachine library](https://github.com/Tinder/StateMachine).
+  FMS2 allows a user to declare each transition or provide dynamic transitions.
+  FMS2 support Guard Conditions from the UML 2 specification.
+
+version: 0.8.0
+homepage: https://github.com/bsutton/fsm2
 
 environment:
   sdk: '>=2.9.0 <3.0.0'
