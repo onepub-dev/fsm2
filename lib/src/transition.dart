@@ -1,46 +1,71 @@
-part of 'state_machine.dart';
+import 'package:fsm/src/state_builder.dart';
+
+import '../fsm.dart';
+import 'graph.dart';
+import 'state_definition.dart';
+import 'state_machine.dart';
 
 /// Defines FSM transition: the change from one state to another.
-class Transition<STATE, EVENT, SIDE_EFFECT> extends Coproduct2<Valid, Invalid> {
-  Transition._(this._value);
+abstract class TransitionDefinition {
+  State fromState;
+  StateDefinition fromStateDefinition;
+  Event event;
 
-  final Union2<Valid<STATE, EVENT, SIDE_EFFECT>, Invalid<STATE, EVENT>> _value;
+  /// The transition returned by the [EventHandler].
+  final Transition _transition;
+  TransitionDefinition._internal(this.fromState, this.fromStateDefinition, this.event, this._transition);
 
-  Transition.valid(
-    STATE fromState,
-    EVENT event,
-    STATE toState,
-    SIDE_EFFECT sideEffect,
-  ) : this._(Union2.first(Valid(fromState, event, toState, sideEffect)));
+  State get toState => _transition.toState;
 
-  Transition.invalid(STATE state, EVENT event)
-      : this._(Union2.second(Invalid(state, event)));
-
-  @override
-  R match<R>(
-    R Function(Valid<STATE, EVENT, SIDE_EFFECT>) ifFirst,
-    R Function(Invalid<STATE, EVENT>) ifSecond,
-  ) =>
-      _value.match(ifFirst, ifSecond);
+  Transition trigger(Graph graph);
 }
 
 /// Valid transition meaning that machine goes from [fromState]
 /// to [toState]. Transition is caused by [event].
 ///
 /// It contains optional [sideEffect].
-class Valid<STATE, EVENT, SIDE_EFFECT> {
-  Valid(this.fromState, this.event, this.toState, this.sideEffect);
+class ValidTransitionDefinition extends TransitionDefinition {
+  ValidTransitionDefinition(
+    State fromState,
+    StateDefinition fromStateDefinition,
+    Event event,
+    Transition transition,
+  ) : super._internal(fromState, fromStateDefinition, event, transition);
 
-  final STATE fromState;
-  final EVENT event;
-  final STATE toState;
-  final SIDE_EFFECT sideEffect;
+  @override
+  Transition trigger(Graph graph) {
+    fromStateDefinition.onExit(fromState, event);
+
+    _transition.sideEffect();
+
+    var toStateDefinition = graph.stateDefinitions[toState.runtimeType];
+
+    toStateDefinition.onEnter(_transition.toState, event);
+
+    return _transition;
+  }
 }
 
-/// Invalid transition called by [event]. Machine stays in [state].
-class Invalid<STATE, EVENT> {
-  Invalid(this.fromState, this.event);
+// /// Invalid transition called by [event]. Machine stays in [state].
+// class InvalidTransition extends Transition {
+//   InvalidTransition(this.fromState, this.event);
 
-  final STATE fromState;
-  final EVENT event;
+//   final State fromState;
+//   final Event event;
+// }
+
+/// Valid transition called by [event] but no [condition] method
+/// evaluated to true so no transition will occur.
+/// Machine stays in [state].
+class NoOpTransitionDefinition extends TransitionDefinition {
+  /// no transition so [fromState] == [toState].
+  NoOpTransitionDefinition(State fromState, StateDefinition fromStateDefinition, Event event)
+      : super._internal(fromState, fromStateDefinition, event, createTransition(fromState));
+  @override
+  Transition trigger(Graph graph) {
+    return _transition;
+  }
 }
+
+typedef TransitionListener = void Function(TransitionDefinition);
+typedef EventHandler<S extends State, E extends Event> = Transition Function(S s, E e);

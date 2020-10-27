@@ -1,25 +1,31 @@
-import 'package:dfunc/dfunc.dart';
 import 'package:fsm/fsm.dart';
 
-part 'fsm_example.g.dart';
-
 void main() {
-  final machine = StateMachine<State, Event, SideEffect>.create((g) => g
+  final machine = StateMachine.create((g) => g
     ..initialState(Solid())
     ..state<Solid>((b) => b
-      ..on<OnMelted>(
-          (Solid s, OnMelted e) => b.transitionTo(Liquid(), LogMelted())))
+      ..on<OnMelted>((s, e) => b.transitionTo(
+            Liquid(),
+            sideEffect: () => print('Melted'),
+          )))
     ..state<Liquid>((b) => b
-      ..onEnter((s) => print('Entering ${s.runtimeType} state'))
-      ..onExit((s) => print('Exiting ${s.runtimeType} state'))
-      ..on<OnFroze>(
-          (Liquid s, OnFroze e) => b.transitionTo(Solid(), LogFrozen()))
-      ..on<OnVaporized>(
-          (Liquid s, OnVaporized e) => b.transitionTo(Gas(), LogVaporized())))
+      ..onEnter((s, e) => print('Entering ${s.runtimeType} State'))
+      ..onExit((s, e) => print('Exiting ${s.runtimeType} State'))
+      ..on<OnFroze>((s, e) => b.transitionTo(
+            Solid(),
+            sideEffect: () => print('Frozen'),
+          ))
+      ..on<OnVaporized>((s, e) => b.transitionTo(
+            Gas(),
+            sideEffect: () => print('Vaporized'),
+          )))
     ..state<Gas>((b) => b
-      ..on<OnCondensed>(
-          (Gas s, OnCondensed e) => b.transitionTo(Liquid(), LogCondensed())))
-    ..onTransition((t) => t.match((v) => print(v.sideEffect), (_) {})));
+      ..on<OnCondensed>((s, e) => b.transitionTo(
+            Liquid(),
+            sideEffect: () => print('Condensed'),
+          )))
+    ..onTransition((t) => print(
+        'Recieved Event ${t.event.runtimeType} in State ${t.fromState.runtimeType} transitioning to State ${t.toState.runtimeType}')));
 
   print(machine.currentState is Solid); // TRUE
 
@@ -30,33 +36,16 @@ void main() {
   print(machine.currentState is Solid); // TRUE
 }
 
-@sealed
-abstract class State with _$State {}
+class Solid implements State {}
 
-class Solid extends State {}
+class Liquid implements State {}
 
-class Liquid extends State {}
+class Gas implements State {}
 
-class Gas extends State {}
+class OnMelted implements Event {}
 
-@sealed
-abstract class Event with _$Event {}
+class OnFroze implements Event {}
 
-class OnMelted extends Event {}
+class OnVaporized implements Event {}
 
-class OnFroze extends Event {}
-
-class OnVaporized extends Event {}
-
-class OnCondensed extends Event {}
-
-@sealed
-abstract class SideEffect with _$SideEffect {}
-
-class LogMelted extends SideEffect {}
-
-class LogFrozen extends SideEffect {}
-
-class LogVaporized extends SideEffect {}
-
-class LogCondensed extends SideEffect {}
+class OnCondensed implements Event {}
