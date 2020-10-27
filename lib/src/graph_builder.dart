@@ -18,9 +18,9 @@ class GraphBuilder {
 
   /// Adds State definition.
   void state<S extends State>(
-    BuildState buildState,
+    BuildState<S> buildState,
   ) {
-    final builder = StateBuilder(S);
+    final builder = StateBuilder<S>(S);
     buildState(builder);
     final definition = builder.build();
     _stateDefinitions[S] = definition;
