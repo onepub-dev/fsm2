@@ -2,19 +2,19 @@ import 'package:fsm/fsm.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-class Solid extends State {}
+class Solid implements State {}
 
-class Liquid extends State {}
+class Liquid implements State {}
 
-class Gas extends State {}
+class Gas implements State {}
 
-class OnMelted extends Event {}
+class OnMelted implements Event {}
 
-class OnFroze extends Event {}
+class OnFroze implements Event {}
 
-class OnVaporized extends Event {}
+class OnVaporized implements Event {}
 
-class OnCondensed extends Event {}
+class OnCondensed implements Event {}
 
 class Watcher extends Mock {
   void onEnter(Type t);
