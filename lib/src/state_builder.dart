@@ -124,4 +124,4 @@ Transition createTransition(State toState) {
   return transition;
 }
 
-typedef BuildState = void Function(StateBuilder);
+typedef BuildState<S extends State> = void Function(StateBuilder<S>);
