@@ -1,7 +1,7 @@
 name: fsm2
 version: 0.8.0
 homepage: https://github.com/bsutton/fsm2
-description: FMS2 provides an implementation of the core design aspects of the UML state diagrams. FMS2 is derived from the FSM library which in turn was inspired by [Tinder StateMachine library](https://github.com/Tinder/StateMachine). FMS2 allows a user to declare each transition or provide dynamic transitions. FMS2 support Guard Conditions from the UML 2 specification.
+description: FMS2 provides an implementation of the core design aspects of the UML state diagrams allowing both declarative transitions and dynamic transitions along with Guard Conditions.
 environment: 
   sdk: '>=2.9.0 <3.0.0'
 dev_dependencies: 
