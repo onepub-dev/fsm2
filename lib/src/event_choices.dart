@@ -22,7 +22,8 @@ class EventChoices<S extends State, E extends Event> {
   /// the transition and no further choices are evaulated.
   var eventChoices = <EventChoice<S, E>>[];
 
-  TransitionDefinition getTransition(S fromState, StateDefinition fromStateDefinition, E event) {
+  TransitionDefinition getTransition(
+      S fromState, StateDefinition fromStateDefinition, E event) {
     for (var choice in eventChoices) {
       if (choice.condition == null || choice.condition(fromState, event)) {
         /// call back into user code to allow them to decied what
@@ -40,4 +41,5 @@ class EventChoices<S extends State, E extends Event> {
   }
 }
 
-typedef Condition<S extends State, E extends Event> = bool Function(S state, E event);
+typedef Condition<S extends State, E extends Event> = bool Function(
+    S state, E event);

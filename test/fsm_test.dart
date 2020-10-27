@@ -80,15 +80,19 @@ StateMachine _createMachine(
 ) =>
     StateMachine.create((g) => g
           ..initialState(initialState)
-          ..state<Solid>((b) =>
-              b..on<OnMelted>((s, e) => b.transitionTo(Liquid(), sideEffect: () => watcher.log(onMeltedMessage))))
+          ..state<Solid>((b) => b
+            ..on<OnMelted>((s, e) => b.transitionTo(Liquid(),
+                sideEffect: () => watcher.log(onMeltedMessage))))
           ..state<Liquid>((b) => b
             ..onEnter((s, e) => watcher?.onEnter(s.runtimeType))
             ..onExit((s, e) => watcher?.onExit(s.runtimeType))
-            ..on<OnFroze>((s, e) => b.transitionTo(Solid(), sideEffect: () => watcher.log(onFrozenMessage)))
-            ..on<OnVaporized>((s, e) => b.transitionTo(Gas(), sideEffect: () => watcher.log(onVaporizedMessage))))
-          ..state<Gas>((b) =>
-              b..on<OnCondensed>((s, e) => b.transitionTo(Liquid(), sideEffect: () => watcher.log(onCondensedMessage))))
+            ..on<OnFroze>((s, e) => b.transitionTo(Solid(),
+                sideEffect: () => watcher.log(onFrozenMessage)))
+            ..on<OnVaporized>((s, e) => b.transitionTo(Gas(),
+                sideEffect: () => watcher.log(onVaporizedMessage))))
+          ..state<Gas>((b) => b
+            ..on<OnCondensed>((s, e) => b.transitionTo(Liquid(),
+                sideEffect: () => watcher.log(onCondensedMessage))))
         // ..onTransition((t) => onTransition(watcher, t))
         );
 

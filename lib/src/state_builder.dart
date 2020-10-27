@@ -12,7 +12,8 @@ import 'state_definition.dart';
 class StateBuilder<S extends State> {
   final StateDefinition _stateDefinition;
 
-  StateBuilder(Type stateType) : _stateDefinition = StateDefinition<S>(stateType);
+  StateBuilder(Type stateType)
+      : _stateDefinition = StateDefinition<S>(stateType);
 
   /// Sets transition that will be called when Event of type [E]
   /// is sent to machine via [StateMachine.transition] method.
@@ -47,7 +48,8 @@ class StateBuilder<S extends State> {
   /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
-  void on<E extends Event>(EventHandler<S, E> eventHandler, {Condition<S, E> condition}) {
+  void on<E extends Event>(EventHandler<S, E> eventHandler,
+      {Condition<S, E> condition}) {
     //   _StateDefinition.transitions[E] = (State s, Event e) => createTransitionTo(s, e);
 
     var choices = _stateDefinition.transitions[E];

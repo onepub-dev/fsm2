@@ -49,8 +49,10 @@ class StateMachine {
     final fromState = _currentState;
     final transitionDefinition = _getTransition(fromState, event);
 
-    if (!_graph.stateDefinitions.containsKey(transitionDefinition.toState.runtimeType)) {
-      throw UnregisteredStateException('State ${transitionDefinition.toState} is not registered');
+    if (!_graph.stateDefinitions
+        .containsKey(transitionDefinition.toState.runtimeType)) {
+      throw UnregisteredStateException(
+          'State ${transitionDefinition.toState} is not registered');
     }
 
     _graph.onTransitionListeners.forEach((onTransition) {
@@ -64,8 +66,10 @@ class StateMachine {
     return transition;
   }
 
-  TransitionDefinition _getTransition<S extends State, E extends Event>(S state, E event) {
-    return _graph.stateDefinitions[state.runtimeType].getTransition(state, event);
+  TransitionDefinition _getTransition<S extends State, E extends Event>(
+      S state, E event) {
+    return _graph.stateDefinitions[state.runtimeType]
+        .getTransition(state, event);
   }
 }
 

@@ -1,3 +1,5 @@
+# 0.8.0
+First release after diverging from fsm package.
 ## 0.0.5
 - Introduced stronger typing in builder methods.
 - Added onEnter and onExits state listeners.

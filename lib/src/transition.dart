@@ -12,7 +12,8 @@ abstract class TransitionDefinition {
 
   /// The transition returned by the [EventHandler].
   final Transition _transition;
-  TransitionDefinition._internal(this.fromState, this.fromStateDefinition, this.event, this._transition);
+  TransitionDefinition._internal(
+      this.fromState, this.fromStateDefinition, this.event, this._transition);
 
   State get toState => _transition.toState;
 
@@ -58,8 +59,10 @@ class ValidTransitionDefinition extends TransitionDefinition {
 /// Machine stays in [state].
 class NoOpTransitionDefinition extends TransitionDefinition {
   /// no transition so [fromState] == [toState].
-  NoOpTransitionDefinition(State fromState, StateDefinition fromStateDefinition, Event event)
-      : super._internal(fromState, fromStateDefinition, event, createTransition(fromState));
+  NoOpTransitionDefinition(
+      State fromState, StateDefinition fromStateDefinition, Event event)
+      : super._internal(
+            fromState, fromStateDefinition, event, createTransition(fromState));
   @override
   Transition trigger(Graph graph) {
     return _transition;
@@ -67,4 +70,5 @@ class NoOpTransitionDefinition extends TransitionDefinition {
 }
 
 typedef TransitionListener = void Function(TransitionDefinition);
-typedef EventHandler<S extends State, E extends Event> = Transition Function(S s, E e);
+typedef EventHandler<S extends State, E extends Event> = Transition Function(
+    S s, E e);
