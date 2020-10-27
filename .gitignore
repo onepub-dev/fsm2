@@ -14,3 +14,4 @@ doc/api/
 *.iml
 
 *.g.dart
+.history
