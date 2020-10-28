@@ -1,7 +1,7 @@
 name: fsm2
-version: 0.8.0
+version: 0.8.2
 homepage: https://github.com/bsutton/fsm2
-description: FMS2 provides an implementation of the core design aspects of the UML state diagrams allowing both declarative transitions and dynamic transitions along with Guard Conditions.
+description: FSM2 provides an implementation of the core design aspects of the UML state diagrams allowing both declarative transitions and dynamic transitions along with Guard Conditions.
 environment: 
   sdk: '>=2.9.0 <3.0.0'
 dev_dependencies: 

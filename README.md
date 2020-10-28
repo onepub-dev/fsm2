@@ -1,5 +1,5 @@
 
-FMS2 provides an implementation of the core design aspects of the UML state diagrams.
+FSM2 provides an implementation of the core design aspects of the UML state diagrams.
 
 Derived from the FSM library which in turn was inspired by [Tinder StateMachine library](https://github.com/Tinder/StateMachine).
 
