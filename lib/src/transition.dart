@@ -5,19 +5,19 @@ import 'state_definition.dart';
 import 'state_machine.dart';
 
 /// Defines FSM transition: the change from one state to another.
-abstract class TransitionDefinition {
-  State fromState;
-  StateDefinition fromStateDefinition;
-  Event event;
+abstract class TransitionDefinition // <S extends State, E extends Event>
+{
+  Type fromState;
+  StateDefinition<State> fromStateDefinition;
+  Type eventType;
 
   /// The transition returned by the [EventHandler].
   final Transition _transition;
-  TransitionDefinition._internal(
-      this.fromState, this.fromStateDefinition, this.event, this._transition);
+  TransitionDefinition._internal(this.fromState, this.fromStateDefinition, this.eventType, this._transition);
 
-  State get toState => _transition.toState;
+  Future<Type> get toState async => (await _transition).toState;
 
-  Transition trigger(Graph graph);
+  Future<Transition> trigger(Graph graph, Event event);
 }
 
 /// Valid transition meaning that machine goes from [fromState]
@@ -26,21 +26,23 @@ abstract class TransitionDefinition {
 /// It contains optional [sideEffect].
 class ValidTransitionDefinition extends TransitionDefinition {
   ValidTransitionDefinition(
-    State fromState,
+    Type fromState,
     StateDefinition fromStateDefinition,
-    Event event,
+    Type eventType,
     Transition transition,
-  ) : super._internal(fromState, fromStateDefinition, event, transition);
+  ) : super._internal(fromState, fromStateDefinition, eventType, transition);
 
   @override
-  Transition trigger(Graph graph) {
-    fromStateDefinition.onExit(fromState, event);
+  Future<Transition> trigger(Graph graph, Event event) async {
+    fromStateDefinition?.onExit(fromState, event);
 
-    _transition.sideEffect();
+    var transition = (await _transition);
 
-    var toStateDefinition = graph.stateDefinitions[toState.runtimeType];
+    if (transition.sideEffect != null) transition.sideEffect();
 
-    toStateDefinition.onEnter(_transition.toState, event);
+    var toStateDefinition = graph.stateDefinitions[(await toState).runtimeType];
+
+    toStateDefinition?.onEnter(transition.toState, event);
 
     return _transition;
   }
@@ -59,16 +61,13 @@ class ValidTransitionDefinition extends TransitionDefinition {
 /// Machine stays in [state].
 class NoOpTransitionDefinition extends TransitionDefinition {
   /// no transition so [fromState] == [toState].
-  NoOpTransitionDefinition(
-      State fromState, StateDefinition fromStateDefinition, Event event)
-      : super._internal(
-            fromState, fromStateDefinition, event, createTransition(fromState));
+  NoOpTransitionDefinition(Type fromState, StateDefinition fromStateDefinition, Type eventType)
+      : super._internal(fromState, fromStateDefinition, eventType, createTransition(fromState));
   @override
-  Transition trigger(Graph graph) {
-    return _transition;
+  Future<Transition> trigger(Graph graph, Event event) {
+    return Future.value(_transition);
   }
 }
 
 typedef TransitionListener = void Function(TransitionDefinition);
-typedef EventHandler<S extends State, E extends Event> = Transition Function(
-    S s, E e);
+typedef EventHandler<E extends Event> = Future<Transition> Function(Type state, E e);

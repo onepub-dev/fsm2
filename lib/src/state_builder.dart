@@ -8,15 +8,18 @@ import 'state_definition.dart';
 
 /// State builder.
 ///
-/// Instance of this class is passed to [GraphBuilder.State] method.
+/// Instance of this class is passed to [GraphBuilder.state] method.
 class StateBuilder<S extends State> {
-  final StateDefinition _stateDefinition;
+  final StateDefinition<S> _stateDefinition;
 
-  StateBuilder(Type stateType)
-      : _stateDefinition = StateDefinition<S>(stateType);
+  StateBuilder(Type stateType) : _stateDefinition = StateDefinition<S>(stateType);
 
-  /// Sets transition that will be called when Event of type [E]
+  /// Sets a dynamically defined transition that will be called when Event of type [E]
   /// is sent to machine via [StateMachine.transition] method.
+  ///
+  /// You should prefer using the [on] method with a statically declared state transition
+  /// wherever possible as it makes static analysis of the [StateMachine] possible by
+  /// calling [StateMachine.analysis()].
   ///
   /// The [eventHandler] is called when [StateMachine.transition] is called
   /// with the the [Event] define by [E]. The eventHandler should be used to transition
@@ -29,6 +32,7 @@ class StateBuilder<S extends State> {
   ///
   /// The [condition] argument implements the UML concept a 'guard condition' and
   /// allows you to register multiple transitions for a single Event.
+  /// Guard conditions allow you to implement a UML 'Choice psuedostate'.
   /// When the Event is fired each transition will be evaluated in the order
   /// they are added to the State.
   /// The first transition whose guard [condition] method returns true will be triggered, any later
@@ -43,13 +47,79 @@ class StateBuilder<S extends State> {
   /// ```
   ///
   /// There MAY be only one transition with a null [condition] and it MUST be the last
-  /// transition added to the [State].
+  /// transition added to the [S]. A transition with a null [condition] is considered the
+  /// 'else' condition in that it fires if none of the transitions with a [condition] evaluate to true.
   ///
   /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
-  void on<E extends Event>(EventHandler<S, E> eventHandler,
-      {Condition<S, E> condition}) {
+  void onDynamic<E extends Event>(EventHandler<E> eventHandler, {Condition<S, E> condition}) {
+    //   _StateDefinition.transitions[E] = (State s, Event e) => createTransitionTo(s, e);
+
+    var choices = _stateDefinition.transitions[E];
+    assert(choices == null || choices.eventType == E);
+
+    if (choices == null) {
+      choices = EventChoices<S, E>();
+      choices.eventType = E;
+    }
+
+    // as this is a dynamic choice we don't know the toState
+    // so we just use the fromState as a place holder that is
+    // ignored.
+    var eventChoice = EventChoice<S, E, S>();
+
+    eventChoice.condition = condition;
+    eventChoice.eventHandler = eventHandler;
+
+    /// there may only be one transition for a given Event with a null choice function
+    /// and it must be the last transition added.
+    _checkHasNoNullChoices<E>(choices);
+
+    choices.eventChoices.add(eventChoice);
+
+    _stateDefinition.transitions[E] = choices;
+  }
+
+  /// Statically declares a transition that will occur when Event of type [E]
+  /// is sent to machine via [StateMachine.transition] method.
+  ///
+  /// Use this method in preference to the [onDynamic] method as it allows
+  /// for static analysis of your state machine.
+  ///
+  /// The [eventHandler] is called when [StateMachine.transition] is called
+  /// with the the [Event] define by [E]. The eventHandler should be used to transition
+  /// the FSM to a new state by calling [StateBuilder.transitionTo].
+  ///
+  /// ```dart
+  /// ..state<MobileNoAcquired>((builder) => builder
+  ///   ..on<UserFound>((state, event) => builder.transitionTo(Login())))
+  /// ```
+  ///
+  /// The [condition] argument implements the UML concept a 'guard condition' and
+  /// allows you to register multiple transitions for a single Event.
+  /// Guard conditions allow you to implement a UML 'Choice psuedostate'.
+  /// When the Event is fired each transition will be evaluated in the order
+  /// they are added to the State.
+  /// The first transition whose guard [condition] method returns true will be triggered, any later
+  /// conditions will not be evaluated.
+  ///
+  /// ```dart
+  /// ..state<MobileNoAcquired>((builder) => builder
+  ///   ..on<UserFound>((state, event) => builder.transitionTo(Login())
+  ///       , condition: (state, event) => event.subscribed == true))
+  ///   ..on<UserFound>((state, event) => builder.transitionTo(AskForSubscription())
+  ///       , condition: (state, event) => event.subscribed == false))
+  /// ```
+  ///
+  /// There MAY be only one transition with a null [condition] and it MUST be the last
+  /// transition added to the [S]. A transition with a null [condition] is considered the
+  /// 'else' condition in that it fires if none of the transitions with a [condition] evaluate to true.
+  ///
+  /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
+  /// transitions for a given Event type with a null [condition] or you try to add a
+  /// transition with a non-null [condition] after adding a transition with a null [condition].
+  void on<E extends Event, TOSTATE extends State>({Condition<S, E> condition, SideEffect sideEffect}) {
     //   _StateDefinition.transitions[E] = (State s, Event e) => createTransitionTo(s, e);
 
     var choices = _stateDefinition.transitions[E];
@@ -58,21 +128,38 @@ class StateBuilder<S extends State> {
       choices.eventType = E;
     }
 
-    var eventChoice = EventChoice<S, E>();
+    var eventChoice = EventChoice<S, E, TOSTATE>();
 
     eventChoice.condition = condition;
-    eventChoice.requestTransition = eventHandler;
+    eventChoice.toState = TOSTATE;
+    eventChoice.sideEffect = sideEffect;
 
     /// there may only be one transition for a given Event with a null choice function
     /// and it must be the last transition added.
-    _checkHasNoNullChoices(choices);
+    _checkHasNoNullChoices<E>(choices);
 
     choices.eventChoices.add(eventChoice);
 
     _stateDefinition.transitions[E] = choices;
   }
 
-  void _checkHasNoNullChoices(EventChoices choices) {
+  /// Adds a nested State definition as per the UML2
+  /// specification for `hierarchically nested states`.
+  void state<C extends State>(
+    BuildState<C> buildState,
+  ) {
+    _stateDefinition.addNestedState(buildState);
+  }
+
+  /// Adds a nested State definition as per the UML2
+  /// specification for `hierarchically nested states`.
+  void costate<CO extends State>(
+    BuildState<CO> buildState,
+  ) {
+    _stateDefinition.addCoState(buildState);
+  }
+
+  void _checkHasNoNullChoices<E extends Event>(EventChoices<S, E> choices) {
     for (var choice in choices.eventChoices) {
       if (choice.condition == null) {
         throw NullChoiceMustBeLastException(choices.eventType);
@@ -94,7 +181,7 @@ class StateBuilder<S extends State> {
   /// desired [toState] and the [sideEffect] that should be called
   /// when the transition is triggered.
   /// Calling [transitionTo] does NOT immediately change the FSM's state
-  /// but rather returns the desired [State] which is then transitioned
+  /// but rather returns the desired [S] which is then transitioned
   /// into once the [EventHandler] returns.
   /// The [sideEffect] callback is called after the [fromState]'s [onExit]
   /// method is called, but before the [toState]'s [onEntry] method is called.
@@ -102,26 +189,28 @@ class StateBuilder<S extends State> {
   /// ..state<MobileNoAcquired>((builder) => builder
   ///   ..on<UserFound>((state, event) => builder.transitionTo(Login()), sideEffect: )
   /// ```
-  Transition transitionTo(State toState, {SideEffect sideEffect}) =>
-      Transition._internal(toState, sideEffect: sideEffect);
+  Future<Transition> transitionTo<TOSTATE extends State>({SideEffect sideEffect}) async =>
+      Transition._internal(TOSTATE, sideEffect: sideEffect);
 
   StateDefinition build() => _stateDefinition;
+
+  void initialState(regionRequired) {}
 }
 
 /// When a user calls [StateBuilder.transitionTo]
 /// Used the Event  [StateBuilder] dsl when  [ is
 /// called. The
-class Transition {
+class Transition<S extends State> {
   Transition._internal(this.toState, {this.sideEffect});
 
-  final State toState;
+  final Type toState;
   final SideEffect sideEffect;
 }
 
-/// global function to avoid contaimating the public api with a ctor
+/// global function to avoid contaminating the public api with a ctor
 /// from Transaction.
-Transition createTransition(State toState) {
-  var transition = Transition._internal(toState);
+Transition createTransition(Type toState, {SideEffect sideEffect}) {
+  var transition = Transition._internal(toState, sideEffect: sideEffect);
 
   return transition;
 }
