@@ -27,59 +27,59 @@ class StateDefinition<S extends State> {
   /// State definitions for a nested set of states.
   final Map<Type, StateDefinition> _nestedStateDefinitions = {};
 
-  // StateDefinition<S> _currentNestedStateDefinition;
-  // State _currentNestedState;
-
-  /// returns null if there are no transitions for the
-  /// passed event out of the current state.
-  Future<TransitionDefinition> _getTransition<E extends Event>(Type state, E event) async {
-    var eventChoices = transitions[event.runtimeType];
-
-    if (eventChoices == null) {
-      return null;
-    }
-
-    return eventChoices.getTransition(state, this, event);
-  }
-
   /// callback used when we enter this [State].
   /// Provide provide a default no-op implementation.
   OnEnter onEnter = (Type toState, Event event) {};
 
   /// callback used when we exiting this [State].
   /// Provide provide a default no-op implementation.
-  OnExit onExit = (State fromState, Event event) {};
+  OnExit onExit = (Type fromState, Event event) {};
 
-  /// recursively searches for a state that can handle [event].
-  /// We start from the leaves of the nested state tree working
-  /// back to the root.
-  // TransitionDefinition findTransition(State fromState, Event event) {
+  /// recursively searches for a [State] that can handle [event].
+  /// We start from the current [State[] up to the root.
+  Future<TransitionDefinition> findTransition<E extends Event>(Type fromState, E event) async {
+    TransitionDefinition transitionDefinition;
+
+    /// does the current state definition have a transition for the give event.
+    transitionDefinition = await _getTransition(event);
+
+    // If no local transitionDefintion then we search the parents
+    var parent = this.parent;
+    while (transitionDefinition == null && parent != null) {
+      transitionDefinition = await parent.findTransition(fromState, event);
+      parent = parent.parent;
+    }
+    return transitionDefinition;
+  }
+
+  // /// Find the [TransitionDefinition] for the given [fromState] and [event].
+  // /// That is, find a transition for [event] that comes from [fromState].
+  // ///
+  // /// If the [event] isn't attached to [fromState] then null is returned.
+  // Future<TransitionDefinition> findTransitionOld<E extends Event>(Type fromState, E event) async {
   //   TransitionDefinition transitionDefinition;
 
-  //   if (_currentNestedStateDefinition != null) {
-  //     transitionDefinition = _currentNestedStateDefinition._getTransition(_currentNestedState, event);
+  //   for (var stateDefinition in _nestedStateDefinitions.values) {
+  //     transitionDefinition = await stateDefinition.findTransition(fromState, event);
+
+  //     if (transitionDefinition != null) break;
   //   }
 
-  //   /// if a sub state doesn't process the event then we will try to.
-  //   transitionDefinition ??= _getTransition(fromState, event);
+  //   transitionDefinition ??= await _getTransition(fromState, event);
+
   //   return transitionDefinition;
   // }
 
-  /// Find the [TransitionDefinition] for the given [fromState] and [event].
-  /// That is, find a transition for [event] that comes from [fromState].
-  ///
-  /// If the [event] isn't attached to [fromState] then null is returned.
-  Future<TransitionDefinition> findTransition<E extends Event>(Type fromState, E event) async {
-    TransitionDefinition transitionDefinition;
-    for (var stateDefinition in _nestedStateDefinitions.values) {
-      transitionDefinition = await stateDefinition.findTransition(fromState, event);
+  /// returns null if there are no transitions for the
+  /// passed event out of the current state.
+  Future<TransitionDefinition> _getTransition<E extends Event>(E event) async {
+    var eventChoices = transitions[event.runtimeType];
 
-      if (transitionDefinition != null) break;
+    if (eventChoices == null) {
+      return null;
     }
 
-    transitionDefinition ??= await _getTransition(fromState, event);
-
-    return transitionDefinition;
+    return await eventChoices.getTransition(stateType, this, event);
   }
 
   List<TransitionDefinition> getStaticTransitions() {
@@ -111,7 +111,7 @@ class StateDefinition<S extends State> {
       }
     }
 
-    transitionDefinition ??= await _getTransition(fromState, event);
+    transitionDefinition ??= await _getTransition(event);
 
     return [transitionDefinition];
   }

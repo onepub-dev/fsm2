@@ -90,9 +90,9 @@ class StateMachine {
     }
     var parent = def.parent;
     while (parent != null) {
-      if (parent.stateType == S.runtimeType) return true;
+      if (parent.stateType == S) return true;
 
-      parent = def.parent;
+      parent = parent.parent;
     }
     return false;
   }
@@ -154,7 +154,7 @@ class StateMachine {
         onTransition(transitionDefinition);
       });
 
-      var transition = await transitionDefinition.trigger(_graph, _currentState,  event);
+      var transition = await transitionDefinition.trigger(_graph, _currentState, event);
       _currentState = (await transition).toState;
       _controller.add(_currentState);
 

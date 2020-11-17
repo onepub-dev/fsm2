@@ -86,19 +86,19 @@ Future<StateMachine> _createMachine<S extends State>(
     (g) => g
       ..initialState<S>()
       ..state<Alive>((b) => b
-        ..onEnter((s, e) => print('entered $s as a result of $e'))
-        ..onExit((s, e) => print('exited $s as a result of $e'))
+        ..onEnter((s, e) => print('onEnter $s as a result of $e'))
+        ..onExit((s, e) => print('onExit $s as a result of $e'))
         ..on<OnBirthday, Young>(condition: (s, e) => human.age < 18, sideEffect: () => human.age++)
         ..on<OnBirthday, MiddleAged>(condition: (s, e) => human.age < 50, sideEffect: () => human.age++)
         ..on<OnBirthday, Old>(condition: (s, e) => human.age < 80, sideEffect: () => human.age++)
-        ..on<OnDeath, Dead>())
-      ..state<Young>((b) => b)
-      ..state<MiddleAged>((b) => b)
-      ..state<Old>((b) => b)
+        ..on<OnDeath, Dead>()
+        ..state<Young>((b) => b)
+        ..state<MiddleAged>((b) => b)
+        ..state<Old>((b) => b))
       ..state<Dead>((b) => b
-        ..on<OnGood, InHeaven>(condition: (s, e) => s.runtimeType == Dead)
-        ..on<OnGood, InHeaven>(condition: (s, e) => s.runtimeType == InHell)
-        ..on<OnBad, InHell>(condition: (s, e) => s.runtimeType == InHeaven)
+        ..on<OnGood, InHeaven>(condition: (s, e) => s == Dead)
+        ..on<OnGood, InHeaven>(condition: (s, e) => s == InHell)
+        ..on<OnBad, InHell>(condition: (s, e) => s == InHeaven)
         ..state<InHeaven>((b) => b)
         ..state<InHell>((b) => b))
       ..onTransition((td) => watcher.log('${td.eventType}')),
