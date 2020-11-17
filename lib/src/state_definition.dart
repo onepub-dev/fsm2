@@ -48,7 +48,7 @@ class StateDefinition<S extends State> {
 
   /// callback used when we exiting this [State].
   /// Provide provide a default no-op implementation.
-  OnExit onExit = (Type fromState, Event event) {};
+  OnExit onExit = (State fromState, Event event) {};
 
   /// recursively searches for a state that can handle [event].
   /// We start from the leaves of the nested state tree working
@@ -129,7 +129,7 @@ class StateDefinition<S extends State> {
   /// A state may have any number of costates.
   /// All co-states simultaneously have a state
   /// This allows
-  void addCoState(buildState) {}
+  void addCoState<CO extends State>(BuildState<CO> buildState) {}
 
   /// recursively searches through the list of nested [StateDefinitions]
   /// for a [StateDefinition] of type [runtimeType];

@@ -24,24 +24,20 @@ void main() {
     expect(machine.isInState<Alive>(), equals(true));
   });
 
-  test('State Alive with OnBirthday should transition to Young and log', () async {
+  test('Test simple transition', () async {
     final machine = await _createMachine<Alive>(watcher, human);
     await machine.transition(OnBirthday());
     expect(machine.isInState<Young>(), equals(true));
     verifyInOrder([watcher.log('OnBirthday')]);
   });
 
-  test('State Liquid with OnFroze should transition to Solid and log', () async {
+  test('Test multiple transitions', () async {
     final machine = await _createMachine<Alive>(watcher, human);
     await machine.transition(OnBirthday());
     expect(machine.isInState<Young>(), equals(true));
-    verifyInOrder([watcher.log('OnBirthday')]);
-  });
+    await machine.transition(OnDeath());
+    expect(machine.isInState<Dead>(), equals(true));
 
-  test('State Liquid with OnVaporized should transition to Gas and log', () async {
-    final machine = await _createMachine<Alive>(watcher, human);
-
-    expect(machine.isInState<Young>(), equals(true));
     verifyInOrder([watcher.log('OnBirthday')]);
   });
 
@@ -54,7 +50,6 @@ void main() {
     } catch (e) {
       expect(e, isA<InvalidTransitionException>());
     }
-    print('done');
   });
 
   test('Unreachable State.', () async {
@@ -91,6 +86,8 @@ Future<StateMachine> _createMachine<S extends State>(
     (g) => g
       ..initialState<S>()
       ..state<Alive>((b) => b
+        ..onEnter((s, e) => print('entered $s as a result of $e'))
+        ..onExit((s, e) => print('exited $s as a result of $e'))
         ..on<OnBirthday, Young>(condition: (s, e) => human.age < 18, sideEffect: () => human.age++)
         ..on<OnBirthday, MiddleAged>(condition: (s, e) => human.age < 50, sideEffect: () => human.age++)
         ..on<OnBirthday, Old>(condition: (s, e) => human.age < 80, sideEffect: () => human.age++)

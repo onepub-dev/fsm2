@@ -15,7 +15,7 @@ typedef BuildGraph = void Function(GraphBuilder);
 typedef SideEffect = void Function();
 
 typedef OnEnter = void Function(Type fromState, Event event);
-typedef OnExit = void Function(Type toState, Event event);
+typedef OnExit = void Function(State toState, Event event);
 
 typedef TransitionListener = void Function(TransitionDefinition);
 typedef EventHandler<E extends Event> = Future<Transition> Function(Type state, E e);

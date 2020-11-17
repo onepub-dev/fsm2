@@ -75,7 +75,7 @@ class StateBuilder<S extends State> {
 
     /// there may only be one transition for a given Event with a null choice function
     /// and it must be the last transition added.
-    _checkHasNoNullChoices<E>(choices);
+    _checkHasNoNullChoices(choices);
 
     choices.eventChoices.add(eventChoice);
 
@@ -137,7 +137,7 @@ class StateBuilder<S extends State> {
 
     /// there may only be one transition for a given Event with a null choice function
     /// and it must be the last transition added.
-    _checkHasNoNullChoices<E>(choices);
+    _checkHasNoNullChoices(choices);
 
     choices.eventChoices.add(eventChoice);
 
@@ -160,9 +160,11 @@ class StateBuilder<S extends State> {
     _stateDefinition.addCoState(buildState);
   }
 
-  void _checkHasNoNullChoices<E extends Event>(EventChoices<S, E> choices) {
+  void _checkHasNoNullChoices(EventChoices choices) {
     for (var choice in choices.eventChoices) {
-      if (choice.condition == null) {
+      // darts generic typedefs are broken for inheritence
+      dynamic a = choice;
+      if ((a.condition as dynamic) == null) {
         throw NullChoiceMustBeLastException(choices.eventType);
       }
     }
@@ -195,5 +197,5 @@ class StateBuilder<S extends State> {
 
   StateDefinition build() => _stateDefinition;
 
-  void initialState(State initialState) {}
+  void initialState<I extends State>() {}
 }

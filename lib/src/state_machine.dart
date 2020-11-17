@@ -8,6 +8,7 @@ import 'package:meta/meta.dart';
 import 'exceptions.dart';
 import 'graph.dart';
 import 'graph_builder.dart';
+import 'state_definition.dart';
 import 'transition.dart';
 
 /// Finite State Machine implementation.
@@ -124,8 +125,13 @@ class StateMachine {
     assert(eventQueue.isNotEmpty);
     var event = eventQueue.removeFirst();
 
-    var transition = await _actualTransition(event.event);
-    event.completer.complete(transition);
+    Transition transition;
+    try {
+      transition = await _actualTransition(event.event);
+      event.completer.complete(transition);
+    } catch (e) {
+      event.completer.completeError(e);
+    }
   }
 
   Future<Transition> _actualTransition<E extends Event>(E event) async {
@@ -148,7 +154,7 @@ class StateMachine {
         onTransition(transitionDefinition);
       });
 
-      var transition = await transitionDefinition.trigger(_graph, event);
+      var transition = await transitionDefinition.trigger(_graph, _currentState,  event);
       _currentState = (await transition).toState;
       _controller.add(_currentState);
 
@@ -171,9 +177,9 @@ class StateMachine {
   @visibleForTesting
   Future<bool> analyse() async {
     var allGood = true;
-    var stateDefinitionMap = Map.from(_graph.stateDefinitions);
+    var stateDefinitionMap = Map<Type, StateDefinition<State>>.from(_graph.stateDefinitions);
 
-    var remainingStateMap = Map.from(_graph.stateDefinitions);
+    var remainingStateMap = Map<Type, StateDefinition<State>>.from(_graph.stateDefinitions);
 
     var foundDynamic = false;
 

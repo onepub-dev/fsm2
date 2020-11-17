@@ -27,8 +27,7 @@ StateMachine createMachine() {
     ..state<AppLaunched>((builder) => builder
       ..onEnter((s, e) => fetchUserStatus())
       ..on<OnForceRegistration, RegistrationRequired>(sideEffect: () => RegistrationWizard.restart())
-      ..onDynamic<OnMissingApiKey>(
-          (s, e) => builder.transitionTo<RegistrationRequired>( sideEffect: () => print('hi')))
+      ..onDynamic<OnMissingApiKey>((s, e) => builder.transitionTo<RegistrationRequired>(sideEffect: () => print('hi')))
       ..on<OnHasApiKey, Registered>())
 
     /// Registered is normally the final state we are looking for
@@ -55,9 +54,8 @@ StateMachine createMachine() {
             (builder) => builder..onEnter((s, e) => RegistrationWizard.setType(RegistrationType.recoverAccount)))
         ..costate<MobileAndRegistrationTypeAcquired>((builder) => builder
           ..state<RegistrationTypeAcquired>((builder) => builder
-            ..state<NewOrganisation>((_) => {})
-            ..state<RecoverAccount>((_) => {})
-            ..state<AcceptInvitation>((_) => {})
+            ..state<RecoverAccount>((_) {})
+            ..state<AcceptInvitation>((_) {})
             ..state<AcquireMobileNo>((builder) => builder
               ..on<OnUserEnteredMobile, MobileNoAcquired>()
 
@@ -65,8 +63,8 @@ StateMachine createMachine() {
               ..state<MobileNoAcquired>((builder) => builder
                 ..onEnter((s, e) => fetchUserDetails())
                 ..on<OnMobileValidated, AcquireUser>()
-                ..state<NewOrganisation>((_) => {})
-                ..state<RecoverAccount>((_) => {})
+                ..state<NewOrganisation>((_) {})
+                ..state<RecoverAccount>((_) {})
                 ..state<AcceptInvitation>((builder) =>
                     builder..on<OnUserNotFound, EmailRequired>()..on<OnUserEnteredMobile, MobileNoAcquired>())
 
@@ -86,103 +84,100 @@ StateMachine createMachine() {
                 // state for each page in the wizard.
                 ..costate<Pages>((builder) => builder
                   ..state<RegionPage>((builder) => builder
-                    ..initialState(RegionRequired)
+                    ..initialState<RegionRequired>()
                     ..on<OnRegionInvalid, RegionRequired>()
                     ..on<OnRegionValidated, RegionAcquired>()
                     ..on<OnRegionNotRequired, RegionNotRequired>()
-                    ..state<RegionRequired>((_) => {})
-                    ..state<RegionAcquired>((_) => {})
-                    ..state<RegionNotRequired>((_) => {}))
-                  ..state<TrialPhonePage>((builder) => builder
-                    ..initialState(TrialRequired)
-                    ..on<OnTrailInvalid, TrialRequired>()
-                    ..on<OnTrailValidated, TrailAcquired>()
-                    ..on<OnTrialNotRequired, TrialNotRequired>()
-                    ..state<TrailRequired>((_) => {})
-                    ..state<TrialAcquired>((_) => {})
-                    ..state<TrialNotRequired>((_) => {}))
-                  ..state<NamePage>((builder) => builder
-                    ..initialState(NameRequired)
-                    ..on<OnNameInvalid, NameRequired>()
-                    ..on<OnNameValidated, NameAcquired>()
-                    ..on<OnNameNotRequired, NameNotRequired>()
-                    ..state<NameRequired>((_) => {})
-                    ..state<NameAcquired>((_) => {})
-                    ..state<NameNotRequired>((_) => {}))
-                  ..state<EmailPage>((builder) => builder
-                    ..initialState(EmailRequired)
-                    ..on<OnEmailInvalid, EmailRequired>()
-                    ..on<OnEmailValidated, EmailAcquired>()
-                    ..on<OnEmailNotRequired, EmailNotRequired>()
-                    ..state<EmailReqired>((_) => {})
-                    ..state<EmailAcquired>((_) => {})
-                    ..state<EmailNotRequired>((_) => {})))))))))
+                    ..state<RegionRequired>((_) {})
+                    ..state<RegionAcquired>((_) {})
+                    ..state<RegionNotRequired>((_) {}))
+                  ..state<TrialPhonePage>((builder) => builder..initialState<TrialRequired>())
+                  ..on<OnTrailInvalid, TrialRequired>()
+                  ..on<OnTrailValidated, TrailAcquired>()
+                  ..on<OnTrialNotRequired, TrialNotRequired>()
+                  ..state<TrailRequired>((_) {})
+                  ..state<TrialAcquired>((_) {})
+                  ..state<TrialNotRequired>((_) {}))
+                ..state<NamePage>((builder) => builder..initialState<NameRequired>())
+                ..on<OnNameInvalid, NameRequired>()
+                ..on<OnNameValidated, NameAcquired>()
+                ..on<OnNameNotRequired, NameNotRequired>()
+                ..state<NameRequired>((_) {})
+                ..state<NameAcquired>((_) {})
+                ..state<NameNotRequired>((_) {}))
+              ..state<EmailPage>((builder) => builder..initialState<EmailRequired>())
+              ..on<OnEmailInvalid, EmailRequired>()
+              ..on<OnEmailValidated, EmailAcquired>()
+              ..on<OnEmailNotRequired, EmailNotRequired>()
+              ..state<EmailReqired>((_) {})
+              ..state<EmailAcquired>((_) {})
+              ..state<EmailNotRequired>((_) {}))))))
     ..onTransition(log));
 
   return stateMachine;
 }
 
-class OnEmailNotRequired extends Event {}
+class OnEmailNotRequired implements Event {}
 
-class OnNameNotRequired extends Event {}
+class OnNameNotRequired implements Event {}
 
-class EmailReqired extends State {}
+class EmailReqired implements State {}
 
-class EmailNotRequired extends State {}
+class EmailNotRequired implements State {}
 
-class OnEmailValidated extends Event {}
+class OnEmailValidated implements Event {}
 
-class EmailAcquired extends State {}
+class EmailAcquired implements State {}
 
-class OnEmailInvalid extends Event {}
+class OnEmailInvalid implements Event {}
 
-class EmailPage extends State {}
+class EmailPage implements State {}
 
-class NameNotRequired extends State {}
+class NameNotRequired implements State {}
 
-class OnNameValidated extends Event {}
+class OnNameValidated implements Event {}
 
-class NameAcquired extends State {}
+class NameAcquired implements State {}
 
-class OnNameInvalid extends Event {}
+class OnNameInvalid implements Event {}
 
-class NameRequired extends State {}
+class NameRequired implements State {}
 
-class NamePage extends State {}
+class NamePage implements State {}
 
-class TrialAcquired extends State {}
+class TrialAcquired implements State {}
 
-class TrailRequired extends State {}
+class TrailRequired implements State {}
 
-class TrialNotRequired extends State {}
+class TrialNotRequired implements State {}
 
-class OnTrialNotRequired extends Event {}
+class OnTrialNotRequired implements Event {}
 
-class TrailAcquired extends State {}
+class TrailAcquired implements State {}
 
-class OnTrailValidated extends Event {}
+class OnTrailValidated implements Event {}
 
-class OnTrailInvalid extends Event {}
+class OnTrailInvalid implements Event {}
 
-class TrialRequired extends State {}
+class TrialRequired implements State {}
 
-class TrialPhonePage extends State {}
+class TrialPhonePage implements State {}
 
-class RegionAcquired extends State {}
+class RegionAcquired implements State {}
 
-class RegionNotRequired extends State {}
+class RegionNotRequired implements State {}
 
-class OnRegionNotRequired extends Event {}
+class OnRegionNotRequired implements Event {}
 
-class OnRegionValidated extends Event {}
+class OnRegionValidated implements Event {}
 
-class OnRegionInvalid extends Event {}
+class OnRegionInvalid implements Event {}
 
-class RegionRequired extends State {}
+class RegionRequired implements State {}
 
-class RegionPage extends State {}
+class RegionPage implements State {}
 
-class Pages extends State {}
+class Pages implements State {}
 
 void fetchUserDetails() {}
 
@@ -260,7 +255,7 @@ class OnMissingApiKey implements Event {}
 class OnHasApiKey implements Event {}
 
 class OnUserSelectedRegistrationType implements Event {
-  var type;
+  RegistrationType type;
 }
 
 void log(TransitionDefinition p1) {}

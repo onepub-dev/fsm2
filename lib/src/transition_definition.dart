@@ -1,4 +1,3 @@
-
 import 'graph.dart';
 import 'state_definition.dart';
 import 'transition.dart';
@@ -17,7 +16,7 @@ abstract class TransitionDefinition // <S extends State, E extends Event>
 
   Future<Type> get toState async => (await _transition).toState;
 
-  Future<Transition> trigger(Graph graph, Event event);
+  Future<Transition> trigger(Graph graph, State state, Event event);
 }
 
 /// Valid transition meaning that machine goes from [fromState]
@@ -33,7 +32,7 @@ class ValidTransitionDefinition extends TransitionDefinition {
   ) : super._internal(fromState, fromStateDefinition, eventType, transition);
 
   @override
-  Future<Transition> trigger(Graph graph, Event event) async {
+  Future<Transition> trigger(Graph graph, State fromState, Event event) async {
     fromStateDefinition?.onExit(fromState, event);
 
     var transition = (await _transition);
@@ -64,8 +63,7 @@ class NoOpTransitionDefinition extends TransitionDefinition {
   NoOpTransitionDefinition(Type fromState, StateDefinition fromStateDefinition, Type eventType)
       : super._internal(fromState, fromStateDefinition, eventType, createTransition(fromState));
   @override
-  Future<Transition> trigger(Graph graph, Event event) {
+  Future<Transition> trigger(Graph graph, State fromState, Event event) {
     return Future.value(_transition);
   }
 }
-
