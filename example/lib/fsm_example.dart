@@ -23,13 +23,13 @@ void main() {
     ..onTransition((t) => print(
         'Recieved Event ${t.eventType} in State ${t.fromState.runtimeType} transitioning to State ${t.toState.runtimeType}')));
 
-  print(machine.currentState is Solid); // TRUE
+  print(machine.isInState<Solid>()); // TRUE
 
   machine.transition(OnMelted());
-  print(machine.currentState is Liquid); // TRUE
+  print(machine.isInState<Liquid>()); // TRUE
 
   machine.transition(OnFroze());
-  print(machine.currentState is Solid); // TRUE
+  print(machine.isInState<Solid>()); // TRUE
 }
 
 class Solid implements State {}

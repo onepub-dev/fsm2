@@ -5,6 +5,7 @@ import 'transition.dart';
 
 import 'exceptions.dart';
 import 'state_definition.dart';
+import 'types.dart';
 
 /// State builder.
 ///
@@ -190,30 +191,9 @@ class StateBuilder<S extends State> {
   ///   ..on<UserFound>((state, event) => builder.transitionTo(Login()), sideEffect: )
   /// ```
   Future<Transition> transitionTo<TOSTATE extends State>({SideEffect sideEffect}) async =>
-      Transition._internal(TOSTATE, sideEffect: sideEffect);
+      createTransition(TOSTATE, sideEffect: sideEffect);
 
   StateDefinition build() => _stateDefinition;
 
-  void initialState(regionRequired) {}
+  void initialState(State initialState) {}
 }
-
-/// When a user calls [StateBuilder.transitionTo]
-/// Used the Event  [StateBuilder] dsl when  [ is
-/// called. The
-class Transition<S extends State> {
-  Transition._internal(this.toState, {this.sideEffect});
-
-  final Type toState;
-  final SideEffect sideEffect;
-}
-
-/// global function to avoid contaminating the public api with a ctor
-/// from Transaction.
-Transition createTransition(Type toState, {SideEffect sideEffect}) {
-  var transition = Transition._internal(toState, sideEffect: sideEffect);
-
-  return transition;
-}
-
-/// The builder.
-typedef BuildState<S extends State> = void Function(StateBuilder<S>);

@@ -3,13 +3,25 @@ import 'package:fsm2/src/state_builder.dart';
 import 'transition.dart';
 
 import 'event_choices.dart';
-import 'state_machine.dart';
+import 'transition_definition.dart';
+import 'types.dart';
 
 class StateDefinition<S extends State> {
   StateDefinition(this.stateType);
 
+  /// If this is a nested state the [parent]
+  /// is a link to the parent of this state.
+  /// If this is not a nested state then parent will be null.
+  StateDefinition parent;
+
+  /// The Type of the [State] that this [StateDefinition] is for.
   final Type stateType;
 
+  /// The maps the set of choices for a given [Event]
+  /// for this [State].
+  /// Choices are defined via calls to either [on] or [onDynamic]
+  /// methods. There can be multiple transitions for each
+  /// event due to the [condition] argument (which is a guard condition).
   final Map<Type, EventChoices> transitions = {};
 
   /// State definitions for a nested set of states.
@@ -53,6 +65,10 @@ class StateDefinition<S extends State> {
   //   return transitionDefinition;
   // }
 
+  /// Find the [TransitionDefinition] for the given [fromState] and [event].
+  /// That is, find a transition for [event] that comes from [fromState].
+  ///
+  /// If the [event] isn't attached to [fromState] then null is returned.
   Future<TransitionDefinition> findTransition<E extends Event>(Type fromState, E event) async {
     TransitionDefinition transitionDefinition;
     for (var stateDefinition in _nestedStateDefinitions.values) {
@@ -105,6 +121,7 @@ class StateDefinition<S extends State> {
     final builder = StateBuilder<C>(C);
     buildState(builder);
     final definition = builder.build();
+    definition.parent = this;
     _nestedStateDefinitions[C] = definition;
   }
 

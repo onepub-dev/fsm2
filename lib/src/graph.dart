@@ -1,6 +1,5 @@
 import 'state_definition.dart';
-import 'state_machine.dart';
-import 'transition.dart';
+import 'types.dart';
 
 class Graph {
   Graph(this.initialState, List<StateDefinition> stateDefinitions, this.onTransitionListeners)

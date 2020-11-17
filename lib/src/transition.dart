@@ -1,73 +1,20 @@
-import 'state_builder.dart';
 
-import 'graph.dart';
-import 'state_definition.dart';
-import 'state_machine.dart';
+import 'types.dart';
 
-/// Defines FSM transition: the change from one state to another.
-abstract class TransitionDefinition // <S extends State, E extends Event>
-{
-  Type fromState;
-  StateDefinition<State> fromStateDefinition;
-  Type eventType;
+/// When a user calls [StateBuilder.transitionTo]
+/// Used the Event  [StateBuilder] dsl when  [ is
+/// called. The
+class Transition<S extends State> {
+  Transition._internal(this.toState, {this.sideEffect});
 
-  /// The transition returned by the [EventHandler].
-  final Transition _transition;
-  TransitionDefinition._internal(this.fromState, this.fromStateDefinition, this.eventType, this._transition);
-
-  Future<Type> get toState async => (await _transition).toState;
-
-  Future<Transition> trigger(Graph graph, Event event);
+  final Type toState;
+  final SideEffect sideEffect;
 }
 
-/// Valid transition meaning that machine goes from [fromState]
-/// to [toState]. Transition is caused by [event].
-///
-/// It contains optional [sideEffect].
-class ValidTransitionDefinition extends TransitionDefinition {
-  ValidTransitionDefinition(
-    Type fromState,
-    StateDefinition fromStateDefinition,
-    Type eventType,
-    Transition transition,
-  ) : super._internal(fromState, fromStateDefinition, eventType, transition);
+/// global function to avoid contaminating the public api with a ctor
+/// from Transaction.
+Transition createTransition(Type toState, {SideEffect sideEffect}) {
+  var transition = Transition._internal(toState, sideEffect: sideEffect);
 
-  @override
-  Future<Transition> trigger(Graph graph, Event event) async {
-    fromStateDefinition?.onExit(fromState, event);
-
-    var transition = (await _transition);
-
-    if (transition.sideEffect != null) transition.sideEffect();
-
-    var toStateDefinition = graph.stateDefinitions[(await toState).runtimeType];
-
-    toStateDefinition?.onEnter(transition.toState, event);
-
-    return _transition;
-  }
+  return transition;
 }
-
-// /// Invalid transition called by [event]. Machine stays in [state].
-// class InvalidTransition extends Transition {
-//   InvalidTransition(this.fromState, this.event);
-
-//   final State fromState;
-//   final Event event;
-// }
-
-/// Valid transition called by [event] but no [condition] method
-/// evaluated to true so no transition will occur.
-/// Machine stays in [state].
-class NoOpTransitionDefinition extends TransitionDefinition {
-  /// no transition so [fromState] == [toState].
-  NoOpTransitionDefinition(Type fromState, StateDefinition fromStateDefinition, Type eventType)
-      : super._internal(fromState, fromStateDefinition, eventType, createTransition(fromState));
-  @override
-  Future<Transition> trigger(Graph graph, Event event) {
-    return Future.value(_transition);
-  }
-}
-
-typedef TransitionListener = void Function(TransitionDefinition);
-typedef EventHandler<E extends Event> = Future<Transition> Function(Type state, E e);

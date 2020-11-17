@@ -1,17 +1,14 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:developer';
+import 'package:fsm2/src/types.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:meta/meta.dart';
 
 import 'exceptions.dart';
 import 'graph.dart';
 import 'graph_builder.dart';
-import 'state_builder.dart';
-
-abstract class State {}
-
-abstract class Event {}
+import 'transition.dart';
 
 /// Finite State Machine implementation.
 ///
@@ -28,9 +25,6 @@ class QueuedEvent {
 }
 
 class StateMachine {
-  /// Returns current State.
-  Type get currentState => _currentState;
-
   /// only one transition can be happening at at time.
   final lock = Lock(enableStackTraces: true);
 
@@ -56,7 +50,54 @@ class StateMachine {
 
   StateMachine._(this._graph) : _currentState = _graph.initialState;
 
+  /// Returns true if the [StateMachine] is in the given state.
+  ///
+  /// For a nested [State] the machine is said to be in current
+  /// leaf [State] plus any parent state.
+  ///
+  /// ```dart
+  ///
+  /// final machine = StateMachine.create((g) => g
+  ///    ..initialState(Solid())
+  ///     ..state<Solid>((b) => b
+  ///       ..state<Soft>((b) => b)
+  ///       ..state<Hard>((b) => b)));
+  /// ```
+  /// If the above machine is in the leaf state 'Soft' then
+  /// it is said to also be in the parent state 'Solid'.
+  /// If a [StateMachine] has 'n' levels of nested state
+  /// then it can be in  upto 'n' States at any given time.
+  ///
+  /// For a co-state [State] the machine is said to be in each
+  /// co-state simultaneously.  Co-States can combine with nested
+  /// states so that a [StateMachine] can be in all of the nested
+  /// states for multiple co-states. So if a machine has two co-states
+  /// and each co-state has 'n' nested states then a [StateMachine]
+  /// could be in 2 * 'n' states plus any parents of each of the
+  /// co-states.
+  ///
+  /// If [state] is not a known [State] then an [UnknownStateException]
+  /// is thrown.
+  bool isInState<S extends State>() {
+    if (_currentState == S) return true;
+
+    /// climb the tree of nested states.
+
+    var def = _graph.findStateDefinition(_currentState);
+    if (def == null) {
+      throw UnknownStateException('The state ${S.runtimeType} has not been registered');
+    }
+    var parent = def.parent;
+    while (parent != null) {
+      if (parent.stateType == S.runtimeType) return true;
+
+      parent = def.parent;
+    }
+    return false;
+  }
+
   /// Call this method with an [event] to transition to a new [State].
+  ///
   /// Returns the a [Tranistion] object that describes the new [State]
   /// the FSM entered as a result of the event.
   ///
@@ -66,7 +107,7 @@ class StateMachine {
   /// A queueing mechanism is used to avoid dead locks, as such
   /// you can call [transition] even whilst in the middle of a call to [transition].
   ///
-  /// Throws a [UnregisteredStateException] if the [event] results in a
+  /// Throws a [UnknownStateException] if the [event] results in a
   /// transition to a [State] that hasn't been registered.
   ///
   Future<Transition> transition<E extends Event>(E event) async {
@@ -92,8 +133,12 @@ class StateMachine {
     return lock.synchronized(() async {
       final fromState = _currentState;
 
-      var stateDefinition = _graph.findStateDefinition(fromState.runtimeType);
+      var stateDefinition = _graph.findStateDefinition(fromState);
       var transitionDefinition = await stateDefinition.findTransition(fromState, event);
+
+      if (transitionDefinition == null) {
+        throw InvalidTransitionException(fromState, event);
+      }
 
       // if (!_graph.stateDefinitions.containsKey(transitionDefinition.toState.runtimeType)) {
       //   throw UnregisteredStateException('State ${transitionDefinition.toState} is not registered');
@@ -162,6 +207,3 @@ class StateMachine {
     return allGood;
   }
 }
-
-typedef OnEnter = void Function(Type fromState, Event event);
-typedef OnExit = void Function(Type toState, Event event);
