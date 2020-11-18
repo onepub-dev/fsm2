@@ -1,7 +1,7 @@
 
 FSM2 provides an implementation of the core design aspects of the UML state diagrams.
 
-Derived from the FSM library which in turn was inspired by [Tinder StateMachine library](https://github.com/Tinder/StateMachine).
+FMS2 is derived from the FSM library which in turn was inspired by [Tinder StateMachine library](https://github.com/Tinder/StateMachine).
 
 State Machines transitions can be defined both declaratively and procedurally.
 
@@ -230,6 +230,59 @@ void main() {
 
 ```
 
+# Analyze
+FSM2 includes a method to check the integrity of your FSM machine.
+
+The analyse method checks that there is a path from the initial state to every state in the tree.
+
+The analyse method outputs a log noting any States that can't be reached.
+
+To run an analysis:
+
+```dart
+final machine = StateMachine.create((g) => g
+    ..initialState(Solid())
+    ..state<Solid>((b) => b
+      ..on<OnMelted>((s, e) => b.transitionTo(
+            Liquid(),
+            sideEffect: () => print('Melted'),
+          )))
+   ));
+await machine.analyse();
+```
+
+# Visualise your FSM
+It can be useful to visualise you FSM and with that in mind FSM2 is able to export your FSM to the dot format.
+
+https://www.graphviz.org/doc/info/lang.html
+
+There are a number of tools tha can display a dot file, the simplest is xdot which can be installed by:
+
+```bash
+apt install xdot
+```
+
+To generate a dot file run: 
+
+```dart
+final machine = StateMachine.create((g) => g
+    ..initialState(Solid())
+    ..state<Solid>((b) => b
+      ..on<OnMelted>((s, e) => b.transitionTo(
+            Liquid(),
+            sideEffect: () => print('Melted'),
+          )))
+   ));
+await machine.export('/path/to/dot/file');
+```
+
+You can then visualise the results via:
+
+```bash
+xdot /part/to/dot/file
+```
+
+
 ## Example classes
 
 The above examples use the following classes.
@@ -254,6 +307,8 @@ class OnHeat implements Event {
   OnHeat({this.deltaDegrees})
 }
 ```
+
+
 
 ## Features and bugs
 
