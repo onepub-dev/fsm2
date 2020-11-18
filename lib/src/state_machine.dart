@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:developer';
-import 'dart:io';
 import 'package:fsm2/src/transition_definition.dart';
 import 'package:fsm2/src/types.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:meta/meta.dart';
 
+import 'dot_exporter.dart';
 import 'exceptions.dart';
 import 'graph.dart';
 import 'graph_builder.dart';
@@ -52,6 +52,8 @@ class StateMachine {
   }
 
   StateMachine._(this._graph) : _currentState = _graph.initialState;
+
+  List<StateDefinition<State>> get topStateDefinitions => _graph.topStateDefinitions;
 
   /// Returns true if the [StateMachine] is in the given state.
   ///
@@ -204,6 +206,25 @@ class StateMachine {
         log('State: ${state.stateType}');
       }
     }
+
+    /// check that no 'path' has the same state twice.
+    // for (var stateDefinition in _graph.stateDefinitions.values) {
+        
+    //     var parent = stateDefinition.parent;
+    //     while (parent != null)
+    //     {
+    //       if (parent.stateType == stateDefinition.stateType)
+    //       {
+    //         allGood = false;
+    //         log()
+    //       }
+    //     }
+    //     if (toState == null) {
+    //       log('Found dynamic transition for ${transitionDefinition.eventType}, transition will be ignored.');
+    //       foundDynamic = true;
+    //       continue;
+    //     }
+    
     return allGood;
   }
 
@@ -223,11 +244,8 @@ class StateMachine {
   /// xdot <path>
   /// ```
   Future<void> export(String path) async {
-    var nodeRoots = <_NodePath>[];
-    await traverseTree((stateDefinition, transitionDefinition) async =>
-        await _addNode(nodeRoots, stateDefinition, transitionDefinition));
-
-    await _saveToDot(path, nodeRoots);
+    var exporter = DotExporter(this);
+    await exporter.export(path);
   }
 
   /// Traverses the State tree calling listener for each statically defined
@@ -247,133 +265,7 @@ class StateMachine {
     }
   }
 
-  Future<void> _addNode(
-      List<_NodePath> nodeRoots, StateDefinition stateDefinition, TransitionDefinition transitionDefinition) async {
-    var appended = false;
-
-    String cluster;
-
-    var toState = await transitionDefinition.toState;
-
-    var toDef = _graph.findStateDefinition(toState);
-
-    if (toDef != null && toDef.parent != null) {
-      cluster = toDef.parent.stateType.toString();
-    }
-
-    var node = _Node(stateDefinition.stateType, transitionDefinition.eventType, toState, cluster: cluster);
-
-    /// see if we have a path that ends with [fromState]
-    for (var path in nodeRoots) {
-      if (path.last.fromState == stateDefinition.stateType) {
-        path.append(node);
-        appended = true;
-        break;
-      }
-    }
-
-    if (!appended) {
-      nodeRoots.add(_NodePath(node));
-    }
-  }
-
-  void _saveToDot(String path, List<_NodePath> nodeRoots) {
-    var file = File(path);
-    var raf = file.openSync(mode: FileMode.write);
-
-    var terminalStateOrdinal = 1;
-
-    raf.writeStringSync('digraph fsm2 {\n');
-
-    var clusters = <String, List<_Node>>{};
-    for (var root in nodeRoots) {
-      var node = root.first;
-      while (node != null) {
-        // print('${node.toState}');
-        if (node.cluster != null) {
-          var cluster = clusters[node.cluster];
-          cluster ??= cluster = <_Node>[];
-          cluster.add(node);
-          clusters[node.cluster] = cluster;
-        }
-        if (node.event == TerminalEvent) {
-          /// we don't label terminal events.
-          raf.writeStringSync('\t${node.fromState} -> ${node.toState}${terminalStateOrdinal++} [shape = point];\n');
-        } else {
-          raf.writeStringSync('\t${node.fromState} -> ${node.toState} [label="${node.event}"];\n');
-        }
-        node = node.next;
-      }
-    }
-
-    /// write out a unique terminal state as a point for each state that had a terminal state.
-    for (var i = 1; i <= terminalStateOrdinal; i++) {
-      raf.writeStringSync('\t${TerminalState}$i [shape=point];\n');
-    }
-    for (var cluster in clusters.keys) {
-      _writeCluster(raf, cluster, clusters[cluster]);
-    }
-
-    raf.writeStringSync('}');
-
-    raf.closeSync();
-  }
-}
-
-// digraph fsm2 {
-//         Alive -> Young [label="OnBirthday"];
-//         Alive -> MiddleAged [label="OnBirthday"];
-//         Alive -> Old [label="OnBirthday"];
-//         Alive -> Dead [label="OnDeath", lhead="clusterDead", compound=true];
-//         Dead -> InHeaven [label="OnGood"];
-//         Dead -> InHeaven [label="OnGood"];
-//         Dead -> InHell [label="OnBad"];
-//       subgraph clusterDead {
-//                 graph [label="Dead", compound=true];
-//           Dead, InHeaven; InHell;
-//         }
-// }
-// ~
-
-void _writeCluster(RandomAccessFile raf, String cluster, List<_Node> nodes) {
-  raf.writeStringSync('''\tsubgraph cluster_${cluster} {
-\t\tgraph [label="${cluster}"];
-''');
-
-  /// put the parent state in the cluster box as well.
-  raf.writeStringSync('\t\t${cluster};');
-
-  /// place each child state into the cluster box.
-  for (var node in nodes) {
-    raf.writeStringSync('${node.toState};');
-  }
-
-  raf.writeStringSync('''\n\t}\n''');
-}
-
-class _NodePath {
-  _Node first;
-  _Node last;
-
-  _NodePath(this.first) : last = first;
-
-  void append(_Node node) {
-    last.next = node;
-    last = node;
-  }
-}
-
-class _Node {
-  Type fromState;
-  Type event;
-  Type toState;
-  String guard;
-  String cluster;
-
-  _Node next;
-  _Node prev;
-
-  _Node(this.fromState, this.event, this.toState, {this.cluster}) {
-    print('node $fromState $event $toState');
+  StateDefinition<State> findStateDefinition(Type stateType) {
+    return _graph.findStateDefinition(stateType);
   }
 }

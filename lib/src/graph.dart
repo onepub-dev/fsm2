@@ -3,12 +3,16 @@ import 'types.dart';
 
 class Graph {
   Graph(this.initialState, List<StateDefinition> stateDefinitions, this.onTransitionListeners)
-      : stateDefinitions = expandStateDefinitions(stateDefinitions);
+      : topStateDefinitions = stateDefinitions,
+        stateDefinitions = expandStateDefinitions(stateDefinitions);
 
   final Type initialState;
 
   /// a full set of stateDefinitions including nested and co-states.
   final Map<Type, StateDefinition> stateDefinitions;
+
+  /// a subset of [stateDefinitions] that only includes the top level states.
+  final List<StateDefinition> topStateDefinitions;
   final List<TransitionListener> onTransitionListeners;
 
   /// scans down the [StateDefinition] tree looking for a matching
@@ -21,7 +25,7 @@ class Graph {
     for (var stateDefinition in stateDefinitions) {
       definitions[stateDefinition.stateType] = stateDefinition;
 
-      var nested = stateDefinition.nestedStateDefinitions();
+      var nested = stateDefinition.nestedStateDefinitions;
       for (var nestedStateDefinition in nested) {
         definitions[nestedStateDefinition.stateType] = nestedStateDefinition;
       }

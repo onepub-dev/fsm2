@@ -13,7 +13,7 @@ import 'package:test/test.dart';
 //   OnForceRegistration
 // }
 void main() {
-  test('registration', () async {
+  test('analyse', () async {
     var fsm = createMachine();
     expect(await fsm.analyse(), equals(true));
   });
@@ -58,8 +58,7 @@ StateMachine createMachine() {
             (builder) => builder..onEnter((s, e) => RegistrationWizard.setType(RegistrationType.newOrganisation)))
         ..state<AcceptInvitation>(
             (builder) => builder..onEnter((s, e) => RegistrationWizard.setType(RegistrationType.recoverAccount)))
-        // co state
-        ..state<MobileAndRegistrationTypeAcquired>((builder) => builder
+        ..costate<MobileAndRegistrationTypeAcquired>((builder) => builder
           ..state<RegistrationTypeAcquired>((builder) => builder
             ..state<RecoverAccount>((_) {})
             ..state<AcceptInvitation>((_) {})

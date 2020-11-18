@@ -186,7 +186,7 @@ class StateBuilder<S extends State> {
   /// Calling [transitionTo] does NOT immediately change the FSM's state
   /// but rather returns the desired [S] which is then transitioned
   /// into once the [EventHandler] returns.
-  /// The [sideEffect] callback is called after the [fromState]'s [onExit]
+  /// The [sideEffect] callback is called after the [fromDefinition]'s [onExit]
   /// method is called, but before the [toState]'s [onEntry] method is called.
   /// ```dart
   /// ..state<MobileNoAcquired>((builder) => builder

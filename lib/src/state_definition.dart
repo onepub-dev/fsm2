@@ -128,13 +128,25 @@ class StateDefinition<S extends State> {
     final definition = builder.build();
     definition.parent = this;
     _nestedStateDefinitions[C] = definition;
+
+    /// validate that this is a valid state to add at this point in the tree
+    var parent = definition.parent;
+    while (parent != null) {
+      if (parent.stateType == definition.stateType) {
+        throw InvalidNestedStateException(definition, parent);
+      }
+      parent = parent.parent;
+    }
   }
 
   /// Adds a child co-state to this state defintion.
   /// A state may have any number of costates.
   /// All co-states simultaneously have a state
   /// This allows
-  void addCoState<CO extends State>(BuildState<CO> buildState) {}
+  void addCoState<CO extends State>(BuildState<CO> buildState) {
+    //TODO: for the moment we hack a costat as a nested state.
+    addNestedState(buildState);
+  }
 
   /// recursively searches through the list of nested [StateDefinitions]
   /// for a [StateDefinition] of type [stateDefinitionType];
@@ -155,7 +167,7 @@ class StateDefinition<S extends State> {
   /// Returns a list of immediately nested [StateDefinition]s.
   /// i.e. we don't search child [StateDefinition]s for further
   /// nested [StateDefinition]s.
-  List<StateDefinition> nestedStateDefinitions() {
+  List<StateDefinition> get nestedStateDefinitions {
     var definitions = <StateDefinition>[];
 
     if (_nestedStateDefinitions.isEmpty) return definitions;
@@ -163,7 +175,7 @@ class StateDefinition<S extends State> {
     for (var stateDefinition in _nestedStateDefinitions.values) {
       definitions.add(stateDefinition);
 
-      var nested = stateDefinition.nestedStateDefinitions();
+      var nested = stateDefinition.nestedStateDefinitions;
       definitions.addAll(nested);
     }
     return definitions;

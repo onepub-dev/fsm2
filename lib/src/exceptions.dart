@@ -1,3 +1,5 @@
+import 'package:fsm2/src/state_definition.dart';
+
 import 'types.dart';
 
 class NullChoiceMustBeLastException implements Exception {
@@ -21,6 +23,16 @@ class UnknownStateException implements Exception {
   String message;
 
   UnknownStateException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+class InvalidNestedStateException implements Exception {
+  String message;
+
+  InvalidNestedStateException(StateDefinition<State> child, StateDefinition<State> parent)
+      : message = 'The child state ${child.stateType} MUST NOT have the same type as a parent state';
 
   @override
   String toString() => message;

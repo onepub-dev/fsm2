@@ -119,7 +119,9 @@ Future<StateMachine> _createMachine<S extends State>(
         ..on<OnGood, InHeaven>(condition: (s, e) => s == Dead)
         ..on<OnGood, InHeaven>(condition: (s, e) => s == InHell)
         ..on<OnBad, InHell>(condition: (s, e) => s == InHeaven)
-        ..state<InHeaven>((b) => b)
+        ..state<InHeaven>((b) => b
+          ..state<Christian>((b) => b..state<Catholic>((b) => b)..state<SalvationArmy>((b) => b))
+          ..state<Budist>((b) => b))
         ..state<InHell>((b) => b))
       ..onTransition((td) => watcher.log('${td.eventType}')),
   );
@@ -144,6 +146,16 @@ class Old implements State {}
 class InHeaven implements State {}
 
 class InHell implements State {}
+
+class Christian implements State {}
+
+class Budist implements State {}
+
+class Catholic implements State {}
+
+class SalvationArmy implements State {}
+
+/// events
 
 class OnBirthday implements Event {}
 
