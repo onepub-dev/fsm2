@@ -1,4 +1,5 @@
 import 'package:fsm2/fsm2.dart';
+import 'package:fsm2/src/state_definition.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
@@ -22,6 +23,25 @@ void main() {
   test('initial State should be Alive', () async {
     final machine = await _createMachine<Alive>(watcher, human);
     expect(machine.isInState<Alive>(), equals(true));
+  });
+
+  test('traverse tree', () async {
+    final machine = await _createMachine<Alive>(watcher, human);
+    var states = <StateDefinition, StateDefinition>{};
+    var transitions = <TransitionDefinition>[];
+    await machine.traverseTree((sd, td) {
+      transitions.add(td);
+      states[sd] = sd;
+    });
+    expect(states.length, equals(7));
+    expect(transitions.length, equals(12));
+    expect(machine.isInState<Alive>(), equals(true));
+  });
+
+  test('Export', () async {
+    final machine = await _createMachine<Alive>(watcher, human);
+    await machine.export('test/test.gv'); // .then(expectAsync0<bool>(() {}));
+    // expectAsync1<bool, String>((a) => machine.export('/tmp/fsm.txt'));
   });
 
   test('Test simple transition', () async {

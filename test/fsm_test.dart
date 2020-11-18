@@ -61,6 +61,7 @@ void main() {
     final watcher = Watcher();
     final machine = _createMachine<Solid>(watcher);
     await machine.transition(OnMelted());
+    expect(machine.isInState<Liquid>(), equals(true));
     verify(watcher.onEnter(Liquid));
     verifyNever(watcher.onExit(Liquid));
   });
@@ -79,11 +80,13 @@ StateMachine _createMachine<S extends State>(
 ) =>
     StateMachine.create((g) => g
           ..initialState<S>()
-          ..state<Solid>((b) =>
-              b..onDynamic<OnMelted>((s, e) => b.transitionTo<Liquid>(sideEffect: () => watcher.log(onMeltedMessage))))
+          ..state<Solid>((b) => b
+            ..onDynamic<OnMelted>((s, e) => b.transitionTo<Liquid>(sideEffect: () => watcher.log(onMeltedMessage)))
+            ..onEnter((s, e) => watcher?.onEnter(s))
+            ..onExit((s, e) => watcher?.onExit(s)))
           ..state<Liquid>((b) => b
-            ..onEnter((s, e) => watcher?.onEnter(s.runtimeType))
-            ..onExit((s, e) => watcher?.onExit(s.runtimeType))
+            ..onEnter((s, e) => watcher?.onEnter(s))
+            ..onExit((s, e) => watcher?.onExit(s))
             ..onDynamic<OnFroze>((s, e) => b.transitionTo<Solid>(sideEffect: () => watcher.log(onFrozenMessage)))
             ..onDynamic<OnVaporized>((s, e) => b.transitionTo<Gas>(sideEffect: () => watcher.log(onVaporizedMessage))))
           ..state<Gas>((b) => b

@@ -1,3 +1,4 @@
+import 'package:fsm2/src/exceptions.dart';
 import 'package:fsm2/src/state_builder.dart';
 
 import 'transition.dart';
@@ -35,62 +36,66 @@ class StateDefinition<S extends State> {
   /// Provide provide a default no-op implementation.
   OnExit onExit = (Type fromState, Event event) {};
 
-  /// recursively searches for a [State] that can handle [event].
-  /// We start from the current [State[] up to the root.
-  Future<TransitionDefinition> findTransition<E extends Event>(Type fromState, E event) async {
+  /// Returns the first transition that can be triggered for the given [event] from the
+  /// given [fromState].
+  ///
+  /// When considering each event we must evaulate the guard condition to determine if the
+  /// transition is valid.
+  ///
+  /// If no triggerable [event] can be found for the [fromState] then a [NoOpTranstionDefinition] is returned
+  /// indicating that no transition will occur under the current conditions.
+  ///
+  /// If no matching [event] can be found for the [fromState] then an [InvalidTransitionException] is thrown.
+  ///
+  /// When searching for an event we have to do a recursive search (starting at the [fromState])
+  /// up the tree of nested states as any events on an ancestor [State] also apply to the child [fromState].
+  ///
+  Future<TransitionDefinition> findTriggerableTransition<E extends Event>(Type fromState, E event) async {
     TransitionDefinition transitionDefinition;
 
-    /// does the current state definition have a transition for the give event.
-    transitionDefinition = await _getTransition(event);
+    if (!hasTransition(fromState, event)) {
+      throw InvalidTransitionException(fromState, event);
+    }
 
-    // If no local transitionDefintion then we search the parents
+    /// does the current state definition have a transition for the give event.
+    transitionDefinition = await _evaluateTransitions(event);
+
+    // If [fromState] doesn't have a transitionDefintion that can be triggered
+    // then we search the parents.
     var parent = this.parent;
-    while (transitionDefinition == null && parent != null) {
-      transitionDefinition = await parent.findTransition(fromState, event);
+    while (transitionDefinition is NoOpTransitionDefinition && parent != null) {
+      transitionDefinition = await parent._evaluateTransitions(event);
       parent = parent.parent;
     }
+
     return transitionDefinition;
   }
 
-  // /// Find the [TransitionDefinition] for the given [fromState] and [event].
-  // /// That is, find a transition for [event] that comes from [fromState].
-  // ///
-  // /// If the [event] isn't attached to [fromState] then null is returned.
-  // Future<TransitionDefinition> findTransitionOld<E extends Event>(Type fromState, E event) async {
-  //   TransitionDefinition transitionDefinition;
-
-  //   for (var stateDefinition in _nestedStateDefinitions.values) {
-  //     transitionDefinition = await stateDefinition.findTransition(fromState, event);
-
-  //     if (transitionDefinition != null) break;
-  //   }
-
-  //   transitionDefinition ??= await _getTransition(fromState, event);
-
-  //   return transitionDefinition;
-  // }
-
-  /// returns null if there are no transitions for the
-  /// passed event out of the current state.
-  Future<TransitionDefinition> _getTransition<E extends Event>(E event) async {
+  /// returns a [NoOpTransitionDefinition] if none of the transitions would be triggered
+  /// or if there where no transitions for [event].
+  Future<TransitionDefinition> _evaluateTransitions<E extends Event>(E event) async {
     var eventChoices = transitions[event.runtimeType];
 
-    if (eventChoices == null) {
-      return null;
-    }
+    if (eventChoices == null) return NoOpTransitionDefinition(stateType, this, E);
 
-    return await eventChoices.getTransition(stateType, this, event);
+    return await eventChoices.evaluateConditions(stateType, this, event);
   }
 
   List<TransitionDefinition> getStaticTransitions() {
     var transitionDefinitions = <TransitionDefinition>[];
+    if (transitions.isEmpty) {
+      transitionDefinitions.add(TerminalTransitionDefinition(stateType, this));
+      return transitionDefinitions;
+    }
 
     for (var choices in transitions.values) {
       for (var choice in choices.eventChoices) {
-        var definition = ValidTransitionDefinition(
-            S, this, choices.eventType, createTransition(choice.toState, sideEffect: choice.sideEffect));
+        if (choice.isStatic) {
+          var definition = ValidTransitionDefinition(
+              S, this, choices.eventType, createTransition(choice.toState, sideEffect: choice.sideEffect));
 
-        transitionDefinitions.add(definition);
+          transitionDefinitions.add(definition);
+        }
       }
     }
 
@@ -100,7 +105,7 @@ class StateDefinition<S extends State> {
   Future<List<TransitionDefinition>> getStaticTransitionsForEvent(Type fromState, Event event) async {
     TransitionDefinition transitionDefinition;
     for (var stateDefinition in _nestedStateDefinitions.values) {
-      transitionDefinition = await stateDefinition.findTransition(fromState, event);
+      transitionDefinition = await stateDefinition.findTriggerableTransition(fromState, event);
 
       if (transitionDefinition != null) break;
     }
@@ -111,7 +116,7 @@ class StateDefinition<S extends State> {
       }
     }
 
-    transitionDefinition ??= await _getTransition(event);
+    transitionDefinition ??= await _evaluateTransitions(event);
 
     return [transitionDefinition];
   }
@@ -132,21 +137,24 @@ class StateDefinition<S extends State> {
   void addCoState<CO extends State>(BuildState<CO> buildState) {}
 
   /// recursively searches through the list of nested [StateDefinitions]
-  /// for a [StateDefinition] of type [runtimeType];
-  StateDefinition<State> findStateDefintion(Type runtimeType) {
+  /// for a [StateDefinition] of type [stateDefinitionType];
+  StateDefinition<State> findStateDefintion(Type stateDefinitionType) {
     StateDefinition found;
     for (var stateDefinition in _nestedStateDefinitions.values) {
-      if (stateDefinition.stateType == runtimeType) {
+      if (stateDefinition.stateType == stateDefinitionType) {
         found = stateDefinition;
         break;
       } else {
-        found = stateDefinition.findStateDefintion(runtimeType);
+        found = stateDefinition.findStateDefintion(stateDefinitionType);
         if (found != null) break;
       }
     }
     return found;
   }
 
+  /// Returns a list of immediately nested [StateDefinition]s.
+  /// i.e. we don't search child [StateDefinition]s for further
+  /// nested [StateDefinition]s.
   List<StateDefinition> nestedStateDefinitions() {
     var definitions = <StateDefinition>[];
 
@@ -159,5 +167,31 @@ class StateDefinition<S extends State> {
       definitions.addAll(nested);
     }
     return definitions;
+  }
+
+  /// Checks that the [fromState] has a transition for [event].
+  ///
+  /// We search up the tree of nested states starting at [fromState]
+  /// as any transitions on parent states can also be applied
+  ///
+  bool hasTransition<E extends Event>(Type fromState, E event) {
+    for (var eventChoices in transitions.values) {
+      if (eventChoices.eventType == event.runtimeType) {
+        return true;
+      }
+    }
+
+    // we didn't find one in the current [StateDefinition] so lets
+    // search the parents.
+    var parent = this.parent;
+    while (parent != null) {
+      for (var eventChoices in parent.transitions.values) {
+        if (eventChoices.eventType == event.runtimeType) {
+          return true;
+        }
+      }
+      parent = parent.parent;
+    }
+    return false;
   }
 }

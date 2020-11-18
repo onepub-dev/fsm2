@@ -6,9 +6,24 @@ import 'transition_definition.dart';
 
 abstract class State {}
 
+/// Class used to represent an implicit terminal [State].
+///
+/// A [State] is considered terminal if it has no explicit transitions ([on] or [onDynamic])
+/// events defined for it.
+class TerminalState extends State {}
+
+/// Class used to represent an implicit event to a terminal [State].
+///
+/// A [State] is considered terminal if it has no explicit transitions ([on] or [onDynamic])
+/// events defined for it.
+///
+/// If a [State] is a terminal state we emmit an implicit transition from the [State] to
+/// the [TerminalState] via a [TerminalEvent].
+class TerminalEvent extends State {}
+
 abstract class Event {}
 
-typedef Condition<S extends State, E extends Event> = bool Function(Type state, E event);
+typedef GuardCondition<S extends State, E extends Event> = bool Function(Type state, E event);
 
 typedef BuildGraph = void Function(GraphBuilder);
 

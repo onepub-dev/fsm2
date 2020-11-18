@@ -6,6 +6,8 @@ class Graph {
       : stateDefinitions = expandStateDefinitions(stateDefinitions);
 
   final Type initialState;
+
+  /// a full set of stateDefinitions including nested and co-states.
   final Map<Type, StateDefinition> stateDefinitions;
   final List<TransitionListener> onTransitionListeners;
 

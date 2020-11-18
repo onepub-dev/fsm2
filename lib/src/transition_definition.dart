@@ -39,7 +39,7 @@ class ValidTransitionDefinition extends TransitionDefinition {
 
     if (transition.sideEffect != null) transition.sideEffect();
 
-    var toStateDefinition = graph.stateDefinitions[(await toState).runtimeType];
+    var toStateDefinition = graph.stateDefinitions[await toState];
 
     toStateDefinition?.onEnter(transition.toState, event);
 
@@ -62,6 +62,20 @@ class NoOpTransitionDefinition extends TransitionDefinition {
   /// no transition so [fromState] == [toState].
   NoOpTransitionDefinition(Type fromState, StateDefinition fromStateDefinition, Type eventType)
       : super._internal(fromState, fromStateDefinition, eventType, createTransition(fromState));
+  @override
+  Future<Transition> trigger(Graph graph, Type fromState, Event event) {
+    return Future.value(_transition);
+  }
+}
+
+/// This is an implicit transition which is added to any terminal State.
+///
+/// A State is considered terminal if there are not transitions out of the
+/// State.
+class TerminalTransitionDefinition extends TransitionDefinition {
+  /// no transition so [fromState] == [toState].
+  TerminalTransitionDefinition(Type fromState, StateDefinition fromStateDefinition)
+      : super._internal(fromState, fromStateDefinition, TerminalEvent, createTransition(TerminalState));
   @override
   Future<Transition> trigger(Graph graph, Type fromState, Event event) {
     return Future.value(_transition);

@@ -54,7 +54,7 @@ class StateBuilder<S extends State> {
   /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
-  void onDynamic<E extends Event>(EventHandler<E> eventHandler, {Condition<S, E> condition}) {
+  void onDynamic<E extends Event>(EventHandler<E> eventHandler, {GuardCondition<S, E> condition}) {
     //   _StateDefinition.transitions[E] = (State s, Event e) => createTransitionTo(s, e);
 
     var choices = _stateDefinition.transitions[E];
@@ -120,7 +120,7 @@ class StateBuilder<S extends State> {
   /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
-  void on<E extends Event, TOSTATE extends State>({Condition<S, E> condition, SideEffect sideEffect}) {
+  void on<E extends Event, TOSTATE extends State>({GuardCondition<S, E> condition, SideEffect sideEffect}) {
     //   _StateDefinition.transitions[E] = (State s, Event e) => createTransitionTo(s, e);
 
     var choices = _stateDefinition.transitions[E];

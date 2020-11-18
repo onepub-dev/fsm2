@@ -13,9 +13,15 @@ import 'package:test/test.dart';
 //   OnForceRegistration
 // }
 void main() {
-  test('registration', () {
+  test('registration', () async {
     var fsm = createMachine();
-    expect(fsm.analyse(), equals(true));
+    expect(await fsm.analyse(), equals(true));
+  });
+
+  test('Export', () async {
+    var fsm = createMachine();
+    await fsm.export('test/test.gv'); // .then(expectAsync0<bool>(() {}));
+    // expectAsync1<bool, String>((a) => machine.export('/tmp/fsm.txt'));
   });
 }
 
@@ -52,7 +58,8 @@ StateMachine createMachine() {
             (builder) => builder..onEnter((s, e) => RegistrationWizard.setType(RegistrationType.newOrganisation)))
         ..state<AcceptInvitation>(
             (builder) => builder..onEnter((s, e) => RegistrationWizard.setType(RegistrationType.recoverAccount)))
-        ..costate<MobileAndRegistrationTypeAcquired>((builder) => builder
+        // co state
+        ..state<MobileAndRegistrationTypeAcquired>((builder) => builder
           ..state<RegistrationTypeAcquired>((builder) => builder
             ..state<RecoverAccount>((_) {})
             ..state<AcceptInvitation>((_) {})
