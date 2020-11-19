@@ -1,3 +1,5 @@
+import 'package:fsm2/src/exceptions.dart';
+
 import 'state_definition.dart';
 import 'types.dart';
 
@@ -23,13 +25,21 @@ class Graph {
     var definitions = <Type, StateDefinition>{};
 
     for (var stateDefinition in stateDefinitions) {
-      definitions[stateDefinition.stateType] = stateDefinition;
+      addStateDefinition(definitions, stateDefinition);
 
       var nested = stateDefinition.nestedStateDefinitions;
       for (var nestedStateDefinition in nested) {
-        definitions[nestedStateDefinition.stateType] = nestedStateDefinition;
+        addStateDefinition(definitions, nestedStateDefinition);
       }
     }
     return definitions;
+  }
+
+  static void addStateDefinition(
+      Map<Type, StateDefinition<State>> stateDefinitions, StateDefinition<State> stateDefinition) {
+    if (stateDefinitions.containsKey(stateDefinition.stateType)) {
+      throw DuplicateStateException(stateDefinition);
+    }
+    stateDefinitions[stateDefinition.stateType] = stateDefinition;
   }
 }
