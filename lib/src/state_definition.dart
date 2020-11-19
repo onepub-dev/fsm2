@@ -7,6 +7,8 @@ import 'event_choices.dart';
 import 'transition_definition.dart';
 import 'types.dart';
 
+enum _ChildrenType { nested, concurrent }
+
 class StateDefinition<S extends State> {
   StateDefinition(this.stateType);
 
@@ -25,8 +27,10 @@ class StateDefinition<S extends State> {
   /// event due to the [condition] argument (which is a guard condition).
   final Map<Type, EventChoices> transitions = {};
 
-  /// State definitions for a nested set of states.
-  final Map<Type, StateDefinition> _nestedStateDefinitions = {};
+  _ChildrenType _childrenType;
+
+  /// State definitions for the set of immediate children of this state.
+  final Map<Type, StateDefinition> childStateDefinitions = {};
 
   /// callback used when we enter this [State].
   /// Provide provide a default no-op implementation.
@@ -104,7 +108,7 @@ class StateDefinition<S extends State> {
 
   Future<List<TransitionDefinition>> getStaticTransitionsForEvent(Type fromState, Event event) async {
     TransitionDefinition transitionDefinition;
-    for (var stateDefinition in _nestedStateDefinitions.values) {
+    for (var stateDefinition in childStateDefinitions.values) {
       transitionDefinition = await stateDefinition.findTriggerableTransition(fromState, event);
 
       if (transitionDefinition != null) break;
@@ -127,7 +131,8 @@ class StateDefinition<S extends State> {
     buildState(builder);
     final definition = builder.build();
     definition.parent = this;
-    _nestedStateDefinitions[C] = definition;
+    definition._childrenType = _ChildrenType.nested;
+    childStateDefinitions[C] = definition;
   }
 
   /// Adds a child co-state to this state defintion.
@@ -135,15 +140,19 @@ class StateDefinition<S extends State> {
   /// All co-states simultaneously have a state
   /// This allows
   void addCoState<CO extends State>(BuildState<CO> buildState) {
-    //TODO: for the moment we hack a costat as a nested state.
-    addNestedState(buildState);
+    final builder = StateBuilder<CO>(CO);
+    buildState(builder);
+    final definition = builder.build();
+    definition.parent = this;
+    definition._childrenType = _ChildrenType.concurrent;
+    childStateDefinitions[CO] = definition;
   }
 
   /// recursively searches through the list of nested [StateDefinitions]
   /// for a [StateDefinition] of type [stateDefinitionType];
   StateDefinition<State> findStateDefintion(Type stateDefinitionType) {
     StateDefinition found;
-    for (var stateDefinition in _nestedStateDefinitions.values) {
+    for (var stateDefinition in childStateDefinitions.values) {
       if (stateDefinition.stateType == stateDefinitionType) {
         found = stateDefinition;
         break;
@@ -161,9 +170,9 @@ class StateDefinition<S extends State> {
   List<StateDefinition> get nestedStateDefinitions {
     var definitions = <StateDefinition>[];
 
-    if (_nestedStateDefinitions.isEmpty) return definitions;
+    if (childStateDefinitions.isEmpty) return definitions;
 
-    for (var stateDefinition in _nestedStateDefinitions.values) {
+    for (var stateDefinition in childStateDefinitions.values) {
       definitions.add(stateDefinition);
 
       var nested = stateDefinition.nestedStateDefinitions;
