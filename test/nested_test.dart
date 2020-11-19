@@ -93,9 +93,8 @@ void main() {
   test('calls onExit', () async {
     final watcher = Watcher();
     final machine = await _createMachine<Alive>(watcher, human);
-    // await machine.transition(OnBirthday());
-    // await machine.transition(OnBirthday());
-    //  verify(watcher.onExit(Old));
+    await machine.transition(OnBirthday());
+    // verify(watcher.onExit((s,e ) => )));
   });
 }
 
@@ -116,10 +115,10 @@ Future<StateMachine> _createMachine<S extends State>(
       ..state<MiddleAged>((b) => b)
       ..state<Old>((b) => b))
     ..state<Dead>((b) => b
-      ..on<OnGood, Budist>(condition: (s, e) => s == Dead)
+      ..on<OnGood, Buddhist>(condition: (s, e) => s == Dead)
       ..on<OnUgly, SalvationArmy>(condition: (s, e) => s == InHell)
       ..on<OnBad, Christian>(condition: (s, e) => s == InHeaven)
-      ..state<InHeaven>((b) => b..state<Budist>((b) => b))
+      ..state<InHeaven>((b) => b..state<Buddhist>((b) => b))
       ..state<InHell>((b) => b..state<Christian>((b) => b..state<Catholic>((b) => b)..state<SalvationArmy>((b) => b))))
     ..onTransition((td) => watcher.log('${td.eventType}')));
 
@@ -146,7 +145,7 @@ class InHell implements State {}
 
 class Christian implements State {}
 
-class Budist implements State {}
+class Buddhist implements State {}
 
 class Catholic implements State {}
 
