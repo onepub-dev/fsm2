@@ -122,7 +122,7 @@ class DotExporter {
 
       raf.writeStringSync('''\n${'\t' * level}// State: $name
 ${'\t' * level}subgraph cluster_${name} {
-\t${'\t' * level}graph [label="${name}", bgcolor="/bugn9/$level" ];
+\t${'\t' * level}graph [label="${name}", bgcolor="/bugn9/$level", fontsize="20" ];
 ''');
       level++;
 
@@ -218,6 +218,6 @@ class _Node {
   _Node prev;
 
   _Node(this.fromDefinition, this.event, this.toState, {this.cluster}) {
-    print('node $fromDefinition $event $toState');
+    print('node ${fromDefinition.stateType} $event $toState');
   }
 }
