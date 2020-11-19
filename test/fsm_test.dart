@@ -31,6 +31,11 @@ void main() {
     watcher = Watcher();
   });
 
+  test('export', () async {
+    final machine = _createMachine<Solid>(watcher);
+    await machine.analyse();
+    await machine.export('test/test.gv');
+  }, skip: true);
   test('initial State should be solid', () {
     final machine = _createMachine<Solid>(watcher);
     expect(machine.isInState<Solid>(), equals(true));
@@ -79,19 +84,17 @@ StateMachine _createMachine<S extends State>(
   Watcher watcher,
 ) =>
     StateMachine.create((g) => g
-          ..initialState<S>()
+          ..initialState<Solid>()
           ..state<Solid>((b) => b
-            ..onDynamic<OnMelted>((s, e) => b.transitionTo<Liquid>(sideEffect: () => watcher.log(onMeltedMessage)))
+            ..on<OnMelted, Liquid>(sideEffect: () => watcher.log(onMeltedMessage))
             ..onEnter((s, e) => watcher?.onEnter(s))
             ..onExit((s, e) => watcher?.onExit(s)))
           ..state<Liquid>((b) => b
             ..onEnter((s, e) => watcher?.onEnter(s))
             ..onExit((s, e) => watcher?.onExit(s))
-            ..onDynamic<OnFroze>((s, e) => b.transitionTo<Solid>(sideEffect: () => watcher.log(onFrozenMessage)))
-            ..onDynamic<OnVaporized>((s, e) => b.transitionTo<Gas>(sideEffect: () => watcher.log(onVaporizedMessage))))
-          ..state<Gas>((b) => b
-            ..onDynamic<OnCondensed>(
-                (s, e) => b.transitionTo<Liquid>(sideEffect: () => watcher.log(onCondensedMessage))))
+            ..on<OnFroze, Solid>(sideEffect: () => watcher.log(onFrozenMessage))
+            ..on<OnVaporized, Gas>(sideEffect: () => watcher.log(onVaporizedMessage)))
+          ..state<Gas>((b) => b..on<OnCondensed, Liquid>(sideEffect: () => watcher.log(onCondensedMessage)))
         // ..onTransition((t) => onTransition(watcher, t))
         );
 
