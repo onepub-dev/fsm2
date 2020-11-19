@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:developer';
+import 'package:fsm2/src/state_of_mind.dart';
 import 'package:fsm2/src/transition_definition.dart';
 import 'package:fsm2/src/types.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:meta/meta.dart';
 
 import 'dot_exporter.dart';
 import 'exceptions.dart';
@@ -20,11 +20,11 @@ import 'transition.dart';
 ///
 ///
 
-class QueuedEvent {
+class _QueuedEvent {
   Event event;
   Completer<Transition> completer = Completer();
 
-  QueuedEvent(this.event);
+  _QueuedEvent(this.event);
 }
 
 class StateMachine {
@@ -33,10 +33,10 @@ class StateMachine {
 
   /// To avoid deadlocks if an event is generated during
   /// a transition we queue transitions.
-  final eventQueue = Queue<QueuedEvent>();
+  final eventQueue = Queue<_QueuedEvent>();
 
   /// Returns [Stream] of States.
-  final StreamController<Type> _controller = StreamController.broadcast();
+  final StreamController<StateOfMind> _controller = StreamController.broadcast();
 
   final Graph _graph;
 
@@ -101,6 +101,10 @@ class StateMachine {
     return false;
   }
 
+  StateOfMind get stateOfMind {
+    return StateOfMind(_currentState);
+  }
+
   /// Call this method with an [event] to transition to a new [State].
   ///
   /// Returns the a [Tranistion] object that describes the new [State]
@@ -116,7 +120,7 @@ class StateMachine {
   /// transition to a [State] that hasn't been registered.
   ///
   Future<Transition> transition<E extends Event>(E event) async {
-    var qe = QueuedEvent(event);
+    var qe = _QueuedEvent(event);
     eventQueue.add(qe);
 
     /// process the event on a microtask.
@@ -152,11 +156,23 @@ class StateMachine {
 
       var transition = await transitionDefinition.trigger(_graph, _currentState, event);
       _currentState = (await transition).toState;
-      _controller.add(_currentState);
+      _controller.add(StateOfMind(_currentState));
 
       return transition;
     });
   }
+
+  /// Returns [Stream] of state types.
+  /// Each time the FSM changes state the new
+  /// state Type is added to the broadcast stream allowing
+  /// you to monitor the transition of states.
+  ///
+  /// Remember that with Nested States a FSM
+  /// can be in multiple states the stream will only
+  /// reflect the state the FMS was directly moved into.
+  /// Any ancestor states that are consequentially moved into
+  /// will not be reflected in the stream.
+  Stream<StateOfMind> get stream => _controller.stream;
 
   /// Checks the state machine to ensure that every [State]
   /// can be reached.
@@ -170,7 +186,6 @@ class StateMachine {
   /// The [analyse] method logs any problems it finds.
   ///
   /// Returns [true] if all States are reachable.
-  @visibleForTesting
   Future<bool> analyse() async {
     var allGood = true;
     var stateDefinitionMap = Map<Type, StateDefinition<State>>.from(_graph.stateDefinitions);

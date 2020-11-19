@@ -7,3 +7,4 @@ export 'src/state_builder.dart';
 export 'src/exceptions.dart';
 export 'src/transition_definition.dart';
 export 'src/types.dart' show State, Event, OnEnter, OnExit;
+export 'src/state_of_mind.dart';
