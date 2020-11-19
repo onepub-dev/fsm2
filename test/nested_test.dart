@@ -40,6 +40,7 @@ void main() {
 
   test('Export', () async {
     final machine = await _createMachine<Alive>(watcher, human);
+    await machine.analyse();
     await machine.export('test/test.gv'); // .then(expectAsync0<bool>(() {}));
     // expectAsync1<bool, String>((a) => machine.export('/tmp/fsm.txt'));
   });
@@ -102,29 +103,25 @@ Future<StateMachine> _createMachine<S extends State>(
   Watcher watcher,
   Human human,
 ) async {
-  var machine = StateMachine.create(
-    (g) => g
-      ..initialState<S>()
-      ..state<Alive>((b) => b
-        ..onEnter((s, e) => print('onEnter $s as a result of $e'))
-        ..onExit((s, e) => print('onExit $s as a result of $e'))
-        ..on<OnBirthday, Young>(condition: (s, e) => human.age < 18, sideEffect: () => human.age++)
-        ..on<OnBirthday, MiddleAged>(condition: (s, e) => human.age < 50, sideEffect: () => human.age++)
-        ..on<OnBirthday, Old>(condition: (s, e) => human.age < 80, sideEffect: () => human.age++)
-        ..on<OnDeath, Dead>()
-        ..state<Young>((b) => b)
-        ..state<MiddleAged>((b) => b)
-        ..state<Old>((b) => b))
-      ..state<Dead>((b) => b
-        ..on<OnGood, InHeaven>(condition: (s, e) => s == Dead)
-        ..on<OnGood, InHeaven>(condition: (s, e) => s == InHell)
-        ..on<OnBad, InHell>(condition: (s, e) => s == InHeaven)
-        ..state<InHeaven>((b) => b
-          ..state<Christian>((b) => b..state<Catholic>((b) => b)..state<SalvationArmy>((b) => b))
-          ..state<Budist>((b) => b))
-        ..state<InHell>((b) => b))
-      ..onTransition((td) => watcher.log('${td.eventType}')),
-  );
+  var machine = StateMachine.create((g) => g
+    ..initialState<S>()
+    ..state<Alive>((b) => b
+      ..onEnter((s, e) => print('onEnter $s as a result of $e'))
+      ..onExit((s, e) => print('onExit $s as a result of $e'))
+      ..on<OnBirthday, Young>(condition: (s, e) => human.age < 18, sideEffect: () => human.age++)
+      ..on<OnBirthday, MiddleAged>(condition: (s, e) => human.age < 50, sideEffect: () => human.age++)
+      ..on<OnBirthday, Old>(condition: (s, e) => human.age < 80, sideEffect: () => human.age++)
+      ..on<OnDeath, Dead>()
+      ..state<Young>((b) => b)
+      ..state<MiddleAged>((b) => b)
+      ..state<Old>((b) => b))
+    ..state<Dead>((b) => b
+      ..on<OnGood, Budist>(condition: (s, e) => s == Dead)
+      ..on<OnUgly, SalvationArmy>(condition: (s, e) => s == InHell)
+      ..on<OnBad, Christian>(condition: (s, e) => s == InHeaven)
+      ..state<InHeaven>((b) => b..state<Budist>((b) => b))
+      ..state<InHell>((b) => b..state<Christian>((b) => b..state<Catholic>((b) => b)..state<SalvationArmy>((b) => b))))
+    ..onTransition((td) => watcher.log('${td.eventType}')));
 
   return machine;
 }
@@ -162,5 +159,7 @@ class OnBirthday implements Event {}
 class OnDeath implements Event {}
 
 class OnGood implements Event {}
+
+class OnUgly implements Event {}
 
 class OnBad implements Event {}
