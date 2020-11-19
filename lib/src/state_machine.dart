@@ -198,33 +198,26 @@ class StateMachine {
     if (remainingStateMap.isNotEmpty) {
       allGood = false;
       if (foundDynamic) {
-        log('As Dynamic transitions were found the analysis may find unreachable States. Try changing any [onDynamic] calls to [on] calls');
+        log('Warning: As Dynamic transitions were found the analysis may find unreachable States. Try changing any [onDynamic] calls to [on] calls');
       }
-      log('The following States cannot be reached.');
+      log('Error: The following States cannot be reached.');
 
       for (var state in remainingStateMap.values) {
-        log('State: ${state.stateType}');
+        log('Error: State: ${state.stateType}');
       }
     }
 
     /// check that no 'path' has the same state twice.
-    // for (var stateDefinition in _graph.stateDefinitions.values) {
-        
-    //     var parent = stateDefinition.parent;
-    //     while (parent != null)
-    //     {
-    //       if (parent.stateType == stateDefinition.stateType)
-    //       {
-    //         allGood = false;
-    //         log()
-    //       }
-    //     }
-    //     if (toState == null) {
-    //       log('Found dynamic transition for ${transitionDefinition.eventType}, transition will be ignored.');
-    //       foundDynamic = true;
-    //       continue;
-    //     }
-    
+    for (var stateDefinition in _graph.stateDefinitions.values) {
+      var parent = stateDefinition.parent;
+      while (parent != null) {
+        if (parent.stateType == stateDefinition.stateType) {
+          allGood = false;
+          log('Error: Found state ${stateDefinition.stateType} has a parent state of the same name. This is not allowed.');
+        }
+        parent = parent.parent;
+      }
+    }
     return allGood;
   }
 
