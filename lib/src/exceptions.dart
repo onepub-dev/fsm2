@@ -28,11 +28,21 @@ class UnknownStateException implements Exception {
   String toString() => message;
 }
 
-class InvalidNestedStateException implements Exception {
+// class InvalidNestedStateException implements Exception {
+//   String message;
+
+//   InvalidNestedStateException(StateDefinition<State> child, StateDefinition<State> parent)
+//       : message = 'The child state ${child.stateType} MUST NOT have the same type as a parent state';
+
+//   @override
+//   String toString() => message;
+// }
+
+class DuplicateStateException implements Exception {
   String message;
 
-  InvalidNestedStateException(StateDefinition<State> child, StateDefinition<State> parent)
-      : message = 'The child state ${child.stateType} MUST NOT have the same type as a parent state';
+  DuplicateStateException(StateDefinition<State> state)
+      : message = 'The state ${state.stateType} is already in use. Every State must be unique.';
 
   @override
   String toString() => message;
