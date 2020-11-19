@@ -128,15 +128,6 @@ class StateDefinition<S extends State> {
     final definition = builder.build();
     definition.parent = this;
     _nestedStateDefinitions[C] = definition;
-
-    /// validate that this is a valid state to add at this point in the tree
-    var parent = definition.parent;
-    while (parent != null) {
-      if (parent.stateType == definition.stateType) {
-        throw InvalidNestedStateException(definition, parent);
-      }
-      parent = parent.parent;
-    }
   }
 
   /// Adds a child co-state to this state defintion.
