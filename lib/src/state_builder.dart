@@ -146,17 +146,13 @@ class StateBuilder<S extends State> {
 
   /// Adds a nested State definition as per the UML2
   /// specification for `hierarchically nested states`.
-  void state<C extends State>(
-    BuildState<C> buildState,
-  ) {
+  void state<C extends State>(BuildState<C> buildState) {
     _stateDefinition.addNestedState(buildState);
   }
 
-  /// Adds a nested State definition as per the UML2
-  /// specification for `hierarchically nested states`.
-  void costate<CO extends State>(
-    BuildState<CO> buildState,
-  ) {
+  /// Adds a costate State definition as per the UML2
+  /// specification for `orthogonal regions`.
+  void costate<CO extends State>(BuildState<CO> buildState) {
     _stateDefinition.addCoState(buildState);
   }
 
@@ -187,7 +183,7 @@ class StateBuilder<S extends State> {
   /// but rather returns the desired [S] which is then transitioned
   /// into once the [EventHandler] returns.
   /// The [sideEffect] callback is called after the [fromDefinition]'s [onExit]
-  /// method is called, but before the [toState]'s [onEntry] method is called.
+  /// method is called, but before the [toState]'s [onEnter] method is called.
   /// ```dart
   /// ..state<MobileNoAcquired>((builder) => builder
   ///   ..on<UserFound>((state, event) => builder.transitionTo(Login()), sideEffect: )
