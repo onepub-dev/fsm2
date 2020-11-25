@@ -140,7 +140,9 @@ abstract class TransitionDefinition<S extends State, E extends Event> {
   /// Can you join a concurrent state
   void callOnEnters(List<StateDefinition> paths, Event event) async {
     for (var toStateDefinition in paths) {
-      if (toStateDefinition.onEnter != null) await toStateDefinition.onEnter(toStateDefinition.stateType, event);
+      if (toStateDefinition.onEnter != null) {
+        await toStateDefinition.onEnter(toStateDefinition.stateType, event);
+      }
     }
   }
 

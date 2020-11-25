@@ -54,12 +54,15 @@ class GraphBuilder {
   }
 
   /// Sets [listener] that will be called on each transition.
-  void onTransition(TransitionListener listener) => _onTransitionListeners.add(listener);
+  void onTransition(TransitionListener listener) =>
+      _onTransitionListeners.add(listener);
 
-  Graph build() => Graph(_initialState, _stateDefinitions, _onTransitionListeners);
+  Graph build() =>
+      Graph(_initialState, _stateDefinitions, _onTransitionListeners);
 
   @visibleForTesting
 
   /// returns a shallow copy of the [_stateDefinitions] map.
-  List<StateDefinition> get stateDefinitions => List<StateDefinition>.from(_stateDefinitions);
+  List<StateDefinition> get stateDefinitions =>
+      List<StateDefinition>.from(_stateDefinitions);
 }

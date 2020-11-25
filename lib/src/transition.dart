@@ -1,4 +1,3 @@
-
 // /// When a user calls [StateBuilder.transitionTo]
 // /// Used the Event  [StateBuilder] dsl when  [ is
 // /// called. The

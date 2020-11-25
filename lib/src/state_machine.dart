@@ -36,7 +36,8 @@ class StateMachine {
   final eventQueue = Queue<_QueuedEvent>();
 
   /// Returns [Stream] of States.
-  final StreamController<StateOfMind> _controller = StreamController.broadcast();
+  final StreamController<StateOfMind> _controller =
+      StreamController.broadcast();
 
   final Graph _graph;
 
@@ -52,7 +53,8 @@ class StateMachine {
   /// expect them. Instead these transitions are logged.
   ///
   /// [production] defaults to false.
-  factory StateMachine.create(BuildGraph buildGraph, {bool production = false}) {
+  factory StateMachine.create(BuildGraph buildGraph,
+      {bool production = false}) {
     final graphBuilder = GraphBuilder();
 
     buildGraph(graphBuilder);
@@ -77,7 +79,8 @@ class StateMachine {
     _stateOfMind.addPath(StatePath.fromLeaf(_graph, initialState));
   }
 
-  List<StateDefinition<State>> get topStateDefinitions => _graph.topStateDefinitions;
+  List<StateDefinition<State>> get topStateDefinitions =>
+      _graph.topStateDefinitions;
 
   /// Returns true if the [StateMachine] is in the given state.
   ///
@@ -184,7 +187,8 @@ class StateMachine {
     /// only one transition at a time.
     return lock.synchronized(() async {
       for (var stateDefinition in _stateOfMind.activeLeafStates()) {
-        var transitionDefinition = await stateDefinition.findTriggerableTransition(stateDefinition.stateType, event);
+        var transitionDefinition = await stateDefinition
+            .findTriggerableTransition(stateDefinition.stateType, event);
 
         _graph.onTransitionListeners.forEach((onTransition) {
           // Some transitions (fork) have multiple targets so we need to
@@ -198,7 +202,8 @@ class StateMachine {
           }
         });
 
-        _stateOfMind = await transitionDefinition.trigger(_graph, _stateOfMind, stateDefinition.stateType, event);
+        _stateOfMind = await transitionDefinition.trigger(
+            _graph, _stateOfMind, stateDefinition.stateType, event);
         _controller.add(_stateOfMind);
       }
 
@@ -241,7 +246,8 @@ class StateMachine {
   /// Returns [true] if all States are reachable.
   bool analyse() {
     var allGood = true;
-    var stateDefinitionMap = Map<Type, StateDefinition<State>>.from(_graph.stateDefinitions);
+    var stateDefinitionMap =
+        Map<Type, StateDefinition<State>>.from(_graph.stateDefinitions);
     // stateDefinitionMap.remove(VirtualRoot);
 
     /// Check initialState is a leaf
@@ -251,7 +257,8 @@ class StateMachine {
       log('Error: initialState must be a leaf state. Found ${_graph.initialState} which is an abstract state.');
     }
 
-    var remainingStateMap = Map<Type, StateDefinition<State>>.from(_graph.stateDefinitions);
+    var remainingStateMap =
+        Map<Type, StateDefinition<State>>.from(_graph.stateDefinitions);
 
     remainingStateMap.remove(_graph.initialState);
     // remainingStateMap.remove(VirtualRoot);
@@ -341,10 +348,13 @@ class StateMachine {
   /// Traverses the State tree calling listener for each state
   /// and each statically defined transition.
   Future<void> traverseTree(
-      void Function(StateDefinition stateDefinition, List<TransitionDefinition> transitionDefinitions) listener,
+      void Function(StateDefinition stateDefinition,
+              List<TransitionDefinition> transitionDefinitions)
+          listener,
       {bool includeInherited = true}) async {
     for (var stateDefinition in _graph.stateDefinitions.values) {
-      await listener.call(stateDefinition, stateDefinition.getTransitions(includeInherited: includeInherited));
+      await listener.call(stateDefinition,
+          stateDefinition.getTransitions(includeInherited: includeInherited));
     }
   }
 

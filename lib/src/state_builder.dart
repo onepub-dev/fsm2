@@ -17,8 +17,9 @@ import 'types.dart';
 class StateBuilder<S extends State> {
   final StateDefinition<S> _stateDefinition;
 
-  StateBuilder(Type stateType) : _stateDefinition = StateDefinition<S>(stateType) {
-    _stateDefinition.setParent( VirtualRoot().definition);
+  StateBuilder(Type stateType)
+      : _stateDefinition = StateDefinition<S>(stateType) {
+    _stateDefinition.setParent(VirtualRoot().definition);
   }
 
   /// Statically declares a transition that will occur when Event of type [E]
@@ -51,13 +52,16 @@ class StateBuilder<S extends State> {
   /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
-  void on<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
-    var onTransition = OnTransition<S, E, TOSTATE>(_stateDefinition, condition, TOSTATE, sideEffect);
+  void on<E extends Event, TOSTATE extends State>(
+      {GuardCondition<E> condition, SideEffect sideEffect}) {
+    var onTransition = OnTransition<S, E, TOSTATE>(
+        _stateDefinition, condition, TOSTATE, sideEffect);
 
     _stateDefinition.addTransition<E>(onTransition);
   }
 
-  void onFork<E extends Event>(BuildFork<E> buildFork, {Function(State, E) condition}) {
+  void onFork<E extends Event>(BuildFork<E> buildFork,
+      {Function(State, E) condition}) {
     final builder = ForkBuilder<E>();
     buildFork(builder);
     final definition = builder.build();
@@ -67,7 +71,8 @@ class StateBuilder<S extends State> {
     _stateDefinition.addTransition(choice);
   }
 
-  void onJoin<JS extends State>(BuildJoin<JS> buildJoin, {Function(JS, Event) condition}) {
+  void onJoin<JS extends State>(BuildJoin<JS> buildJoin,
+      {Function(JS, Event) condition}) {
     final builder = JoinBuilder<JS>(_stateDefinition);
     buildJoin(builder);
     final definition = builder.build();

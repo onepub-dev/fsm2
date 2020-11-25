@@ -4,7 +4,8 @@ import '../types.dart';
 import 'transition_definition.dart';
 
 /// A Join
-class JoinTransitionDefinition<S extends State, E extends Event> extends TransitionDefinition<S, E> {
+class JoinTransitionDefinition<S extends State, E extends Event>
+    extends TransitionDefinition<S, E> {
   @override
   List<Type> get targetStates => [definition.toState];
 

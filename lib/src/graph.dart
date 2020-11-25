@@ -20,11 +20,13 @@ class Graph {
 
   /// scans down the [StateDefinition] tree looking for a matching
   /// state.
-  StateDefinition findStateDefinition(Type runtimeType) => stateDefinitions[runtimeType];
+  StateDefinition findStateDefinition(Type runtimeType) =>
+      stateDefinitions[runtimeType];
 
   /// wire the top state definitions into the stateDefinition map
   /// and into the [VirtualRoot]
-  static Map<Type, StateDefinition> _expandStateDefinitions(List<StateDefinition<State>> topStateDefinitions) {
+  static Map<Type, StateDefinition> _expandStateDefinitions(
+      List<StateDefinition<State>> topStateDefinitions) {
     var definitions = <Type, StateDefinition>{};
 
     addStateDefinition(definitions, VirtualRoot().definition);
@@ -33,7 +35,9 @@ class Graph {
       addStateDefinition(definitions, stateDefinition);
 
       /// wire the root states into the virtual root.
-      VirtualRoot().definition.childStateDefinitions[stateDefinition.stateType] = stateDefinition;
+      VirtualRoot()
+          .definition
+          .childStateDefinitions[stateDefinition.stateType] = stateDefinition;
 
       var nested = stateDefinition.nestedStateDefinitions;
       for (var nestedStateDefinition in nested) {
@@ -44,7 +48,8 @@ class Graph {
   }
 
   static void addStateDefinition(
-      Map<Type, StateDefinition<State>> stateDefinitions, StateDefinition<State> stateDefinition) {
+      Map<Type, StateDefinition<State>> stateDefinitions,
+      StateDefinition<State> stateDefinition) {
     if (stateDefinitions.containsKey(stateDefinition.stateType)) {
       throw DuplicateStateException(stateDefinition);
     }

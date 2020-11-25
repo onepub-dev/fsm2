@@ -7,7 +7,8 @@ class NullChoiceMustBeLastException implements Exception {
   NullChoiceMustBeLastException(this.eventType);
 
   @override
-  String toString() => "The Event ${eventType} already has a transition with a null 'choice'. Only one is allowed";
+  String toString() =>
+      "The Event ${eventType} already has a transition with a null 'choice'. Only one is allowed";
 }
 
 class InvalidTransitionException implements Exception {
@@ -16,7 +17,8 @@ class InvalidTransitionException implements Exception {
   InvalidTransitionException(this.fromState, this.event);
 
   @override
-  String toString() => 'There is no transition for Event ${event.runtimeType} from the State ${fromState}.';
+  String toString() =>
+      'There is no transition for Event ${event.runtimeType} from the State ${fromState}.';
 }
 
 class UnknownStateException implements Exception {
@@ -42,7 +44,8 @@ class DuplicateStateException implements Exception {
   String message;
 
   DuplicateStateException(StateDefinition<State> state)
-      : message = 'The state ${state.stateType} is already in use. Every State must be unique.';
+      : message =
+            'The state ${state.stateType} is already in use. Every State must be unique.';
 
   @override
   String toString() => message;

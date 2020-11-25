@@ -123,9 +123,12 @@ Future<StateMachine> _createMachine<S extends State>(
       ..initialState<Young>()
       ..onEnter((s, e) async => print('onEnter $s as a result of $e'))
       ..onExit((s, e) async => print('onExit $s as a result of $e'))
-      ..on<OnBirthday, Young>(condition: (e) => human.age < 18, sideEffect: () async => human.age++)
-      ..on<OnBirthday, MiddleAged>(condition: (e) => human.age < 50, sideEffect: () async => human.age++)
-      ..on<OnBirthday, Old>(condition: (e) => human.age < 80, sideEffect: () async => human.age++)
+      ..on<OnBirthday, Young>(
+          condition: (e) => human.age < 18, sideEffect: () async => human.age++)
+      ..on<OnBirthday, MiddleAged>(
+          condition: (e) => human.age < 50, sideEffect: () async => human.age++)
+      ..on<OnBirthday, Old>(
+          condition: (e) => human.age < 80, sideEffect: () async => human.age++)
       ..on<OnDeath, Purgatory>()
       ..state<Young>((b) => b)
       ..state<MiddleAged>((b) => b)
@@ -134,11 +137,15 @@ Future<StateMachine> _createMachine<S extends State>(
 
       /// ..initialState<InHeaven>()
       ..state<Purgatory>((b) => b
-        ..on<OnJudged, Buddhist>(condition: (e) => e.judgement == Judgement.good)
+        ..on<OnJudged, Buddhist>(
+            condition: (e) => e.judgement == Judgement.good)
         ..on<OnJudged, Catholic>(condition: (e) => e.judgement == Judgement.bad)
-        ..on<OnJudged, SalvationArmy>(condition: (e) => e.judgement == Judgement.ugly))
+        ..on<OnJudged, SalvationArmy>(
+            condition: (e) => e.judgement == Judgement.ugly))
       ..state<InHeaven>((b) => b..state<Buddhist>((b) => b))
-      ..state<InHell>((b) => b..state<Christian>((b) => b..state<SalvationArmy>((b) {})..state<Catholic>((b) => b))))
+      ..state<InHell>((b) => b
+        ..state<Christian>(
+            (b) => b..state<SalvationArmy>((b) {})..state<Catholic>((b) => b))))
     ..onTransition((from, event, to) => watcher.log('${event.runtimeType}')));
   return machine;
 }

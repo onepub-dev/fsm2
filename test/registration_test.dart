@@ -32,30 +32,38 @@ StateMachine createMachine() {
     /// AppLaunched
     ..state<AppLaunched>((builder) => builder
       ..onEnter((s, e) async => fetchUserStatus())
-      ..on<OnForceRegistration, RegistrationRequired>(sideEffect: () async => RegistrationWizard.restart())
-      ..on<OnMissingApiKey, RegistrationRequired>(sideEffect: () async => print('hi'))
+      ..on<OnForceRegistration, RegistrationRequired>(
+          sideEffect: () async => RegistrationWizard.restart())
+      ..on<OnMissingApiKey, RegistrationRequired>(
+          sideEffect: () async => print('hi'))
       ..on<OnHasApiKey, Registered>())
 
     /// Registered is normally the final state we are looking for
     /// but there a few circumstance where we force the user to register.
-    ..state<Registered>((builder) =>
-        builder..on<OnForceRegistration, RegistrationRequired>(sideEffect: () async => RegistrationWizard.restart))
+    ..state<Registered>((builder) => builder
+      ..on<OnForceRegistration, RegistrationRequired>(
+          sideEffect: () async => RegistrationWizard.restart))
 
     ///RegistrationRequired
     ..state<RegistrationRequired>((builder) => builder
-      ..on<OnUserSelectedRegistrationType, AcceptInvitation>(condition: (e) => e.type == RegistrationType.acceptInvite)
+      ..on<OnUserSelectedRegistrationType, AcceptInvitation>(
+          condition: (e) => e.type == RegistrationType.acceptInvite)
       ..on<OnUserSelectedRegistrationType, NewOrganisation>(
           condition: (e) => e.type == RegistrationType.newOrganisation)
-      ..on<OnUserSelectedRegistrationType, RecoverAccount>(condition: (e) => e.type == RegistrationType.recoverAccount)
+      ..on<OnUserSelectedRegistrationType, RecoverAccount>(
+          condition: (e) => e.type == RegistrationType.recoverAccount)
 
       /// HasRegistrationType
       ..state<RegistrationTypeAcquired>((builder) => builder
-        ..state<NewOrganisation>(
-            (builder) => builder..onEnter((s, e) async => RegistrationWizard.setType(RegistrationType.acceptInvite)))
-        ..state<RecoverAccount>(
-            (builder) => builder..onEnter((s, e) async => RegistrationWizard.setType(RegistrationType.newOrganisation)))
+        ..state<NewOrganisation>((builder) => builder
+          ..onEnter((s, e) async =>
+              RegistrationWizard.setType(RegistrationType.acceptInvite)))
+        ..state<RecoverAccount>((builder) => builder
+          ..onEnter((s, e) async =>
+              RegistrationWizard.setType(RegistrationType.newOrganisation)))
         ..state<AcceptInvitation>((builder) => builder
-          ..onEnter((s, e) async => RegistrationWizard.setType(RegistrationType.recoverAccount))
+          ..onEnter((s, e) async =>
+              RegistrationWizard.setType(RegistrationType.recoverAccount))
           ..on<OnUserNotFound, EmailRequired>()
           ..on<OnUserEnteredMobile, MobileNoAcquired>())
         ..costate<MobileAndRegistrationTypeAcquired>((builder) => builder
@@ -68,17 +76,10 @@ StateMachine createMachine() {
               ..on<OnMobileValidated, AcquireUser>()
 
               /// we fetch the users state based on their mobile.
-              ..state<AcquireUser>((builder) => builder
-                ..on<OnUserNotFound, EmailRequired>()
-                ..on<OnUserDisabled, AccountDisabledTerminal>()
-                ..on<OnUserEnabled, AccountEnabled>()
-                ..on<OnUserAcquisitionFailed, UserAcquistionRetryRequired>())
+              ..state<AcquireUser>((builder) => builder..on<OnUserNotFound, EmailRequired>()..on<OnUserDisabled, AccountDisabledTerminal>()..on<OnUserEnabled, AccountEnabled>()..on<OnUserAcquisitionFailed, UserAcquistionRetryRequired>())
 
               /// The user's account is active
-              ..state<AccountEnabled>((builder) => builder
-                ..on<OnInActiveCustomerFound, InactiveCustomerTerminal>()
-                ..on<OnActiveCustomerFound, ActiveCustomer>()
-                ..on<OnViableInvitiationFound, ViableInvitation>())
+              ..state<AccountEnabled>((builder) => builder..on<OnInActiveCustomerFound, InactiveCustomerTerminal>()..on<OnActiveCustomerFound, ActiveCustomer>()..on<OnViableInvitiationFound, ViableInvitation>())
 
               // state for each page in the wizard.
               ..costate<Pages>((builder) => builder

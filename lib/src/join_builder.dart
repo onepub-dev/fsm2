@@ -10,7 +10,8 @@ import 'types.dart';
 class JoinBuilder<S extends State> {
   final JoinDefinition<S> _joinDefinition;
 
-  JoinBuilder(StateDefinition stateDefinition) : _joinDefinition = JoinDefinition<S>(S);
+  JoinBuilder(StateDefinition stateDefinition)
+      : _joinDefinition = JoinDefinition<S>(S);
 
   JoinDefinition build() => _joinDefinition;
 

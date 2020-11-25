@@ -30,7 +30,9 @@ class DotExporter {
   DotExporter(this.stateMachine);
 
   Future<void> _addEdgePath(
-      List<_EdgePath> nodeRoots, StateDefinition stateDefinition, TransitionDefinition transitionDefinition) async {
+      List<_EdgePath> nodeRoots,
+      StateDefinition stateDefinition,
+      TransitionDefinition transitionDefinition) async {
     var appended = false;
 
     String cluster;
@@ -45,7 +47,8 @@ class DotExporter {
       }
 
       for (var event in transitionDefinition.triggerEvents) {
-        var node = _Edge(stateDefinition, event, targetState, cluster: cluster, terminal: toDef.isTerminal);
+        var node = _Edge(stateDefinition, event, targetState,
+            cluster: cluster, terminal: toDef.isTerminal);
 
         /// see if we have a path that ends with [fromState]
         for (var path in nodeRoots) {
@@ -84,7 +87,8 @@ class DotExporter {
     for (var root in stateRoots) {
       var node = root.first;
       while (node != null) {
-        raf.writeStringSync('\t${node.fromDefinition.stateType} -> ${node.toState} [label="${node.event}"];\n');
+        raf.writeStringSync(
+            '\t${node.fromDefinition.stateType} -> ${node.toState} [label="${node.event}"];\n');
 
         // if the toState is a terminal state we need to write an extra
         // entry to show a transition to the virtual terminal state.
@@ -122,7 +126,8 @@ class DotExporter {
 // }
 // ~
 
-  void _writeSubGraph(RandomAccessFile raf, StateDefinition stateDefinition, int level) {
+  void _writeSubGraph(
+      RandomAccessFile raf, StateDefinition stateDefinition, int level) {
     if (stateDefinition.nestedStateDefinitions.isNotEmpty) {
       var name = stateDefinition.stateType;
 
@@ -133,7 +138,8 @@ ${'\t' * level}subgraph cluster_${name} {
       level++;
 
       /// put the parent state in the cluster box as well.
-      raf.writeStringSync('${'\t' * level}${name} [style="filled" fillcolor="grey" color="black" fontsize="20"];\n');
+      raf.writeStringSync(
+          '${'\t' * level}${name} [style="filled" fillcolor="grey" color="black" fontsize="20"];\n');
 
       /// place each child state into the cluster box.
       raf.writeStringSync('${'\t' * (level)}// nested states\n');
@@ -167,7 +173,8 @@ ${'\t' * level}subgraph cluster_${name} {
 
   void export(String path) async {
     var nodeRoots = <_EdgePath>[];
-    await stateMachine.traverseTree((stateDefinition, transitionDefinitions) async {
+    await stateMachine
+        .traverseTree((stateDefinition, transitionDefinitions) async {
       for (var transitionDefinition in transitionDefinitions) {
         await _addEdgePath(nodeRoots, stateDefinition, transitionDefinition);
       }
@@ -183,18 +190,21 @@ ${'\t' * level}subgraph cluster_${name} {
       /// write out a unique terminal state as a point for each state that had a terminal state.
       raf.writeStringSync('${'\t' * level}// terminal states\n');
       for (var terminal in terminals) {
-        raf.writeStringSync('${'\t' * level}TerminalState$terminal [shape=point];\n');
+        raf.writeStringSync(
+            '${'\t' * level}TerminalState$terminal [shape=point];\n');
       }
     }
   }
 
-  void addTerminalToSubGraph(StateDefinition fromDefinition, int terminalStateOrdinal) {
+  void addTerminalToSubGraph(
+      StateDefinition fromDefinition, int terminalStateOrdinal) {
     var fromState = fromDefinition.stateType;
 
     /// If a state has no children then it is a leaf.
     /// If it has a parent then the terminals should be displayed in the
     /// parents subgraph.
-    if (fromDefinition.nestedStateDefinitions.isEmpty && fromDefinition.parent != VirtualRoot().definition) {
+    if (fromDefinition.nestedStateDefinitions.isEmpty &&
+        fromDefinition.parent != VirtualRoot().definition) {
       fromState = fromDefinition.parent.stateType;
     }
 
@@ -231,7 +241,8 @@ class _Edge {
   _Edge next;
   _Edge prev;
 
-  _Edge(this.fromDefinition, this.event, this.toState, {@required this.terminal, this.cluster}) {
+  _Edge(this.fromDefinition, this.event, this.toState,
+      {@required this.terminal, this.cluster}) {
     print('edge ${fromDefinition.stateType}:$event -> $toState');
   }
 
