@@ -16,7 +16,7 @@ class InvalidTransitionException implements Exception {
   InvalidTransitionException(this.fromState, this.event);
 
   @override
-  String toString() => 'There is no tranisition for Event ${event.runtimeType} from the State ${fromState}.';
+  String toString() => 'There is no transition for Event ${event.runtimeType} from the State ${fromState}.';
 }
 
 class UnknownStateException implements Exception {
@@ -43,6 +43,16 @@ class DuplicateStateException implements Exception {
 
   DuplicateStateException(StateDefinition<State> state)
       : message = 'The state ${state.stateType} is already in use. Every State must be unique.';
+
+  @override
+  String toString() => message;
+}
+
+/// The statemachine has been defined in an invalid fashion.
+class InvalidStateMachine implements Exception {
+  String message;
+
+  InvalidStateMachine(this.message);
 
   @override
   String toString() => message;

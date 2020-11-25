@@ -43,21 +43,21 @@ void main() {
 
   test('State Solid with OnMelted should transition to Liquid and log', () async {
     final machine = _createMachine<Solid>(watcher);
-    await machine.transition(OnMelted());
+    await machine.applyEvent(OnMelted());
     expect(machine.isInState<Liquid>(), equals(true));
     verifyInOrder([watcher.log(onMeltedMessage)]);
   });
 
   test('State Liquid with OnFroze should transition to Solid and log', () async {
     final machine = _createMachine<Liquid>(watcher);
-    await machine.transition(OnFroze());
+    await machine.applyEvent(OnFroze());
     expect(machine.isInState<Solid>(), equals(true));
     verifyInOrder([watcher.log(onFrozenMessage)]);
   });
 
   test('State Liquid with OnVaporized should transition to Gas and log', () async {
     final machine = _createMachine<Liquid>(watcher);
-    await machine.transition(OnVaporized());
+    await machine.applyEvent(OnVaporized());
     expect(machine.isInState<Gas>(), equals(true));
     verifyInOrder([watcher.log(onVaporizedMessage)]);
   });
@@ -65,7 +65,7 @@ void main() {
   test('calls onEnter, but not onExit', () async {
     final watcher = Watcher();
     final machine = _createMachine<Solid>(watcher);
-    await machine.transition(OnMelted());
+    await machine.applyEvent(OnMelted());
     expect(machine.isInState<Liquid>(), equals(true));
     verify(watcher.onEnter(Liquid));
     verifyNever(watcher.onExit(Liquid));
@@ -74,8 +74,8 @@ void main() {
   test('calls onExit', () async {
     final watcher = Watcher();
     final machine = _createMachine<Solid>(watcher);
-    await machine.transition(OnMelted());
-    await machine.transition(OnVaporized());
+    await machine.applyEvent(OnMelted());
+    await machine.applyEvent(OnVaporized());
     verify(watcher.onExit(Liquid));
   });
 }
@@ -83,20 +83,21 @@ void main() {
 StateMachine _createMachine<S extends State>(
   Watcher watcher,
 ) =>
-    StateMachine.create((g) => g
-          ..initialState<Solid>()
+    StateMachine.create(
+        (g) => g
+          ..initialState<S>()
           ..state<Solid>((b) => b
-            ..on<OnMelted, Liquid>(sideEffect: () => watcher.log(onMeltedMessage))
-            ..onEnter((s, e) => watcher?.onEnter(s))
-            ..onExit((s, e) => watcher?.onExit(s)))
+            ..on<OnMelted, Liquid>(sideEffect: () async => watcher.log(onMeltedMessage))
+            ..onEnter((s, e) async => watcher?.onEnter(s))
+            ..onExit((s, e) async => watcher?.onExit(s)))
           ..state<Liquid>((b) => b
-            ..onEnter((s, e) => watcher?.onEnter(s))
-            ..onExit((s, e) => watcher?.onExit(s))
-            ..on<OnFroze, Solid>(sideEffect: () => watcher.log(onFrozenMessage))
-            ..on<OnVaporized, Gas>(sideEffect: () => watcher.log(onVaporizedMessage)))
-          ..state<Gas>((b) => b..on<OnCondensed, Liquid>(sideEffect: () => watcher.log(onCondensedMessage)))
-        // ..onTransition((t) => onTransition(watcher, t))
-        );
+            ..onEnter((s, e) async => watcher?.onEnter(s))
+            ..onExit((s, e) async => watcher?.onExit(s))
+            ..on<OnFroze, Solid>(sideEffect: () async => watcher.log(onFrozenMessage))
+            ..on<OnVaporized, Gas>(sideEffect: () async => watcher.log(onVaporizedMessage)))
+          ..state<Gas>((b) => b..on<OnCondensed, Liquid>(sideEffect: () async => watcher.log(onCondensedMessage)))
+          ..onTransition((from, event, to) => print('${from} ${event} ${to} ')),
+        production: true);
 
 const onMeltedMessage = 'onMeltedMessage';
 const onFrozenMessage = 'onFrozenMessage';

@@ -11,7 +11,8 @@ void main() {
 
 StateMachine _createMachine() {
   return StateMachine.create((g) => g
-    ..initialState<Heating>()
+    ..initialState<DoorClosed>()
+    ..state<DoorClosed>((b) => b..on<OnBake, Baking>()..on<OnToast, Toasting>())
     ..state<DoorOpen>((b) {})
     ..state<Heating>((b) => b
       ..on<OpenDoor, DoorOpen>()
@@ -24,6 +25,8 @@ StateMachine _createMachine() {
 
 class DoorOpen implements State {}
 
+class DoorClosed implements State {}
+
 class Toasting implements State {}
 
 class Baking implements State {}
@@ -35,3 +38,7 @@ class LightOn implements State {}
 class OpenDoor implements Event {}
 
 class OnTurnOff implements Event {}
+
+class OnToast implements Event {}
+
+class OnBake implements Event {}

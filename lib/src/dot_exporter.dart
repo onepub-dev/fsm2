@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'package:meta/meta.dart';
 
 import 'package:fsm2/src/state_machine.dart';
-import 'package:fsm2/src/transition_definition.dart';
 
 import 'state_definition.dart';
-import 'types.dart';
+import 'transitions/transition_definition.dart';
 
 /// Class exports a [StateMachine] to a dot notation file so that the FMS can be visualised.
 ///
@@ -14,9 +14,6 @@ import 'types.dart';
 /// apt install xdot
 ///
 /// https://www.graphviz.org/doc/info/lang.html
-///
-/// The export can only deal with static transisions ([on] not [onDynamic])
-/// as it has no way of determining the final state for dynamic transitions.
 ///
 /// To visualise the resulting file graph run:
 ///
@@ -29,40 +26,44 @@ class DotExporter {
 
   /// creates a map of the terminal ordinals to what
   /// parent state they belong to.
-  var terminalToCluster = <Type, List<int>>{};
+  var terminalsOwnedByCluster = <Type, List<int>>{};
   DotExporter(this.stateMachine);
 
-  Future<void> _addNode(
-      List<_NodePath> nodeRoots, StateDefinition stateDefinition, TransitionDefinition transitionDefinition) async {
+  Future<void> _addEdgePath(
+      List<_EdgePath> nodeRoots, StateDefinition stateDefinition, TransitionDefinition transitionDefinition) async {
     var appended = false;
 
     String cluster;
 
-    var toState = await transitionDefinition.toState;
+    var targetStates = await transitionDefinition.targetStates;
 
-    var toDef = stateMachine.findStateDefinition(toState);
+    for (var targetState in targetStates) {
+      var toDef = stateMachine.findStateDefinition(targetState);
 
-    if (toDef != null && toDef.parent != null) {
-      cluster = toDef.parent.stateType.toString();
-    }
-
-    var node = _Node(stateDefinition, transitionDefinition.eventType, toState, cluster: cluster);
-
-    /// see if we have a path that ends with [fromState]
-    for (var path in nodeRoots) {
-      if (path.last.fromDefinition.stateType == stateDefinition.stateType) {
-        path.append(node);
-        appended = true;
-        break;
+      if (toDef != null && toDef.parent != VirtualRoot().definition) {
+        cluster = toDef.parent.stateType.toString();
       }
-    }
 
-    if (!appended) {
-      nodeRoots.add(_NodePath(node));
+      for (var event in transitionDefinition.triggerEvents) {
+        var node = _Edge(stateDefinition, event, targetState, cluster: cluster, terminal: toDef.isTerminal);
+
+        /// see if we have a path that ends with [fromState]
+        for (var path in nodeRoots) {
+          if (path.last.fromDefinition.stateType == stateDefinition.stateType) {
+            path.append(node);
+            appended = true;
+            break;
+          }
+        }
+
+        if (!appended) {
+          nodeRoots.add(_EdgePath(node));
+        }
+      }
     }
   }
 
-  void _saveToDot(String path, List<_NodePath> stateRoots) {
+  void _saveToDot(String path, List<_EdgePath> stateRoots) {
     var file = File(path);
     var raf = file.openSync(mode: FileMode.write);
 
@@ -76,20 +77,25 @@ class DotExporter {
     raf.closeSync();
   }
 
-  void writeTransitions(RandomAccessFile raf, List<_NodePath> stateRoots) {
+  /// writes out a dot line for every transition.
+  /// It also records any terminal states and creates a virtual transition
+  /// to a terminal state.
+  void writeTransitions(RandomAccessFile raf, List<_EdgePath> stateRoots) {
     for (var root in stateRoots) {
       var node = root.first;
       while (node != null) {
-        // print('${node.toState}');
-        if (node.event == TerminalEvent) {
+        raf.writeStringSync('\t${node.fromDefinition.stateType} -> ${node.toState} [label="${node.event}"];\n');
+
+        // if the toState is a terminal state we need to write an extra
+        // entry to show a transition to the virtual terminal state.
+        if (node.isDestinationTerminal) {
           addTerminalToSubGraph(node.fromDefinition, terminalStateOrdinal);
 
           /// we don't label terminal events and we make them a small dot.
           raf.writeStringSync(
               '\t${node.fromDefinition.stateType} -> ${node.toState}${terminalStateOrdinal++} [shape = point];\n');
-        } else {
-          raf.writeStringSync('\t${node.fromDefinition.stateType} -> ${node.toState} [label="${node.event}"];\n');
         }
+
         node = node.next;
       }
     }
@@ -160,15 +166,18 @@ ${'\t' * level}subgraph cluster_${name} {
   }
 
   void export(String path) async {
-    var nodeRoots = <_NodePath>[];
-    await stateMachine.traverseTree((stateDefinition, transitionDefinition) async =>
-        await _addNode(nodeRoots, stateDefinition, transitionDefinition));
+    var nodeRoots = <_EdgePath>[];
+    await stateMachine.traverseTree((stateDefinition, transitionDefinitions) async {
+      for (var transitionDefinition in transitionDefinitions) {
+        await _addEdgePath(nodeRoots, stateDefinition, transitionDefinition);
+      }
+    });
 
     await _saveToDot(path, nodeRoots);
   }
 
   void writeTerminals(RandomAccessFile raf, Type name, int level) {
-    var terminals = terminalToCluster[name];
+    var terminals = terminalsOwnedByCluster[name];
 
     if (terminals != null) {
       /// write out a unique terminal state as a point for each state that had a terminal state.
@@ -185,39 +194,47 @@ ${'\t' * level}subgraph cluster_${name} {
     /// If a state has no children then it is a leaf.
     /// If it has a parent then the terminals should be displayed in the
     /// parents subgraph.
-    if (fromDefinition.nestedStateDefinitions.isEmpty && fromDefinition.parent != null) {
+    if (fromDefinition.nestedStateDefinitions.isEmpty && fromDefinition.parent != VirtualRoot().definition) {
       fromState = fromDefinition.parent.stateType;
     }
 
-    var terminals = terminalToCluster[fromState] ?? <int>[];
+    var terminals = terminalsOwnedByCluster[fromState] ?? <int>[];
     terminals.add(terminalStateOrdinal);
-    terminalToCluster[fromState] = terminals;
+    terminalsOwnedByCluster[fromState] = terminals;
   }
 }
 
-class _NodePath {
-  _Node first;
-  _Node last;
+// Describes a linked list of edges
+class _EdgePath {
+  _Edge first;
+  _Edge last;
 
-  _NodePath(this.first) : last = first;
+  _EdgePath(this.first) : last = first;
 
-  void append(_Node node) {
+  void append(_Edge node) {
     last.next = node;
     last = node;
   }
 }
 
-class _Node {
+/// Describes an event that transition from one state to another
+class _Edge {
   StateDefinition fromDefinition;
   Type event;
   Type toState;
   String guard;
   String cluster;
 
-  _Node next;
-  _Node prev;
+  /// If the toState is a terminal state (no events leave the state)
+  bool terminal;
 
-  _Node(this.fromDefinition, this.event, this.toState, {this.cluster}) {
-    print('node ${fromDefinition.stateType} $event $toState');
+  _Edge next;
+  _Edge prev;
+
+  _Edge(this.fromDefinition, this.event, this.toState, {@required this.terminal, this.cluster}) {
+    print('edge ${fromDefinition.stateType}:$event -> $toState');
   }
+
+  /// true if the toState is a terminal state.
+  bool get isDestinationTerminal => terminal;
 }

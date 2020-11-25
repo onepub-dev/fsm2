@@ -63,5 +63,3 @@ class GraphBuilder {
   /// returns a shallow copy of the [_stateDefinitions] map.
   List<StateDefinition> get stateDefinitions => List<StateDefinition>.from(_stateDefinitions);
 }
-
-

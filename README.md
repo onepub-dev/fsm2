@@ -22,7 +22,7 @@ void main() {
   final machine = StateMachine.create((g) => g
     ..initialState(Solid())
     ..state<Solid>((b) => b
-      ..on<OnMelted>((s, e) => b.transitionTo(Liquid())))
+      ..on<OnMelted, Liquid>())
  ));
 
 ```
@@ -60,11 +60,9 @@ void main() {
   final machine = StateMachine.create((g) => g
     ..initialState(Solid())
     ..state<Solid>((b) => b
-      ..on<OnHeat>((s,e) => b.transitionTo(Liquid())
-        condition: s.temperature + e.deltaDegrees > 0)
-       ..on<OnHeat>((s,e) => b.transitionTo(Boiling())
-        condition: s.temperature + e.deltaDegrees > 100)
-      ..on<OnMelted>((s, e) => b.transitionTo(Liquid())))
+      ..on<OnHeat, Liquid>(condition: s.temperature + e.deltaDegrees > 0)
+       ..on<OnHeat, Boiling>(condition: s.temperature + e.deltaDegrees > 100)
+      ..on<OnMelted, Liquid>())
  ));
 
 ```
@@ -86,93 +84,9 @@ void main() {
   final machine = StateMachine.create((g) => g
     ..initialState(Solid())
     ..state<Solid>((b) => b
-      ..on<OnHeat>((s,e) => b.transitionTo(Liquid()
-          , sideEffect: () => print('I melted')),
-        condition: s.temperature + e.deltaDegrees > 0)
+      ..on<OnHeat, Liquid>(sideEffect: () => print('I melted'), condition: s.temperature + e.deltaDegrees > 0)
  ));
  ```
-
-## Procedural transitions
-
-Declarative state transitions make it easy to understand a State Machine and all of its transitions.
-However sometimes delcaritive transitions aren't expresive enough to fully capture the transition logic.
-
-As such FSM2 allows you to procedurally code a transition.
-
-Firstly lets take note of the fact that the following call (taken from the above example) doesn't actually perform a transition.
-
-```dart
-b.transitionTo(Liquid())
-```
-
-Rather the call returns a `Transition` object which the StateMachine uses to determine the transition.
-
-
-To understand how this works lets look at the `on` method in more detail.
-
-The `on` method is a lambda of type `EventHandler`
-
-```dart
-typedef EventHandler<S extends State, E extends Event> = Transition Function(S s, E e);
-```
-
-The EventHanlder is passed the current State (s) and the Event (e) registered in the `on` clause.
-
-```dart
-  ..on<OnHeat>((s,e) => b.transitionTo(Liquid())
-```
-
-The event handler is called when the declared event is passed to `machine.transition(OnHeat())`. The EventHandler MUST
-return a `Transition` object which is then used by the StateMachine to transition to the new State defined in the
-`Transition` object.
-
-
-The above code creates a Transition object by calling:
-
-```dart
-b.transitionTo(Liquid());
-```
-
-```dart
-class Transition {
-  final State toState;
-  final SideEffect sideEffect;
-}
-```
-
-As you can see the Transition class also takes a `SideEffect` which is a lambda that will be called after the
-current State's `onExit` method is called but before the new State's `onEntry` method is called.
-
-To pass a SideEffect to the transition object:
-
-```dart
-b.transitionTo(OnHeat(deltaDegrees: 60), sideEffect: () => print('new temp is ${s.currentTemp + e.deltaDegrees}'));
-```
-
-We now understand how the `EventHandler` and `transitionTo` methods work so lets look at how we use these
-to procedurally declare a transition.
-
-```dart
-
-final machine = StateMachine.create((g) => g
-    ..initialState(Solid())
-    ..state<Solid>((b) => b
-     ..on<OnHeat>((s,e) => heatThingsUp(b, s,e))
-
-  ....
-
-  Transition heatThingsUp(StateBuilder b, Solid s, OnHeat e)
-  {
-    var newTemp = s.currentTemp + e.deltaDegrees;
-
-    if (newTemp < 0)
-     return b.transition(OnFroze(newTemp));
-    else if (newTemp < 100)
-     return b.transition(OnLiquid(newTemp));
-    else 
-      return b.transition(OnBoiling(newTemp), sideEffect: () => print('Time for tea'))
-  }
-```
 
 ## onEnter/onExit
 
@@ -196,25 +110,17 @@ void main() {
   final machine = StateMachine.create((g) => g
     ..initialState(Solid())
     ..state<Solid>((b) => b
-      ..on<OnMelted>((s, e) => b.transitionTo(
-            Liquid(),
-            sideEffect: () => print('Melted'),
+      ..on<OnMelted, Liquid>(sideEffect: () => print('Melted'),
           )))
     ..state<Liquid>((b) => b
       ..onEnter((s, e) => print('Entering ${s.runtimeType} State'))
       ..onExit((s, e) => print('Exiting ${s.runtimeType} State'))
-      ..on<OnFroze>((s, e) => b.transitionTo(
-            Solid(),
-            sideEffect: () => print('Frozen'),
+      ..on<OnFroze, Solid>sideEffect: () => print('Frozen'),
           ))
-      ..on<OnVaporized>((s, e) => b.transitionTo(
-            Gas(),
-            sideEffect: () => print('Vaporized'),
+      ..on<OnVaporized, Gas>(sideEffect: () => print('Vaporized'),
           )))
     ..state<Gas>((b) => b
-      ..on<OnCondensed>((s, e) => b.transitionTo(
-            Liquid(),
-            sideEffect: () => print('Condensed'),
+      ..on<OnCondensed, Liquid>(sideEffect: () => print('Condensed'),
           )))
     ..onTransition((t) => print(
         'Recieved Event ${t.event.runtimeType} in State ${t.fromState.runtimeType} transitioning to State ${t.toState.runtimeType}')));
@@ -243,9 +149,7 @@ To run an analysis:
 final machine = StateMachine.create((g) => g
     ..initialState(Solid())
     ..state<Solid>((b) => b
-      ..on<OnMelted>((s, e) => b.transitionTo(
-            Liquid(),
-            sideEffect: () => print('Melted'),
+      ..on<OnMelted, Liquid>(sideEffect: () => print('Melted'),
           )))
    ));
 await machine.analyse();
@@ -268,9 +172,7 @@ To generate a dot file run:
 final machine = StateMachine.create((g) => g
     ..initialState(Solid())
     ..state<Solid>((b) => b
-      ..on<OnMelted>((s, e) => b.transitionTo(
-            Liquid(),
-            sideEffect: () => print('Melted'),
+      ..on<OnMelted, Liquid>(sideEffect: () => print('Melted'),
           )))
    ));
 await machine.export('/path/to/dot/file');

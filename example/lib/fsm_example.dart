@@ -1,34 +1,27 @@
 import 'package:fsm2/fsm2.dart';
 
-void main() {
+void main() async {
   final machine = StateMachine.create((g) => g
     ..initialState<Solid>()
-    ..state<Solid>((b) => b
-      ..onDynamic<OnMelted>((s, e) => b.transitionTo<Liquid>(
-            sideEffect: () => print('Melted'),
-          )))
+    ..state<Solid>((b) => b..on<OnMelted, Liquid>(sideEffect: () async => print('Melted')))
     ..state<Liquid>((b) => b
-      ..onEnter((s, e) => print('Entering ${s.runtimeType} State'))
-      ..onExit((s, e) => print('Exiting ${s.runtimeType} State'))
-      ..onDynamic<OnFroze>((s, e) => b.transitionTo<Solid>(
-            sideEffect: () => print('Frozen'),
-          ))
-      ..onDynamic<OnVaporized>((s, e) => b.transitionTo<Gas>(
-            sideEffect: () => print('Vaporized'),
-          )))
-    ..state<Gas>((b) => b
-      ..onDynamic<OnCondensed>((s, e) => b.transitionTo<Liquid>(
-            sideEffect: () => print('Condensed'),
-          )))
-    ..onTransition((t) => print(
-        'Recieved Event ${t.eventType} in State ${t.fromState.runtimeType} transitioning to State ${t.toState.runtimeType}')));
+      ..onEnter((s, e) async => print('Entering ${s.runtimeType} State'))
+      ..onExit((s, e) async => print('Exiting ${s.runtimeType} State'))
+      ..on<OnFroze, Solid>(sideEffect: () async => print('Frozen'))
+      ..on<OnVaporized, Gas>(sideEffect: () async => print('Vaporized')))
+    ..state<Gas>((b) => b..on<OnCondensed, Liquid>(sideEffect: () async => print('Condensed')))
+    ..onTransition((from, e, to) =>
+        print('Recieved Event ${e} in State ${from.stateType} transitioning to State ${to.stateType}')));
+
+  await machine.analyse();
+  await machine.export('test/test.gv');
 
   print(machine.isInState<Solid>()); // TRUE
 
-  machine.transition(OnMelted());
+  await machine.applyEvent(OnMelted());
   print(machine.isInState<Liquid>()); // TRUE
 
-  machine.transition(OnFroze());
+  await machine.applyEvent(OnFroze());
   print(machine.isInState<Solid>()); // TRUE
 }
 
