@@ -1,13 +1,33 @@
 import 'package:fsm2/fsm2.dart';
 import 'package:test/test.dart';
+import 'package:dcli/dcli.dart' hide equals;
 
 StateMachine machine;
 void main() {
   test('export', () async {
     _createMachine();
     await machine.analyse();
-    await machine.export('test/test.gv');
-  }, skip: false);
+    await machine.export('test/gv/life_test.gv');
+
+    var graph = '''digraph fsm2 {
+	InitialState [shape=point];
+	InitialState -> Twinkle;
+	Twinkle -> Gestation [label="Conception"];
+	Gestation -> Baby [label="Born"];
+	Baby -> Teenager [label="Puberty"];
+	Teenager -> Adult [label="GetDrunk"];
+	Adult -> Dead [label="Death"];
+	Dead -> TerminalState1;
+// terminal states
+TerminalState1 [shape=point];
+}''';
+
+    var lines = read('test/gv/life_test.gv')
+        .toList()
+        .reduce((value, line) => value += '\n' + line);
+
+    expect(lines, equals(graph));
+  });
 }
 
 void _createMachine() {

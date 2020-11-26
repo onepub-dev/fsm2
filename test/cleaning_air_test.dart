@@ -6,7 +6,7 @@ void main() {
   test('export', () async {
     _createMachine();
 
-    await machine.export('test/test.gv');
+    await machine.export('test/gv/cleaning_air_test.gv');
   }, skip: false);
 
   test('fork', () async {
@@ -21,38 +21,26 @@ void main() {
     var som = machine.stateOfMind;
     var paths = som.activeLeafStates();
     expect(paths.length, equals(2));
-    var types =
-        som.pathForLeafState(HandleFan).path.map((sd) => sd.stateType).toList();
-    expect(
-        types, equals([HandleFan, HandleEquipment, CleaningAir, VirtualRoot]));
-    types = som
-        .pathForLeafState(HandleLamp)
-        .path
-        .map((sd) => sd.stateType)
-        .toList();
-    expect(
-        types, equals([HandleLamp, HandleEquipment, CleaningAir, VirtualRoot]));
-
-    await machine.export('test/test.gv');
+    var types = som.pathForLeafState(HandleFan).path.map((sd) => sd.stateType).toList();
+    expect(types, equals([HandleFan, HandleEquipment, CleaningAir, VirtualRoot]));
+    types = som.pathForLeafState(HandleLamp).path.map((sd) => sd.stateType).toList();
+    expect(types, equals([HandleLamp, HandleEquipment, CleaningAir, VirtualRoot]));
   }, skip: false);
 }
 
 void _createMachine() {
   machine = StateMachine.create((g) => g
     ..initialState<CheckingAir>()
-    ..state<CheckingAir>((b) => b
-      ..onFork<OnCheckAir>((b) => b..target<HandleFan>()..target<HandleLamp>(),
-          condition: (s, e) => e.quality < 10))
+    ..state<CheckingAir>((b) =>
+        b..onFork<OnCheckAir>((b) => b..target<HandleFan>()..target<HandleLamp>(), condition: (s, e) => e.quality < 10))
     ..state<CleaningAir>((b) => b
       ..onExit((s, e) async => turnFanOff())
       ..onExit((s, e) async => turnLightOff())
       ..costate<HandleEquipment>((b) => b
-        ..onJoin<WaitForGoodAir>(
-            (b) => b..on<OnAirFlowIncreased>()..on<OnLampOn>())
+        ..onJoin<WaitForGoodAir>((b) => b..on<OnAirFlowIncreased>()..on<OnLampOn>())
         ..state<HandleFan>((b) => b..onEnter((s, e) async => turnFanOn()))
         ..state<HandleLamp>((b) => b..onEnter((s, e) async => turnLightOn())))
-      ..state<WaitForGoodAir>((b) =>
-          b..on<OnCheckAir, CheckingAir>(condition: (e) => e.quality > 20))));
+      ..state<WaitForGoodAir>((b) => b..on<OnGoodAir, CheckingAir>())));
 }
 
 void turnFanOn() {}
@@ -88,3 +76,5 @@ class OnLampOff implements Event {}
 class OnAirFlowIncreased implements Event {}
 
 class OnLampOn implements Event {}
+
+class OnGoodAir implements Event {}

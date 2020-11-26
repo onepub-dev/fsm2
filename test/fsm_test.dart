@@ -1,3 +1,4 @@
+import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -34,8 +35,23 @@ void main() {
   test('export', () async {
     final machine = _createMachine<Solid>(watcher);
     await machine.analyse();
-    await machine.export('test/test.gv');
-  }, skip: true);
+    await machine.export('test/gv/fsm_test.gv');
+
+    var graph = '''digraph fsm2 {
+	InitialState [shape=point];
+	InitialState -> Solid;
+	Solid -> Liquid [label="OnMelted"];
+	Liquid -> Solid [label="OnFroze"];
+	Liquid -> Gas [label="OnVaporized"];
+	Gas -> Liquid [label="OnCondensed"];
+}''';
+
+    var lines = read('test/gv/fsm_test.gv')
+        .toList()
+        .reduce((value, line) => value += '\n' + line);
+
+    expect(lines, equals(graph));
+  });
   test('initial State should be solid', () {
     final machine = _createMachine<Solid>(watcher);
     expect(machine.isInState<Solid>(), equals(true));

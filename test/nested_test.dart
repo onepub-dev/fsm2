@@ -1,3 +1,4 @@
+import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -41,7 +42,13 @@ void main() {
   test('Export', () async {
     final machine = await _createMachine<Young>(watcher, human);
     await machine.analyse();
-    await machine.export('test/test.gv'); // .then(expectAsync0<bool>(() {}));
+    await machine.export('test/gv/nested_test.gv');
+
+    var lines = read('test/gv/nested_test.gv').toList().reduce((value, line) => value += '\n' + line);
+
+    expect(lines, equals(graph));
+
+    // .then(expectAsync0<bool>(() {}));
     // expectAsync1<bool, String>((a) => machine.export('/tmp/fsm.txt'));
   });
 
@@ -123,12 +130,10 @@ Future<StateMachine> _createMachine<S extends State>(
       ..initialState<Young>()
       ..onEnter((s, e) async => print('onEnter $s as a result of $e'))
       ..onExit((s, e) async => print('onExit $s as a result of $e'))
-      ..on<OnBirthday, Young>(
-          condition: (e) => human.age < 18, sideEffect: () async => human.age++)
-      ..on<OnBirthday, MiddleAged>(
-          condition: (e) => human.age < 50, sideEffect: () async => human.age++)
-      ..on<OnBirthday, Old>(
-          condition: (e) => human.age < 80, sideEffect: () async => human.age++)
+      // ..on<OnBirthday, Young>(
+      //     condition: (e) => human.age < 18, sideEffect: () async => human.age++)
+      ..on<OnBirthday, MiddleAged>(condition: (e) => human.age < 50, sideEffect: () async => human.age++)
+      ..on<OnBirthday, Old>(condition: (e) => human.age < 80, sideEffect: () async => human.age++)
       ..on<OnDeath, Purgatory>()
       ..state<Young>((b) => b)
       ..state<MiddleAged>((b) => b)
@@ -137,15 +142,11 @@ Future<StateMachine> _createMachine<S extends State>(
 
       /// ..initialState<InHeaven>()
       ..state<Purgatory>((b) => b
-        ..on<OnJudged, Buddhist>(
-            condition: (e) => e.judgement == Judgement.good)
+        ..on<OnJudged, Buddhist>(condition: (e) => e.judgement == Judgement.good)
         ..on<OnJudged, Catholic>(condition: (e) => e.judgement == Judgement.bad)
-        ..on<OnJudged, SalvationArmy>(
-            condition: (e) => e.judgement == Judgement.ugly))
+        ..on<OnJudged, SalvationArmy>(condition: (e) => e.judgement == Judgement.ugly))
       ..state<InHeaven>((b) => b..state<Buddhist>((b) => b))
-      ..state<InHell>((b) => b
-        ..state<Christian>(
-            (b) => b..state<SalvationArmy>((b) {})..state<Catholic>((b) => b))))
+      ..state<InHell>((b) => b..state<Christian>((b) => b..state<SalvationArmy>((b) {})..state<Catholic>((b) => b))))
     ..onTransition((from, event, to) => watcher.log('${event.runtimeType}')));
   return machine;
 }
@@ -191,3 +192,79 @@ class OnJudged implements Event {
 
   OnJudged(this.judgement);
 }
+
+var graph = '''digraph fsm2 {
+	InitialState [shape=point];
+	InitialState -> Young;
+	Young -> MiddleAged [label="OnBirthday"];
+	Young -> Old [label="OnBirthday"];
+	Young -> Purgatory [label="OnDeath"];
+	MiddleAged -> MiddleAged [label="OnBirthday"];
+	MiddleAged -> Old [label="OnBirthday"];
+	MiddleAged -> Purgatory [label="OnDeath"];
+	Old -> MiddleAged [label="OnBirthday"];
+	Old -> Old [label="OnBirthday"];
+	Old -> Purgatory [label="OnDeath"];
+	Purgatory -> Buddhist [label="OnJudged"];
+	Buddhist -> TerminalState1;
+	Purgatory -> Catholic [label="OnJudged"];
+	Catholic -> TerminalState2;
+	Purgatory -> SalvationArmy [label="OnJudged"];
+	SalvationArmy -> TerminalState3;
+
+	// State: Alive
+	subgraph cluster_Alive {
+		graph [label="Alive", bgcolor="/bugn9/1", fontsize="20" ];
+		// nested states
+		Young; MiddleAged; Old; 
+
+	}
+
+	// State: Dead
+	subgraph cluster_Dead {
+		graph [label="Dead", bgcolor="/bugn9/1", fontsize="20" ];
+		// nested states
+		Purgatory; Buddhist; SalvationArmy; Catholic; 
+
+		// State: InHeaven
+		subgraph cluster_InHeaven {
+			graph [label="InHeaven", bgcolor="/bugn9/2", fontsize="20" ];
+			// nested states
+			Buddhist; 
+			// terminal states
+			TerminalState1 [shape=point];
+
+		}
+
+		// State: InHell
+		subgraph cluster_InHell {
+			graph [label="InHell", bgcolor="/bugn9/2", fontsize="20" ];
+			// nested states
+			SalvationArmy; Catholic; 
+
+			// State: Christian
+			subgraph cluster_Christian {
+				graph [label="Christian", bgcolor="/bugn9/3", fontsize="20" ];
+				// nested states
+				SalvationArmy; Catholic; 
+				// terminal states
+				TerminalState2 [shape=point];
+				TerminalState3 [shape=point];
+
+			}
+
+		}
+
+		// State: Christian
+		subgraph cluster_Christian {
+			graph [label="Christian", bgcolor="/bugn9/2", fontsize="20" ];
+			// nested states
+			SalvationArmy; Catholic; 
+			// terminal states
+			TerminalState2 [shape=point];
+			TerminalState3 [shape=point];
+
+		}
+
+	}
+}''';
