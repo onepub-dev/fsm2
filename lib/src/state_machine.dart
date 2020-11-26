@@ -29,7 +29,7 @@ class _QueuedEvent {
 
 class StateMachine {
   /// only one transition can be happening at at time.
-  final lock = Lock(enableStackTraces: true);
+  final lock = Lock();
 
   /// To avoid deadlocks if an event is generated during
   /// a transition we queue transitions.
