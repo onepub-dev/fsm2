@@ -131,8 +131,8 @@ class StateDefinition<S extends State> {
   /// We need to check any parent states as we inherit
   /// transitions from all our ancestors.
   bool get isTerminal {
-    return _eventTranstionsMap.isNotEmpty &&
-        (parent == null || parent.isTerminal);
+    return getTransitions(includeInherited: true).isEmpty;
+    // return _eventTranstionsMap.isNotEmpty && (parent == null || parent.isTerminal);
   }
 
   /// A state is a leaf state if it has no child states.
