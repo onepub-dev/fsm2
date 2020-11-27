@@ -68,8 +68,7 @@ class StateDefinition<S extends State> {
   /// When searching for an event we have to do a recursive search (starting at the [fromState])
   /// up the tree of nested states as any events on an ancestor [State] also apply to the child [fromState].
   ///
-  Future<TransitionDefinition> findTriggerableTransition<E extends Event>(
-      Type fromState, E event) async {
+  Future<TransitionDefinition> findTriggerableTransition<E extends Event>(Type fromState, E event) async {
     TransitionDefinition transitionDefinition;
 
     if (!hasTransition(fromState, event)) {
@@ -82,8 +81,7 @@ class StateDefinition<S extends State> {
     // If [fromState] doesn't have a transitionDefintion that can be triggered
     // then we search the parents.
     var parent = this.parent;
-    while (transitionDefinition is NoOpTransitionDefinition &&
-        parent != VirtualRoot().definition) {
+    while (transitionDefinition is NoOpTransitionDefinition && parent != VirtualRoot().definition) {
       transitionDefinition = await parent._evaluateTransitions(event);
       parent = parent.parent;
     }
@@ -93,10 +91,8 @@ class StateDefinition<S extends State> {
 
   /// returns a [NoOpTransitionDefinition] if none of the transitions would be triggered
   /// or if there where no transitions for [event].
-  Future<TransitionDefinition> _evaluateTransitions<E extends Event>(
-      E event) async {
-    var transitionChoices = _eventTranstionsMap[event.runtimeType]
-        as List<TransitionDefinition<S, E>>;
+  Future<TransitionDefinition> _evaluateTransitions<E extends Event>(E event) async {
+    var transitionChoices = _eventTranstionsMap[event.runtimeType] as List<TransitionDefinition<S, E>>;
 
     if (transitionChoices == null) {
       return NoOpTransitionDefinition<S, E>(this, E);
@@ -140,8 +136,7 @@ class StateDefinition<S extends State> {
 
   /// A state is an abstract state if it has any child states
   /// You cannot use an abstract state as an transition target.
-  bool get isAbstract =>
-      childStateDefinitions.isNotEmpty || this == VirtualRoot().definition;
+  bool get isAbstract => childStateDefinitions.isNotEmpty || this == VirtualRoot().definition;
 
   /// Returns the set of transitions 'from' this state.
   /// As a state inherits any transitions defined by
@@ -191,8 +186,7 @@ class StateDefinition<S extends State> {
   //   return [transitionDefinition];
   // }
 
-  void addTransition<E extends Event>(
-      TransitionDefinition<S, E> transitionDefinition) {
+  void addTransition<E extends Event>(TransitionDefinition<S, E> transitionDefinition) {
     var transitionDefinitions = _eventTranstionsMap[E];
     transitionDefinitions ??= <TransitionDefinition<S, E>>[];
 
@@ -218,8 +212,8 @@ class StateDefinition<S extends State> {
   /// A state may have any number of costates.
   /// All co-states simultaneously have a state
   /// This allows
-  void addCoState<CO extends State>(BuildState<CO> buildState) {
-    final builder = StateBuilder<CO>(CO);
+  void addCoState<CO extends State>(BuildCoState<CO> buildState) {
+    final builder = CoStateBuilder<CO>(CO);
     buildState(builder);
     final definition = builder.build();
     definition.setParent(this);
@@ -273,9 +267,7 @@ class StateDefinition<S extends State> {
 
     /// Do we have a transtion for [event]
     return transitions.fold<bool>(
-        false,
-        (found, transition) =>
-            found || transition.triggerEvents.contains(event.runtimeType));
+        false, (found, transition) => found || transition.triggerEvents.contains(event.runtimeType));
   }
 
   void checkHasNoNullChoices(Type eventType) {

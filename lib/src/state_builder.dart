@@ -17,8 +17,7 @@ import 'types.dart';
 class StateBuilder<S extends State> {
   final StateDefinition<S> _stateDefinition;
 
-  StateBuilder(Type stateType)
-      : _stateDefinition = StateDefinition<S>(stateType) {
+  StateBuilder(Type stateType) : _stateDefinition = StateDefinition<S>(stateType) {
     _stateDefinition.setParent(VirtualRoot().definition);
   }
 
@@ -52,32 +51,18 @@ class StateBuilder<S extends State> {
   /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
-  void on<E extends Event, TOSTATE extends State>(
-      {GuardCondition<E> condition, SideEffect sideEffect}) {
-    var onTransition = OnTransition<S, E, TOSTATE>(
-        _stateDefinition, condition, TOSTATE, sideEffect);
+  void on<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
+    var onTransition = OnTransition<S, E, TOSTATE>(_stateDefinition, condition, TOSTATE, sideEffect);
 
     _stateDefinition.addTransition<E>(onTransition);
   }
 
-  void onFork<E extends Event>(BuildFork<E> buildFork,
-      {Function(State, E) condition}) {
+  void onFork<E extends Event>(BuildFork<E> buildFork, {Function(State, E) condition}) {
     final builder = ForkBuilder<E>();
     buildFork(builder);
     final definition = builder.build();
 
     var choice = ForkTransitionDefinition<S, E>(_stateDefinition, definition);
-
-    _stateDefinition.addTransition(choice);
-  }
-
-  void onJoin<JS extends State>(BuildJoin<JS> buildJoin,
-      {Function(JS, Event) condition}) {
-    final builder = JoinBuilder<JS>(_stateDefinition);
-    buildJoin(builder);
-    final definition = builder.build();
-
-    var choice = JoinTransitionDefinition(_stateDefinition, definition);
 
     _stateDefinition.addTransition(choice);
   }
@@ -90,7 +75,7 @@ class StateBuilder<S extends State> {
 
   /// Adds a costate State definition as per the UML2
   /// specification for `orthogonal regions`.
-  void costate<CO extends State>(BuildState<CO> buildState) {
+  void costate<CO extends State>(BuildCoState<CO> buildState) {
     _stateDefinition.addCoState(buildState);
   }
 
@@ -107,4 +92,18 @@ class StateBuilder<S extends State> {
   StateDefinition build() => _stateDefinition;
 
   void initialState<I extends State>() {}
+}
+
+class CoStateBuilder<S extends State> extends StateBuilder<S> {
+  CoStateBuilder(Type stateType) : super(stateType);
+
+  void onJoin<JS extends State>(BuildJoin<JS> buildJoin, {Function(JS, Event) condition}) {
+    final builder = JoinBuilder<JS>(_stateDefinition);
+    buildJoin(builder);
+    final definition = builder.build();
+
+    var choice = JoinTransitionDefinition(_stateDefinition, definition);
+
+    _stateDefinition.addTransition(choice);
+  }
 }

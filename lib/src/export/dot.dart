@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'package:fsm2/src/transitions/transition_definition.dart';
 import 'package:meta/meta.dart';
 
 import 'package:fsm2/src/state_machine.dart';
 
-import 'state_definition.dart';
-import 'transitions/transition_definition.dart';
+import '../state_definition.dart';
 
 /// Class exports a [StateMachine] to a dot notation file so that the FMS can be visualised.
 ///

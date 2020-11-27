@@ -37,9 +37,14 @@ typedef OnExit = Future<void> Function(Type toState, Event event);
 typedef TransitionListener = void Function(
     StateDefinition, Event, StateDefinition);
 
-/// The builder.
+/// The builder for a state.
 typedef BuildState<S extends State> = void Function(StateBuilder<S>);
 
+/// Builder for [costate]
+typedef BuildCoState<S extends State> = void Function(CoStateBuilder<S>);
+
+/// Builder for onFork
 typedef BuildFork<E extends Event> = void Function(ForkBuilder<E>);
 
+/// Builder for onJoin
 typedef BuildJoin<S extends State> = void Function(JoinBuilder<S>);
