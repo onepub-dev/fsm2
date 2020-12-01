@@ -1,3 +1,9 @@
+# 0.9.2
+co-regions implemented. 
+diagramming now works.
+moved back to released version of synchronized.
+creating unit tests for exports.
+
 # 0.9.1
 Improvements to exportor for graphwiz.
 
