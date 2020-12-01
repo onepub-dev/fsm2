@@ -22,7 +22,7 @@ class SMCState {
 
   SMCState({this.name, this.type});
 
-  static SMCState virtualRoot = SMCState(name: 'initial', type: SMCStateType.root);
+  
 
   ///
   /// Build the SMSState tree

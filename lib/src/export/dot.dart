@@ -5,6 +5,7 @@ import 'package:meta/meta.dart';
 import 'package:fsm2/src/state_machine.dart';
 
 import '../state_definition.dart';
+import '../virtual_root.dart';
 
 /// Class exports a [StateMachine] to a dot notation file so that the FMS can be visualised.
 ///
@@ -52,7 +53,7 @@ class DotExporter {
     for (var targetState in targetStates) {
       var toDef = stateMachine.findStateDefinition(targetState);
 
-      if (toDef != null && toDef.parent != VirtualRoot().definition) {
+      if (toDef != null && toDef.parent.stateType != VirtualRoot) {
         cluster = toDef.parent.stateType.toString();
       }
 
@@ -205,7 +206,7 @@ ${'\t' * level}subgraph cluster_${regionName} {
     /// If it has a parent then the terminals should be displayed in the
     /// parents subgraph.
     if (terminalStateDefinition.nestedStateDefinitions.isEmpty &&
-        terminalStateDefinition.parent != VirtualRoot().definition) {
+        terminalStateDefinition.parent.runtimeType != VirtualRoot) {
       terminalState = terminalStateDefinition.parent.stateType;
     }
 

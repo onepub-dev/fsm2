@@ -1,4 +1,5 @@
 import 'package:fsm2/src/exceptions.dart';
+import 'package:fsm2/src/virtual_root.dart';
 
 import '../join_definition.dart';
 import '../state_definition.dart';
@@ -27,11 +28,11 @@ class JoinTransitionDefinition<S extends State, E extends Event, TOSTATE extends
 
     var parent = parentStateDefinition;
 
-    while (!parent.isCoRegion && parent.stateType != VirtualRoot().runtimeType) {
+    while (!parent.isCoRegion && parent.stateType != VirtualRoot) {
       parent = parent.parent;
     }
 
-    if (parent.stateType == VirtualRoot().runtimeType) {
+    if (parent.stateType == VirtualRoot) {
       throw OnJoinException('onJoin for ${parentStateDefinition.stateType} MUST have a coregion anscestor.');
     }
   }

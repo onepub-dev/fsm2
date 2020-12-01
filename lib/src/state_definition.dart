@@ -6,6 +6,7 @@ import 'package:fsm2/src/state_builder.dart';
 import 'transitions/noop_transition.dart';
 import 'transitions/transition_definition.dart';
 import 'types.dart';
+import 'virtual_root.dart';
 
 class StateDefinition<S extends State> {
   String nEnterLabel;
@@ -20,11 +21,6 @@ class StateDefinition<S extends State> {
   /// is a link to the parent of this state.
   /// If this is not a nested state then parent will be null.
   StateDefinition _parent;
-
-  void setParent<P extends State>(StateDefinition<P> parent) {
-    // log('set parent = ${parent.stateType} on ${stateType} ${hashCode}');
-    _parent = parent;
-  }
 
   StateDefinition get parent => _parent;
 
@@ -45,6 +41,11 @@ class StateDefinition<S extends State> {
   /// List of State definitions for the set of immediate children of this state.
   /// The are in the same order as the builder declares them.
   final List<StateDefinition> childStateDefinitions = [];
+
+  void setParent<P extends State>(StateDefinition<P> parent) {
+    // log('set parent = ${parent.stateType} on ${stateType} ${hashCode}');
+    _parent = parent;
+  }
 
   /// Returns a complete list of nested [StateDefinition]s below
   /// this state in the tree.
@@ -102,7 +103,7 @@ class StateDefinition<S extends State> {
     // If [fromState] doesn't have a transitionDefintion that can be triggered
     // then we search the parents.
     var parent = this.parent;
-    while (transitionDefinition is NoOpTransitionDefinition && parent != VirtualRoot().definition) {
+    while (transitionDefinition is NoOpTransitionDefinition && parent.stateType != VirtualRoot) {
       transitionDefinition = await parent._evaluateTransitions(event);
       parent = parent.parent;
     }
@@ -157,7 +158,7 @@ class StateDefinition<S extends State> {
 
   /// A state is an abstract state if it has any child states
   /// You cannot use an abstract state as an transition target.
-  bool get isAbstract => childStateDefinitions.isNotEmpty || this == VirtualRoot().definition;
+  bool get isAbstract => childStateDefinitions.isNotEmpty || stateType == VirtualRoot;
 
   /// The state has concurrent children.
   bool get isCoRegion => this is CoRegionDefinition;
@@ -181,7 +182,7 @@ class StateDefinition<S extends State> {
     /// add inherited transitions.
     if (includeInherited) {
       var parent = this.parent;
-      while (parent != VirtualRoot().definition) {
+      while (parent.stateType != VirtualRoot) {
         transitionDefinitions.addAll(parent.getTransitions());
 
         parent = parent.parent;
@@ -268,17 +269,5 @@ class StateDefinition<S extends State> {
         throw NullChoiceMustBeLastException(eventType);
       }
     }
-  }
-}
-
-class VirtualRoot implements State {
-  static final _self = VirtualRoot._internal();
-  var definition = StateDefinition<VirtualRoot>(VirtualRoot);
-
-  factory VirtualRoot() => _self;
-
-  /// make the ctor private.
-  VirtualRoot._internal() {
-    definition.setParent(definition);
   }
 }

@@ -118,8 +118,6 @@ class StartMachineCatExporter {
   }
 
   void writeTransitions(RandomAccessFile raf, StateDefinition sd, int level) {
-    var pseudoStateId = 0;
-
     var firstpass = true;
 
     for (var transition in sd.getTransitions(includeInherited: false)) {
@@ -138,7 +136,6 @@ class StartMachineCatExporter {
       //   writeJoin(raf, sd, transition, level, pseudoStateId);
       // }
 
-      pseudoStateId++;
     }
     if (firstpass == false) raf.writeStringSync('${indent(level)}\n');
   }

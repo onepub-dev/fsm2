@@ -13,6 +13,7 @@ import 'state_definition.dart';
 import 'state_path.dart';
 import 'static_analysis.dart' as analysis;
 import 'transitions/transition_definition.dart';
+import 'virtual_root.dart';
 
 /// Finite State Machine implementation.
 ///
@@ -71,7 +72,8 @@ class StateMachine {
 
     /// If no initial state then the first state is the initial state.
     if (initialState == null && _graph.stateDefinitions.isNotEmpty) {
-      initialState = _graph.stateDefinitions[0].stateType;
+      _graph.initialState =
+          initialState = _graph.stateDefinitions.values.firstWhere((sd) => sd.stateType != VirtualRoot).stateType;
     }
 
     assert(initialState != null);
@@ -143,7 +145,7 @@ class StateMachine {
       throw UnknownStateException('The state ${S} has not been registered');
     }
     var parent = def.parent;
-    while (parent != VirtualRoot().definition) {
+    while (parent.stateType != VirtualRoot) {
       if (parent.stateType == S) return true;
 
       parent = parent.parent;
@@ -291,7 +293,7 @@ class StateMachine {
     var ancestor = sd;
 
     var parent = sd.parent;
-    while (parent != VirtualRoot().definition) {
+    while (parent.stateType != VirtualRoot) {
       ancestor = parent;
       parent = parent.parent;
     }

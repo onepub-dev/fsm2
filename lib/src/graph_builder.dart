@@ -5,6 +5,7 @@ import 'state_builder.dart';
 import 'state_machine.dart';
 import 'graph.dart';
 import 'types.dart';
+import 'virtual_root.dart';
 
 /// Builder for FSM.
 ///
@@ -13,6 +14,7 @@ class GraphBuilder {
   Type _initialState;
   final _stateDefinitions = <StateDefinition>[];
   final List<TransitionListener> _onTransitionListeners = [];
+  final StateDefinition<VirtualRoot> virtualRoot = StateDefinition<VirtualRoot>(VirtualRoot);
 
   String _initialStateLabel;
 
@@ -26,7 +28,7 @@ class GraphBuilder {
   void state<S extends State>(
     BuildState<S> buildState,
   ) {
-    final builder = StateBuilder<S>(S, VirtualRoot().definition, StateDefinition(S));
+    final builder = StateBuilder<S>(S, virtualRoot, StateDefinition(S));
     buildState(builder);
     final definition = builder.build();
 
@@ -63,7 +65,7 @@ class GraphBuilder {
   /// Sets [listener] that will be called on each transition.
   void onTransition(TransitionListener listener) => _onTransitionListeners.add(listener);
 
-  Graph build() => Graph(_initialState, _stateDefinitions, _onTransitionListeners, _initialStateLabel);
+  Graph build() => Graph(virtualRoot, _initialState, _stateDefinitions, _onTransitionListeners, _initialStateLabel);
 
   @visibleForTesting
 

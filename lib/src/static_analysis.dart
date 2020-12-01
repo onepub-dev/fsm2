@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'graph.dart';
 import 'state_definition.dart';
 import 'types.dart';
+import 'virtual_root.dart';
 
 /// * Checks the state machine to ensure that leaf  every [State]
 /// can be reached.
@@ -28,24 +29,14 @@ import 'types.dart';
 bool analyse(Graph graph) {
   var allGood = true;
   var stateDefinitionMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
-  // stateDefinitionMap.remove(VirtualRoot);
-
-  // removed as no longer valid. We also test for correct state of the initial state during the build.
-  // /// Check initialState is a leaf
-  // var initState = graph.findStateDefinition(graph.initialState);
-  // if (!initState.isLeaf) {
-  //   allGood = false;
-  //   log('Error: initialState must be a leaf state. Found ${graph.initialState} which is an abstract state.');
-  // }
 
   var remainingStateMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
   remainingStateMap.remove(graph.initialState);
-  // remainingStateMap.remove(VirtualRoot);
 
   /// Check each state is reachable
   for (var stateDefinition in stateDefinitionMap.values) {
-    if (stateDefinition != VirtualRoot().definition) {
+    if (stateDefinition.stateType != VirtualRoot) {
       /// If the parent can be reached then the initial state can be reached.
       remainingStateMap.remove(stateDefinition.initialState);
 
@@ -87,7 +78,7 @@ bool analyse(Graph graph) {
   /// 1) the toState must be defined
   /// 2) the toState must be a leaf state
   for (var stateDefinition in stateDefinitionMap.values) {
-    if (stateDefinition == VirtualRoot().definition) continue;
+    if (stateDefinition.stateType == VirtualRoot) continue;
     // log('Found state: ${stateDefinition.stateType}');
     for (var transitionDefinition in stateDefinition.getTransitions(includeInherited: false)) {
       var targetStates = transitionDefinition.targetStates;

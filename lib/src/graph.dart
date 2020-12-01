@@ -2,13 +2,16 @@ import 'package:fsm2/src/exceptions.dart';
 
 import 'state_definition.dart';
 import 'types.dart';
+import 'virtual_root.dart';
 
 class Graph {
-  Graph(this.initialState, this.topStateDefinitions, this.onTransitionListeners, this.initialStateLabel)
-      : stateDefinitions = _expandStateDefinitions(topStateDefinitions);
+  Graph(
+      this.virtualRoot, this.initialState, this.topStateDefinitions, this.onTransitionListeners, this.initialStateLabel)
+      : stateDefinitions = _expandStateDefinitions(virtualRoot, topStateDefinitions);
 
-  final Type initialState;
-  final String initialStateLabel;
+  StateDefinition<VirtualRoot> virtualRoot;
+  Type initialState;
+  String initialStateLabel;
 
   /// a full set of stateDefinitions including nested and [coregion].
   final Map<Type, StateDefinition> stateDefinitions;
@@ -33,16 +36,16 @@ class Graph {
 
   /// wire the top state definitions into the stateDefinition map
   /// and into the [VirtualRoot]
-  static Map<Type, StateDefinition> _expandStateDefinitions(List<StateDefinition<State>> topStateDefinitions) {
+  static Map<Type, StateDefinition> _expandStateDefinitions(StateDefinition<VirtualRoot> virtualRoot, List<StateDefinition<State>> topStateDefinitions) {
     var definitions = <Type, StateDefinition>{};
 
-    addStateDefinition(definitions, VirtualRoot().definition);
+    addStateDefinition(definitions, virtualRoot);
 
     for (var stateDefinition in topStateDefinitions) {
       addStateDefinition(definitions, stateDefinition);
 
       /// wire the top level states into the virtual root.
-      VirtualRoot().definition.childStateDefinitions.add(stateDefinition);
+      virtualRoot.childStateDefinitions.add(stateDefinition);
 
       var nested = stateDefinition.nestedStateDefinitions;
       for (var nestedStateDefinition in nested) {

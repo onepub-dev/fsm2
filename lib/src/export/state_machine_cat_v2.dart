@@ -19,7 +19,7 @@ import 'smc_state.dart';
 /// ```
 class StartMachineCatV2Exporter {
   final StateMachine stateMachine;
-  // var terminalStateOrdinal = 1;
+  final SMCState virtualRoot = SMCState(name: 'initial', type: SMCStateType.root);
 
   /// creates a map of the terminal ordinals to what
   /// parent state they belong to.
@@ -27,21 +27,11 @@ class StartMachineCatV2Exporter {
   StartMachineCatV2Exporter(this.stateMachine);
 
   void export(String path) async {
-    // await stateMachine.traverseTree((stateDefinition, transitionDefinitions) async {
-    //   for (var transitionDefinition in transitionDefinitions) {
-    //     if (stateDefinition.isLeaf) {
-    //       await _addEdgePath(stateDefinition, transitionDefinition);
-    //     }
-    //   }
-    // });
-
     var smcState = build();
     await _save(path, smcState);
   }
 
   SMCState build() {
-    var virtualRoot = SMCState.virtualRoot;
-
     for (var child in stateMachine.topStateDefinitions) {
       virtualRoot.addChild(SMCState.build(virtualRoot, child));
     }
@@ -63,108 +53,4 @@ class StartMachineCatV2Exporter {
 
     raf.closeSync();
   }
-
-  // void writeRegion(RandomAccessFile raf, StateDefinition<State> sd, int level) {
-  //   level++;
-
-  //   /// start the region
-  //   raf.writeStringSync('${indent(level)}${sd.stateType}\n');
-  //   raf.writeStringSync('${indent(level)}{\n');
-
-  //   // /// Delcare the enter/exit points for the region
-  //   // raf.writeStringSync('${indent(level)}[*] => ${sd.stateType}\n');
-
-  //   // raf.writeStringSync('${indent(level)}${sd.stateType} => [*]\n');
-  //   // raf.writeStringSync('${indent(level)}state ${sd.stateType} {\n');
-
-  //   var firstpass = true;
-  //   var sawState = false;
-
-  //   for (var child in sd.childStateDefinitions.values) {
-  //     if (!firstpass) {
-  //       raf.writeStringSync(',\n');
-  //     }
-  //     firstpass = false;
-
-  //     if (child.isAbstract) {
-  //       sawState = true;
-  //       writeRegion(raf, child, level);
-  //     } else {
-  //       sawState = true;
-  //       writeState(raf, child, level);
-  //     }
-  //   }
-  //   if (sawState) {
-  //     raf.writeStringSync(';\n');
-  //   }
-  //   raf.writeStringSync('${indent(level)}}');
-  //   writeTransitions(raf, sd, level);
-  //   //  raf.writeStringSync('\n${indent(level)}}\n');
-  // }
-
-  // void writeState(RandomAccessFile raf, StateDefinition<State> sd, int level) {
-  //   level++;
-  //   raf.writeStringSync('${indent(level)}${sd.stateType}');
-
-  //   writeTransitions(raf, sd, level);
-  // }
-
-  // void writeTransitions(RandomAccessFile raf, StateDefinition sd, int level) {
-  //   var pseudoStateId = 0;
-
-  //   var firstpass = true;
-
-  //   for (var transition in sd.getTransitions(includeInherited: false)) {
-  //     if (firstpass) {
-  //       raf.writeStringSync('${indent(level)}\n');
-  //       firstpass = false;
-  //     }
-  //     if (transition is OnTransitionDefinition) {
-  //       raf.writeStringSync(
-  //           '${indent(level)}${transition.fromStateDefinition.stateType} => ${transition.toState} : ${transition.triggerEvents.first},\n');
-  //     }
-
-  //     //  else if (transition is ForkTransitionDefinition) {
-  //     //   writeFork(raf, sd, transition, level, pseudoStateId);
-  //     // } else if (transition is JoinTransitionDefinition) {
-  //     //   writeJoin(raf, sd, transition, level, pseudoStateId);
-  //     // }
-
-  //     pseudoStateId++;
-  //   }
-  //   if (firstpass == false) raf.writeStringSync('${indent(level)}\n');
-  // }
-
-  // void writeFork(RandomAccessFile raf, StateDefinition sd, ForkTransitionDefinition<State, Event> transition, int level,
-  //     int pseudoStateId) {
-  //   /// forks are pseudo states which in mermaid need a name.
-  //   /// as we model them as a transition we don't have a name.
-  //   /// As such we use the states name followed by a unqiue id to generate a name.
-  //   var forkName = ']${sd.stateType}$pseudoStateId';
-  //   raf.writeStringSync('${indent(level)}$forkName; \n');
-
-  //   /// Add a transition into the fork
-  //   raf.writeStringSync('${indent(level)}${transition.fromStateDefinition.stateType} => ${forkName};\n');
-  //   // raf.writeStringSync('${indent(level)}[*] => $forkName;\n');
-
-  //   // /// now add a transition from the fork to each target.
-  //   // for (var target in transition.targetStates) {
-  //   //   raf.writeStringSync('${indent(level)}$forkName => ${target};\n');
-  //   // }
-  // }
-
-  // void writeJoin(RandomAccessFile raf, StateDefinition sd, JoinTransitionDefinition<State, Event, State> transition,
-  //     int level, int pseudoStateId) {
-  //   /// joins are pseudo states which in mermaid need a name.
-  //   /// as we model them as a transition we don't have a name.
-  //   /// As such we use the states name followed by a unqiue id to generate a name.
-  //   var joinName = ']${sd.stateType}$pseudoStateId';
-  //   raf.writeStringSync('${indent(level)}$joinName \n');
-
-  //   // for (var state in sd.childStateDefinitions.values) {
-  //   //   raf.writeStringSync('${indent(level)}${state.stateType} => $joinName;\n');
-  //   // }
-
-  //   // raf.writeStringSync('${indent(level)}$joinName => [*] \n');
-  // }
 }

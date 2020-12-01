@@ -1,6 +1,7 @@
 import 'graph.dart';
 import 'state_definition.dart';
 import 'types.dart';
+import 'virtual_root.dart';
 
 /// describes a path from a leaf state up to the root state.
 class PartialStatePath {
@@ -59,8 +60,7 @@ class PartialStatePath {
 /// This class should only be used to store
 /// a path which starts from an active leaf.
 class StatePath extends PartialStatePath {
-  StatePath(List<StateDefinition> path)
-      : super.fromPath(List.unmodifiable(path));
+  StatePath(List<StateDefinition> path) : super.fromPath(List.unmodifiable(path));
 
   /// Creates a [StatePath] from a leaf by trace
   /// up the graph to determine the complete list
@@ -70,12 +70,12 @@ class StatePath extends PartialStatePath {
     ancestors.addAncestor((graph.findStateDefinition(leafState)));
     var parent = graph.getParent(leafState);
 
-    do {
+    while (parent != VirtualRoot) {
       ancestors.addAncestor(graph.findStateDefinition(parent));
       parent = graph.getParent(parent);
-    } while (parent != VirtualRoot().definition.stateType);
+    }
 
-    ancestors.addAncestor(VirtualRoot().definition);
+    ancestors.addAncestor(graph.virtualRoot);
 
     _path.addAll(ancestors._path);
   }

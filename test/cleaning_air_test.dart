@@ -1,5 +1,6 @@
 import 'package:fsm2/fsm2.dart';
 import 'package:fsm2/src/types.dart';
+import 'package:fsm2/src/virtual_root.dart';
 import 'package:test/test.dart';
 
 StateMachine machine;
