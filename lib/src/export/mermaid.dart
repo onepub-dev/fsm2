@@ -74,7 +74,7 @@ class MermaidExporter {
     raf.writeStringSync('${indent(level)}${sd.stateType} --> [*]\n');
     raf.writeStringSync('${indent(level)}state ${sd.stateType} {\n');
 
-    for (var child in sd.childStateDefinitions.values) {
+    for (var child in sd.childStateDefinitions) {
       if (child.isAbstract) {
         writeRegion(raf, child, level);
       } else {
@@ -124,8 +124,8 @@ class MermaidExporter {
     }
   }
 
-  void writeJoin(RandomAccessFile raf, StateDefinition sd, JoinTransitionDefinition<State, Event> transition, int level,
-      int pseudoStateId) {
+  void writeJoin(RandomAccessFile raf, StateDefinition sd, JoinTransitionDefinition<State, Event, State> transition,
+      int level, int pseudoStateId) {
     /// joins are pseudo states which in mermaid need a name.
     /// as we model them as a transition we don't have a name.
     /// As such we use the states name followed by a unqiue id to generate a name.
@@ -140,7 +140,7 @@ class MermaidExporter {
     //   raf.writeStringSync('${indent(level)}${event} --> $joinName\n');
     // }
 
-    for (var state in sd.childStateDefinitions.values) {
+    for (var state in sd.childStateDefinitions) {
       raf.writeStringSync('${indent(level)}${state.stateType} --> $joinName\n');
     }
 

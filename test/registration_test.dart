@@ -66,7 +66,7 @@ StateMachine createMachine() {
               RegistrationWizard.setType(RegistrationType.recoverAccount))
           ..on<OnUserNotFound, EmailRequired>()
           ..on<OnUserEnteredMobile, MobileNoAcquired>())
-        ..costate<MobileAndRegistrationTypeAcquired>((builder) => builder
+        ..coregion<MobileAndRegistrationTypeAcquired>((builder) => builder
           ..state<AcquireMobileNo>((builder) => builder
             ..on<OnUserEnteredMobile, MobileNoAcquired>()
 
@@ -82,7 +82,7 @@ StateMachine createMachine() {
               ..state<AccountEnabled>((builder) => builder..on<OnInActiveCustomerFound, InactiveCustomerTerminal>()..on<OnActiveCustomerFound, ActiveCustomer>()..on<OnViableInvitiationFound, ViableInvitation>())
 
               // state for each page in the wizard.
-              ..costate<Pages>((builder) => builder
+              ..coregion<Pages>((builder) => builder
                 ..state<RegionPage>((builder) => builder
                   ..initialState<RegionRequired>()
                   ..on<OnRegionInvalid, RegionRequired>()

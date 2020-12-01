@@ -1,3 +1,5 @@
+import 'package:fsm2/src/co_region_builder.dart';
+import 'package:fsm2/src/co_region_definition.dart';
 import 'package:fsm2/src/exceptions.dart';
 import 'package:fsm2/src/state_builder.dart';
 
@@ -5,9 +7,13 @@ import 'transitions/noop_transition.dart';
 import 'transitions/transition_definition.dart';
 import 'types.dart';
 
-enum _ChildrenType { nested, concurrent }
-
 class StateDefinition<S extends State> {
+  String nEnterLabel;
+
+  String onExitLabel;
+
+  Type initialState;
+
   StateDefinition(this.stateType);
 
   /// If this is a nested state the [parent]
@@ -36,11 +42,26 @@ class StateDefinition<S extends State> {
   /// be in this map twice.
   final Map<Type, List<TransitionDefinition>> _eventTranstionsMap = {};
 
-  // ignore: unused_field
-  _ChildrenType _childrenType;
+  /// List of State definitions for the set of immediate children of this state.
+  /// The are in the same order as the builder declares them.
+  final List<StateDefinition> childStateDefinitions = [];
 
-  /// State definitions for the set of immediate children of this state.
-  final Map<Type, StateDefinition> childStateDefinitions = {};
+  /// Returns a complete list of nested [StateDefinition]s below
+  /// this state in the tree.
+  /// i.e. every possible child/grandchild/... state.
+  List<StateDefinition> get nestedStateDefinitions {
+    var definitions = <StateDefinition>[];
+
+    if (childStateDefinitions.isEmpty) return definitions;
+
+    for (var stateDefinition in childStateDefinitions) {
+      definitions.add(stateDefinition);
+
+      var nested = stateDefinition.nestedStateDefinitions;
+      definitions.addAll(nested);
+    }
+    return definitions;
+  }
 
   /// callback used when we enter this [State].
   /// Provide provide a default no-op implementation.
@@ -92,7 +113,7 @@ class StateDefinition<S extends State> {
   /// returns a [NoOpTransitionDefinition] if none of the transitions would be triggered
   /// or if there where no transitions for [event].
   Future<TransitionDefinition> _evaluateTransitions<E extends Event>(E event) async {
-    var transitionChoices = _eventTranstionsMap[event.runtimeType] as List<TransitionDefinition<S, E>>;
+    var transitionChoices = _eventTranstionsMap[event.runtimeType] as List<TransitionDefinition<E>>;
 
     if (transitionChoices == null) {
       return NoOpTransitionDefinition<S, E>(this, E);
@@ -108,8 +129,8 @@ class StateDefinition<S extends State> {
   /// If no condition allows the transition to fire then we return
   /// a [NoOpTransitionDefinition] which result in no state transition occuring.
   ///
-  Future<TransitionDefinition<S, E>> evaluateConditions<E extends Event>(
-      List<TransitionDefinition<S, E>> transitionChoices, E event) async {
+  Future<TransitionDefinition<E>> evaluateConditions<E extends Event>(
+      List<TransitionDefinition<E>> transitionChoices, E event) async {
     assert(transitionChoices.isNotEmpty);
     for (var transitionDefinition in transitionChoices) {
       /// hack to get around typedef inheritance issues.
@@ -137,6 +158,9 @@ class StateDefinition<S extends State> {
   /// A state is an abstract state if it has any child states
   /// You cannot use an abstract state as an transition target.
   bool get isAbstract => childStateDefinitions.isNotEmpty || this == VirtualRoot().definition;
+
+  /// The state has concurrent children.
+  bool get isCoRegion => this is CoRegionDefinition;
 
   /// Returns the set of transitions 'from' this state.
   /// As a state inherits any transitions defined by
@@ -166,29 +190,9 @@ class StateDefinition<S extends State> {
     return transitionDefinitions;
   }
 
-  // Future<List<TransitionDefinition>> getStaticTransitionsForEvent(Type fromState, Event event) async {
-  //   TransitionDefinition transitionDefinition;
-  //   for (var stateDefinition in childStateDefinitions.values) {
-  //     transitionDefinition = await stateDefinition.findTriggerableTransition(fromState, event);
-
-  //     if (transitionDefinition != null) break;
-  //   }
-
-  //   for (var transitions in _eventTranstionsMap.values) {
-  //     for (var transition in transitions) {
-  //       // TODO what is meant to happen here?
-  //       if (transition.targetStates != null) {}
-  //     }
-  //   }
-
-  //   transitionDefinition ??= await _evaluateTransitions(event);
-
-  //   return [transitionDefinition];
-  // }
-
-  void addTransition<E extends Event>(TransitionDefinition<S, E> transitionDefinition) {
+  void addTransition<E extends Event>(TransitionDefinition<E> transitionDefinition) {
     var transitionDefinitions = _eventTranstionsMap[E];
-    transitionDefinitions ??= <TransitionDefinition<S, E>>[];
+    transitionDefinitions ??= <TransitionDefinition<E>>[];
 
     if (transitionDefinition.condition == null) {
       checkHasNoNullChoices(E);
@@ -200,58 +204,43 @@ class StateDefinition<S extends State> {
 
   /// Adds a child state to this state definition.
   void addNestedState<C extends State>(BuildState<C> buildState) {
-    final builder = StateBuilder<C>(C);
+    final builder = StateBuilder<C>(C, this, StateDefinition(C));
+    //builder.parent = this;
     buildState(builder);
     final definition = builder.build();
     definition.setParent(this);
-    definition._childrenType = _ChildrenType.nested;
-    childStateDefinitions[C] = definition;
+    childStateDefinitions.add(definition);
   }
 
-  /// Adds a child co-state to this state defintion.
-  /// A state may have any number of costates.
-  /// All co-states simultaneously have a state
+  /// Adds a child [coregion] to this state defintion.
+  /// A state may have any number of [coregion]s.
+  /// All [coregion]s simultaneously have a state
   /// This allows
-  void addCoState<CO extends State>(BuildCoState<CO> buildState) {
-    final builder = CoStateBuilder<CO>(CO);
+  void addCoRegion<CO extends State>(BuildCoRegion<CO> buildState) {
+    final builder = CoRegionBuilder<CO>(CO, this, CoRegionDefinition(CO));
+    //  builder.parent = this;
     buildState(builder);
     final definition = builder.build();
     definition.setParent(this);
-    definition._childrenType = _ChildrenType.concurrent;
-    childStateDefinitions[CO] = definition;
+    childStateDefinitions.add(definition);
   }
 
   /// recursively searches through the list of nested [StateDefinitions]
   /// for a [StateDefinition] of type [stateDefinitionType];
-  StateDefinition<State> findStateDefintion(Type stateDefinitionType) {
+  StateDefinition<State> findStateDefintion(Type stateDefinitionType, {bool includeChildren = true}) {
     StateDefinition found;
-    for (var stateDefinition in childStateDefinitions.values) {
+    for (var stateDefinition in childStateDefinitions) {
       if (stateDefinition.stateType == stateDefinitionType) {
         found = stateDefinition;
         break;
       } else {
-        found = stateDefinition.findStateDefintion(stateDefinitionType);
-        if (found != null) break;
+        if (includeChildren) {
+          found = stateDefinition.findStateDefintion(stateDefinitionType);
+          if (found != null) break;
+        }
       }
     }
     return found;
-  }
-
-  /// Returns a list of immediately nested [StateDefinition]s.
-  /// i.e. we don't search child [StateDefinition]s for further
-  /// nested [StateDefinition]s.
-  List<StateDefinition> get nestedStateDefinitions {
-    var definitions = <StateDefinition>[];
-
-    if (childStateDefinitions.isEmpty) return definitions;
-
-    for (var stateDefinition in childStateDefinitions.values) {
-      definitions.add(stateDefinition);
-
-      var nested = stateDefinition.nestedStateDefinitions;
-      definitions.addAll(nested);
-    }
-    return definitions;
   }
 
   /// Checks that the [fromState] has a transition for [event].

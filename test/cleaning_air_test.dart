@@ -1,4 +1,5 @@
 import 'package:fsm2/fsm2.dart';
+import 'package:fsm2/src/types.dart';
 import 'package:test/test.dart';
 
 StateMachine machine;
@@ -30,21 +31,65 @@ void main() {
 
 void _createMachine() {
   machine = StateMachine.create((g) => g
-    ..initialState<MonitorAir>()
+    ..initialState<MaintainAir>(label: 'TurnOn')
     ..state<MaintainAir>((b) => b
-      ..on<OnBadAir, RunFan>()
+      ..initialState<MonitorAir>()
+      ..on<TurnOff, FinalState>()
       ..state<MonitorAir>((b) => b
+//        ..on<OnBadAir, CleanAir>()
         ..onFork<OnBadAir>((b) => b..target<RunFan>()..target<HandleLamp>()..target<WaitForGoodAir>(),
             condition: (s, e) => e.quality < 10))
-      ..state<CleanAir>((b) => b
+      ..coregion<CleanAir>((b) => b
         ..onExit((s, e) async => turnFanOff())
-        ..onExit((s, e) async => turnLightOff())
-        ..costate<HandleEquipment>((b) => b
-          ..onJoin<WaitForGoodAir>((b) => b..on<OnAirFlowIncreased>()..on<OnLampOn>()..on<OnGoodAir>())
-          ..state<RunFan>((b) => b..onEnter((s, e) async => turnFanOn()))
-          ..state<HandleLamp>((b) => b..onEnter((s, e) async => turnLightOn()))
-          ..state<WaitForGoodAir>((b) {})))));
+        ..onExit((s, e) async => turnLightOff(), label: 'TurnLightOn')
+        //..onJoin<MonitorAir>((b) => b..on<OnRunning>()..on<OnLampOn>()..on<OnGoodAir>())
+        ..state<RunFan>((b) => b
+          ..onEnter((s, e) async => turnFanOn())
+          ..onJoin<OnRunning, MonitorAir>(condition: ((e) => 2 > 1)))
+        // ..onJoin<OnFred, AAAMonitorAir>(condition: ((e) => 2 > 1)))
+        ..state<HandleLamp>((b) => b
+          ..onEnter((s, e) async => turnLightOn(), label: 'TurnLightOn')
+          ..onJoin<OnLampOn, MonitorAir>())
+        ..state<WaitForGoodAir>((b) => b..onJoin<OnGoodAir, MonitorAir>()
+            // ..on<OnBadAir, WaitForGoodAir>()
+            ))));
 }
+
+var smcGraph = '''initial,
+MaintainAir
+{
+  MonitorAir {
+    MonitorAir => CleanAir.parallel : OnBadAir;
+  },
+
+	CleanAir.parallel [label="CleanAir"]
+	{
+    ]CleanAir.Fork1,
+		RunFan,
+		HandleLamp,
+		WaitForGoodAir;
+    initial.cleanair => ]CleanAir.Fork1;
+    WaitForGoodAir => WaitForGoodAir : OnBadAir;
+ 
+    ]CleanAir.Fork1=> RunFan;
+    ]CleanAir.Fork1=> HandleLamp;
+    ]CleanAir.Fork1=> WaitForGoodAir;
+
+    RunFan => ]HandleEquipmentJoin1 : OnRunning;
+    HandleLamp => ]HandleEquipmentJoin1: OnLampOn;
+    WaitForGoodAir => ]HandleEquipmentJoin1 : GoodAir;
+    ]HandleEquipmentJoin1=> cleanair.final ;
+
+    CleanAir.parallel  => MonitorAir : GoodAir;
+
+	};
+  initial.MonitorAir => MonitorAir ;
+  MonitorAir => final.MaintainAir ;
+};
+
+initial => MaintainAir : TurnOn;
+MaintainAir => final : TurnOff;
+''';
 
 var graph = '''stateDiagram-v2
     [*] --> MaintainAir
@@ -110,8 +155,10 @@ class OnBadAir implements Event {
 
 class OnLampOff implements Event {}
 
-class OnAirFlowIncreased implements Event {}
+class OnRunning implements Event {}
 
 class OnLampOn implements Event {}
 
 class OnGoodAir implements Event {}
+
+class TurnOff implements Event {}

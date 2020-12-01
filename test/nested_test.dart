@@ -39,19 +39,6 @@ void main() {
     expect(machine.isInState<Alive>(), equals(true));
   });
 
-  test('Export', () async {
-    final machine = await _createMachine<Young>(watcher, human);
-    await machine.analyse();
-    await machine.export('test/gv/nested_test.gv');
-
-    var lines = read('test/gv/nested_test.gv').toList().reduce((value, line) => value += '\n' + line);
-
-    expect(lines, equals(graph));
-
-    // .then(expectAsync0<bool>(() {}));
-    // expectAsync1<bool, String>((a) => machine.export('/tmp/fsm.txt'));
-  });
-
   test('Test no op transition', () async {
     final machine = await _createMachine<Young>(watcher, human);
     await machine.applyEvent(OnBirthday());
@@ -118,6 +105,19 @@ void main() {
     await machine.applyEvent(OnBirthday());
     // verify(watcher.onExit((s,e ) {} )));
   });
+
+  test('Export', () async {
+    final machine = await _createMachine<Alive>(watcher, human);
+    await machine.analyse();
+    await machine.export('test/gv/nested_test.gv');
+
+    var lines = read('test/gv/nested_test.gv').toList().reduce((value, line) => value += '\n' + line);
+
+    expect(lines, equals(graph));
+
+    // .then(expectAsync0<bool>(() {}));
+    // expectAsync1<bool, String>((a) => machine.export('/tmp/fsm.txt'));
+  });
 }
 
 Future<StateMachine> _createMachine<S extends State>(
@@ -130,8 +130,7 @@ Future<StateMachine> _createMachine<S extends State>(
       ..initialState<Young>()
       ..onEnter((s, e) async => print('onEnter $s as a result of $e'))
       ..onExit((s, e) async => print('onExit $s as a result of $e'))
-      // ..on<OnBirthday, Young>(
-      //     condition: (e) => human.age < 18, sideEffect: () async => human.age++)
+      ..on<OnBirthday, Young>(condition: (e) => human.age < 18, sideEffect: () async => human.age++)
       ..on<OnBirthday, MiddleAged>(condition: (e) => human.age < 50, sideEffect: () async => human.age++)
       ..on<OnBirthday, Old>(condition: (e) => human.age < 80, sideEffect: () async => human.age++)
       ..on<OnDeath, Purgatory>()

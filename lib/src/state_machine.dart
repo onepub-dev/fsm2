@@ -6,11 +6,12 @@ import 'package:fsm2/src/types.dart';
 import 'package:synchronized/synchronized.dart';
 
 import 'exceptions.dart';
-import 'export/state_machine_cat.dart';
+import 'export/state_machine_cat_v2.dart';
 import 'graph.dart';
 import 'graph_builder.dart';
 import 'state_definition.dart';
 import 'state_path.dart';
+import 'static_analysis.dart' as analysis;
 import 'transitions/transition_definition.dart';
 
 /// Finite State Machine implementation.
@@ -68,19 +69,41 @@ class StateMachine {
   StateMachine._(this._graph, {this.production}) {
     var initialState = _graph.initialState;
 
+    /// If no initial state then the first state is the initial state.
     if (initialState == null && _graph.stateDefinitions.isNotEmpty) {
       initialState = _graph.stateDefinitions[0].stateType;
     }
 
     assert(initialState != null);
-    if (_graph.findStateDefinition(initialState) == null) {
-      throw UnknownStateException('The initialState $initialState is not a registered state.');
+
+    if (!_graph.isTopLevelState(initialState)) {
+      throw InvalidInitialStateException('The initialState $initialState MUST be a top level state.');
     }
 
-    _stateOfMind.addPath(StatePath.fromLeaf(_graph, initialState));
+    var initialSd = _graph.findStateDefinition(initialState);
+
+    /// Find the initial state by chaining down through the initialStates looking for a leaf.
+    if (!_loadStateOfMind(initialSd)) {
+      throw InvalidInitialStateException('The top level initialState $initialState must lead to a leaf state.');
+    }
+  }
+
+  bool _loadStateOfMind(StateDefinition<State> initialState) {
+    if (initialState.isLeaf) {
+      _stateOfMind.addPath(StatePath.fromLeaf(_graph, initialState.stateType));
+      return true;
+    } else {
+      /// search child for a leaf.
+      var child = initialState.findStateDefintion(initialState.initialState, includeChildren: false);
+      return _loadStateOfMind(child);
+    }
   }
 
   List<StateDefinition<State>> get topStateDefinitions => _graph.topStateDefinitions;
+
+  String get initialStateLabel => _graph.initialStateLabel;
+
+  Type get initialState => _graph.initialState;
 
   /// Returns true if the [StateMachine] is in the given state.
   ///
@@ -100,13 +123,13 @@ class StateMachine {
   /// If a [StateMachine] has 'n' levels of nested state
   /// then it can be in  upto 'n' States at any given time.
   ///
-  /// For a co-state [State] the machine is said to be in each
-  /// co-state simultaneously.  Co-States can combine with nested
+  /// For a [coregion] the machine is said to be in each
+  /// [coregion] simultaneously.  Coregions can combine with nested
   /// states so that a [StateMachine] can be in all of the nested
-  /// states for multiple co-states. So if a machine has two co-states
-  /// and each co-state has 'n' nested states then a [StateMachine]
+  /// states for multiple [coregion]s. So if a machine has two [coregion]s
+  /// and each [coregion] has 'n' nested states then a [StateMachine]
   /// could be in 2 * 'n' states plus any parents of each of the
-  /// co-states.
+  /// [coregion]s.
   ///
   /// If [state] is not a known [State] then an [UnknownStateException]
   /// is thrown.
@@ -209,6 +232,10 @@ class StateMachine {
     });
   }
 
+  bool analyse() {
+    return analysis.analyse(_graph);
+  }
+
   /// Returns [Stream] of state types.
   /// Each time the FSM changes state the new
   /// state Type is added to the broadcast stream allowing
@@ -220,108 +247,6 @@ class StateMachine {
   /// Any ancestor states that are consequentially moved into
   /// will not be reflected in the stream.
   Stream<StateOfMind> get stream => _controller.stream;
-
-  /// * Checks the state machine to ensure that leaf  every [State]
-  /// can be reached.
-  ///
-  /// We do this by checking that each state has at
-  /// least one event that leads to that [State].
-  ///
-  /// The [analyse] method will only work if all [State]
-  /// transitions are explicity declared. If you use any
-  /// dynamic transitions (where you have a function that
-  /// works out the transition) then the call to [analyse]
-  /// will fail.
-  ///
-  /// * Checks that there are no duplicate states
-  ///
-  /// * Checks that no transition exist to an abstract state.
-  ///
-  /// * Checks that all transitions target a registered state.
-  ///
-  /// The [analyse] method logs any problems it finds.
-  ///
-  /// Returns [true] if all States are reachable.
-  bool analyse() {
-    var allGood = true;
-    var stateDefinitionMap = Map<Type, StateDefinition<State>>.from(_graph.stateDefinitions);
-    // stateDefinitionMap.remove(VirtualRoot);
-
-    /// Check initialState is a leaf
-    var initState = _graph.findStateDefinition(_graph.initialState);
-    if (!initState.isLeaf) {
-      allGood = false;
-      log('Error: initialState must be a leaf state. Found ${_graph.initialState} which is an abstract state.');
-    }
-
-    var remainingStateMap = Map<Type, StateDefinition<State>>.from(_graph.stateDefinitions);
-
-    remainingStateMap.remove(_graph.initialState);
-    // remainingStateMap.remove(VirtualRoot);
-
-    /// Check each state is reachable
-    for (var stateDefinition in stateDefinitionMap.values) {
-      if (stateDefinition != VirtualRoot().definition) {
-        /// log('Found state: ${stateDefinition.stateType}');
-        for (var transitionDefinition in stateDefinition.getTransitions()) {
-          var targetStates = transitionDefinition.targetStates;
-          for (var targetState in targetStates) {
-            remainingStateMap.remove(targetState);
-          }
-        }
-      }
-
-      /// abstract states cannot be transitioned to, so remove them
-      /// as we go.
-      if (stateDefinition.isAbstract) {
-        remainingStateMap.remove(stateDefinition.stateType);
-      }
-    }
-
-    if (remainingStateMap.isNotEmpty) {
-      allGood = false;
-      log('Error: The following States cannot be reached.');
-
-      for (var state in remainingStateMap.values) {
-        log('Error: State: ${state.stateType}');
-      }
-    }
-
-    /// check for duplicate states.
-    var seen = <Type>{};
-    for (var stateDefinition in _graph.stateDefinitions.values) {
-      if (seen.contains(stateDefinition.stateType)) {
-        allGood = false;
-        log('Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
-      }
-    }
-
-    /// Check that no transition points to a valid state.
-    /// 1) the toState must be defined
-    /// 2) the toState must be a leaf state
-    for (var stateDefinition in stateDefinitionMap.values) {
-      if (stateDefinition == VirtualRoot().definition) continue;
-      // log('Found state: ${stateDefinition.stateType}');
-      for (var transitionDefinition in stateDefinition.getTransitions()) {
-        var targetStates = transitionDefinition.targetStates;
-        for (var targetState in targetStates) {
-          var toStateDefinition = _graph.stateDefinitions[targetState];
-          if (toStateDefinition == null) {
-            allGood = false;
-            log('Found transition to non-existant state ${targetState}.');
-            continue;
-          }
-
-          if (toStateDefinition.isAbstract) {
-            allGood = false;
-            log('Found transition to abstract state ${targetState}. Only leaf states may be the target of a transition');
-          }
-        }
-      }
-    }
-
-    return allGood;
-  }
 
   /// Exports the [StateMachine] to dot notation which can then
   /// be used by xdot to display a diagram of the state machine.
@@ -338,7 +263,7 @@ class StateMachine {
   /// ```
   Future<void> export(String path) async {
     //var exporter = MermaidExporter(this);
-    var exporter = StartMachineCatExporter(this);
+    var exporter = StartMachineCatV2Exporter(this);
     await exporter.export(path);
   }
 
@@ -354,5 +279,23 @@ class StateMachine {
 
   StateDefinition<State> findStateDefinition(Type stateType) {
     return _graph.findStateDefinition(stateType);
+  }
+
+  /// Returns the oldest ancestor for the state.
+  /// If the state has no ancestors then we return the state.
+  /// The VirtualRoot is not considered an ancestor and will
+  /// never be returned.
+  Type oldestAncestor(Type state) {
+    var sd = findStateDefinition(state);
+
+    var ancestor = sd;
+
+    var parent = sd.parent;
+    while (parent != VirtualRoot().definition) {
+      ancestor = parent;
+      parent = parent.parent;
+    }
+
+    return ancestor.stateType;
   }
 }

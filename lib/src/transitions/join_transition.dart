@@ -1,21 +1,43 @@
+import 'package:fsm2/src/exceptions.dart';
+
 import '../join_definition.dart';
 import '../state_definition.dart';
 import '../types.dart';
 import 'transition_definition.dart';
 
 /// A Join
-class JoinTransitionDefinition<S extends State, E extends Event>
-    extends TransitionDefinition<S, E> {
-  @override
-  List<Type> get targetStates => [definition.toState];
-
+/// [E] the event that triggers this transition
+/// [S] the state that we will transition to once all other Joins are triggered
+///  for the parent [coregion]
+class JoinTransitionDefinition<S extends State, E extends Event, TOSTATE extends State>
+    extends TransitionDefinition<E> {
   final JoinDefinition definition;
 
-  /// For a Join transition the [stateDefinition] is the parent costate.
-  JoinTransitionDefinition(StateDefinition<S> stateDefinition, this.definition)
-      : super(
-          stateDefinition,
-        );
+  /// The ancestor coregion this join is associated with.
+  StateDefinition coRegion;
+
+  /// For a Join transition the [toStateDefinition] is the parent [coregion].
+  JoinTransitionDefinition(
+    StateDefinition<State> parentStateDefinition,
+    GuardCondition<E> condition,
+    SideEffect sideEffect,
+  )   : definition = JoinDefinition(TOSTATE),
+        super(parentStateDefinition, sideEffect: sideEffect, condition: condition) {
+    definition.addEvent(E);
+
+    var parent = parentStateDefinition;
+
+    while (!parent.isCoRegion && parent.stateType != VirtualRoot().runtimeType) {
+      parent = parent.parent;
+    }
+
+    if (parent.stateType == VirtualRoot().runtimeType) {
+      throw OnJoinException('onJoin for ${parentStateDefinition.stateType} MUST have a coregion anscestor.');
+    }
+  }
+
+  @override
+  List<Type> get targetStates => [definition.toState];
 
   @override
   List<Type> get triggerEvents => definition.events;

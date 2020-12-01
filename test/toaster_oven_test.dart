@@ -5,7 +5,7 @@ void main() {
   test('export', () async {
     final machine = _createMachine();
     await machine.analyse();
-    await machine.export('test/test.gv');
+    await machine.export('test/gv/toaster_oven.gv');
   }, skip: false);
 }
 
@@ -13,9 +13,9 @@ StateMachine _createMachine() {
   return StateMachine.create((g) => g
     ..initialState<DoorClosed>()
     ..state<DoorClosed>((b) => b..on<OnBake, Baking>()..on<OnToast, Toasting>())
-    ..state<DoorOpen>((b) {})
+    ..state<DoorOpen>((b) => b..on<OnCloseDoor, DoorClosed>())
     ..state<Heating>((b) => b
-      ..on<OpenDoor, DoorOpen>()
+      ..on<OnOpenDoor, DoorOpen>()
       ..state<Toasting>((b) {})
       ..state<Baking>((b) {})));
 
@@ -35,7 +35,9 @@ class Heating implements State {}
 
 class LightOn implements State {}
 
-class OpenDoor implements Event {}
+class OnOpenDoor implements Event {}
+
+class OnCloseDoor implements Event {}
 
 class OnTurnOff implements Event {}
 

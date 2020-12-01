@@ -30,6 +30,17 @@ class UnknownStateException implements Exception {
   String toString() => message;
 }
 
+
+class InvalidInitialStateException implements Exception {
+  String message;
+
+  InvalidInitialStateException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+
 // class InvalidNestedStateException implements Exception {
 //   String message;
 
@@ -56,6 +67,17 @@ class InvalidStateMachine implements Exception {
   String message;
 
   InvalidStateMachine(this.message);
+
+  @override
+  String toString() => message;
+}
+
+
+/// An onJoin statement was used incorrectly.
+class OnJoinException implements Exception {
+  String message;
+
+  OnJoinException(this.message);
 
   @override
   String toString() => message;

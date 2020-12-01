@@ -3,7 +3,6 @@ import 'package:fsm2/src/transitions/on_transition.dart';
 
 import 'fork_builder.dart';
 import 'graph_builder.dart';
-import 'join_builder.dart';
 import 'state_machine.dart';
 
 import 'exceptions.dart';
@@ -17,8 +16,12 @@ import 'types.dart';
 class StateBuilder<S extends State> {
   final StateDefinition<S> _stateDefinition;
 
-  StateBuilder(Type stateType) : _stateDefinition = StateDefinition<S>(stateType) {
-    _stateDefinition.setParent(VirtualRoot().definition);
+  /// The initial state for the substate
+  /// If there are no child states then this is just 'this'.
+  Type _initialState;
+
+  StateBuilder(Type stateType, StateDefinition parent, this._stateDefinition) {
+    _stateDefinition.setParent(parent);
   }
 
   /// Statically declares a transition that will occur when Event of type [E]
@@ -42,7 +45,7 @@ class StateBuilder<S extends State> {
   /// ..state<MobileNoAcquired>((builder) => builder
   ///   ..on<OnUserFound, LoggedIn>(condition: (state, event) => event.subscribed == true))
   ///   ..on<OnUserFound, AskForSubscription>(condition: (state, event) => event.subscribed == false))
-  /// ```
+  /// ```a
   ///
   /// There MAY be only one transition with a null [condition] and it MUST be the last
   /// transition added to the [S]. A transition with a null [condition] is considered the
@@ -52,11 +55,25 @@ class StateBuilder<S extends State> {
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
   void on<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
-    var onTransition = OnTransition<S, E, TOSTATE>(_stateDefinition, condition, TOSTATE, sideEffect);
+    var onTransition = OnTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, TOSTATE, sideEffect);
 
     _stateDefinition.addTransition<E>(onTransition);
   }
 
+  /// Adds a nested State definition as per the UML2
+  /// specification for `hierarchically nested states`.
+  void state<C extends State>(BuildState<C> buildState) {
+    _stateDefinition.addNestedState(buildState);
+  }
+
+  /// Adds a [coregion] State definition as per the UML2
+  /// specification for `orthogonal regions`.
+  void coregion<CO extends State>(BuildCoRegion<CO> buildState) {
+    _stateDefinition.addCoRegion(buildState);
+  }
+
+  /// Used to enter a co-region by targeting the set of states within the
+  /// coregion to transition to.
   void onFork<E extends Event>(BuildFork<E> buildFork, {Function(State, E) condition}) {
     final builder = ForkBuilder<E>();
     buildFork(builder);
@@ -67,43 +84,50 @@ class StateBuilder<S extends State> {
     _stateDefinition.addTransition(choice);
   }
 
-  /// Adds a nested State definition as per the UML2
-  /// specification for `hierarchically nested states`.
-  void state<C extends State>(BuildState<C> buildState) {
-    _stateDefinition.addNestedState(buildState);
-  }
+  /// Adds an event to the set of events that must be triggered to leave the parent [coregion].
+  /// Every onJoin in a coregion must target the same external state.
+  void onJoin<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
+    var onTransition = JoinTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, sideEffect);
 
-  /// Adds a costate State definition as per the UML2
-  /// specification for `orthogonal regions`.
-  void costate<CO extends State>(BuildCoState<CO> buildState) {
-    _stateDefinition.addCoState(buildState);
+    _stateDefinition.addTransition<E>(onTransition);
   }
 
   /// Sets callback that will be called right after machine enters this State.
-  void onEnter(OnEnter onEnter) {
+  void onEnter(OnEnter onEnter, {String label}) {
     _stateDefinition.onEnter = onEnter;
+    _stateDefinition.nEnterLabel = label;
   }
 
   /// Sets callback that will be called right before machine exits this State.
-  void onExit(OnExit onExit) {
+  void onExit(OnExit onExit, {String label}) {
     _stateDefinition.onExit = onExit;
+    _stateDefinition.onExitLabel = label;
   }
 
-  StateDefinition build() => _stateDefinition;
+  StateDefinition build() {
+    if (_stateDefinition.isLeaf) {
+      _initialState = _stateDefinition.stateType;
+      return _stateDefinition;
+    } else {
+      /// If no initial state then the first state is the initial state.
+      if (_initialState == null && _stateDefinition.childStateDefinitions.isNotEmpty) {
+        _initialState = _stateDefinition.childStateDefinitions[0].stateType;
+      }
 
-  void initialState<I extends State>() {}
-}
+      assert(_initialState != null);
+      var sd = _stateDefinition.findStateDefintion(_initialState, includeChildren: false);
+      if (sd == null) {
+        throw InvalidInitialStateException(
+            'The initialState $_initialState MUST be a child state of ${_stateDefinition.stateType}.');
+      }
 
-class CoStateBuilder<S extends State> extends StateBuilder<S> {
-  CoStateBuilder(Type stateType) : super(stateType);
+      _stateDefinition.initialState = _initialState;
 
-  void onJoin<JS extends State>(BuildJoin<JS> buildJoin, {Function(JS, Event) condition}) {
-    final builder = JoinBuilder<JS>(_stateDefinition);
-    buildJoin(builder);
-    final definition = builder.build();
+      return _stateDefinition;
+    }
+  }
 
-    var choice = JoinTransitionDefinition(_stateDefinition, definition);
-
-    _stateDefinition.addTransition(choice);
+  void initialState<I extends State>() {
+    _initialState = I;
   }
 }

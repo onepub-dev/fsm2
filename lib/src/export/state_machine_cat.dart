@@ -88,7 +88,7 @@ class StartMachineCatExporter {
     var firstpass = true;
     var sawState = false;
 
-    for (var child in sd.childStateDefinitions.values) {
+    for (var child in sd.childStateDefinitions) {
       if (!firstpass) {
         raf.writeStringSync(',\n');
       }
@@ -127,7 +127,7 @@ class StartMachineCatExporter {
         raf.writeStringSync('${indent(level)}\n');
         firstpass = false;
       }
-      if (transition is OnTransition) {
+      if (transition is OnTransitionDefinition) {
         raf.writeStringSync(
             '${indent(level)}${transition.fromStateDefinition.stateType} => ${transition.toState} : ${transition.triggerEvents.first},\n');
       }
@@ -161,8 +161,8 @@ class StartMachineCatExporter {
     // }
   }
 
-  void writeJoin(RandomAccessFile raf, StateDefinition sd, JoinTransitionDefinition<State, Event> transition, int level,
-      int pseudoStateId) {
+  void writeJoin(RandomAccessFile raf, StateDefinition sd, JoinTransitionDefinition<State, Event, State> transition,
+      int level, int pseudoStateId) {
     /// joins are pseudo states which in mermaid need a name.
     /// as we model them as a transition we don't have a name.
     /// As such we use the states name followed by a unqiue id to generate a name.
