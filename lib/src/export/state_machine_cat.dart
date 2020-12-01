@@ -140,7 +140,11 @@ class StartMachineCatExporter {
     if (firstpass == false) raf.writeStringSync('${indent(level)}\n');
   }
 
-  void writeFork(RandomAccessFile raf, StateDefinition sd, ForkTransitionDefinition<State, Event> transition, int level,
+  void writeFork(
+      RandomAccessFile raf,
+      StateDefinition sd,
+      ForkTransitionDefinition<State, Event> transition,
+      int level,
       int pseudoStateId) {
     /// forks are pseudo states which in mermaid need a name.
     /// as we model them as a transition we don't have a name.
@@ -149,7 +153,8 @@ class StartMachineCatExporter {
     raf.writeStringSync('${indent(level)}$forkName; \n');
 
     /// Add a transition into the fork
-    raf.writeStringSync('${indent(level)}${transition.fromStateDefinition.stateType} => ${forkName};\n');
+    raf.writeStringSync(
+        '${indent(level)}${transition.fromStateDefinition.stateType} => ${forkName};\n');
     // raf.writeStringSync('${indent(level)}[*] => $forkName;\n');
 
     // /// now add a transition from the fork to each target.
@@ -158,8 +163,12 @@ class StartMachineCatExporter {
     // }
   }
 
-  void writeJoin(RandomAccessFile raf, StateDefinition sd, JoinTransitionDefinition<State, Event, State> transition,
-      int level, int pseudoStateId) {
+  void writeJoin(
+      RandomAccessFile raf,
+      StateDefinition sd,
+      JoinTransitionDefinition<State, Event, State> transition,
+      int level,
+      int pseudoStateId) {
     /// joins are pseudo states which in mermaid need a name.
     /// as we model them as a transition we don't have a name.
     /// As such we use the states name followed by a unqiue id to generate a name.

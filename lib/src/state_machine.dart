@@ -38,7 +38,8 @@ class StateMachine {
   final eventQueue = Queue<_QueuedEvent>();
 
   /// Returns [Stream] of States.
-  final StreamController<StateOfMind> _controller = StreamController.broadcast();
+  final StreamController<StateOfMind> _controller =
+      StreamController.broadcast();
 
   final Graph _graph;
 
@@ -54,7 +55,8 @@ class StateMachine {
   /// expect them. Instead these transitions are logged.
   ///
   /// [production] defaults to false.
-  factory StateMachine.create(BuildGraph buildGraph, {bool production = false}) {
+  factory StateMachine.create(BuildGraph buildGraph,
+      {bool production = false}) {
     final graphBuilder = GraphBuilder();
 
     buildGraph(graphBuilder);
@@ -72,21 +74,24 @@ class StateMachine {
 
     /// If no initial state then the first state is the initial state.
     if (initialState == null && _graph.stateDefinitions.isNotEmpty) {
-      _graph.initialState =
-          initialState = _graph.stateDefinitions.values.firstWhere((sd) => sd.stateType != VirtualRoot).stateType;
+      _graph.initialState = initialState = _graph.stateDefinitions.values
+          .firstWhere((sd) => sd.stateType != VirtualRoot)
+          .stateType;
     }
 
     assert(initialState != null);
 
     if (!_graph.isTopLevelState(initialState)) {
-      throw InvalidInitialStateException('The initialState $initialState MUST be a top level state.');
+      throw InvalidInitialStateException(
+          'The initialState $initialState MUST be a top level state.');
     }
 
     var initialSd = _graph.findStateDefinition(initialState);
 
     /// Find the initial state by chaining down through the initialStates looking for a leaf.
     if (!_loadStateOfMind(initialSd)) {
-      throw InvalidInitialStateException('The top level initialState $initialState must lead to a leaf state.');
+      throw InvalidInitialStateException(
+          'The top level initialState $initialState must lead to a leaf state.');
     }
   }
 
@@ -96,12 +101,14 @@ class StateMachine {
       return true;
     } else {
       /// search child for a leaf.
-      var child = initialState.findStateDefintion(initialState.initialState, includeChildren: false);
+      var child = initialState.findStateDefintion(initialState.initialState,
+          includeChildren: false);
       return _loadStateOfMind(child);
     }
   }
 
-  List<StateDefinition<State>> get topStateDefinitions => _graph.topStateDefinitions;
+  List<StateDefinition<State>> get topStateDefinitions =>
+      _graph.topStateDefinitions;
 
   String get initialStateLabel => _graph.initialStateLabel;
 
@@ -212,7 +219,8 @@ class StateMachine {
     /// only one transition at a time.
     return lock.synchronized(() async {
       for (var stateDefinition in _stateOfMind.activeLeafStates()) {
-        var transitionDefinition = await stateDefinition.findTriggerableTransition(stateDefinition.stateType, event);
+        var transitionDefinition = await stateDefinition
+            .findTriggerableTransition(stateDefinition.stateType, event);
 
         _graph.onTransitionListeners.forEach((onTransition) {
           // Some transitions (fork) have multiple targets so we need to
@@ -226,7 +234,8 @@ class StateMachine {
           }
         });
 
-        _stateOfMind = await transitionDefinition.trigger(_graph, _stateOfMind, stateDefinition.stateType, event);
+        _stateOfMind = await transitionDefinition.trigger(
+            _graph, _stateOfMind, stateDefinition.stateType, event);
         _controller.add(_stateOfMind);
       }
 
@@ -272,10 +281,13 @@ class StateMachine {
   /// Traverses the State tree calling listener for each state
   /// and each statically defined transition.
   Future<void> traverseTree(
-      void Function(StateDefinition stateDefinition, List<TransitionDefinition> transitionDefinitions) listener,
+      void Function(StateDefinition stateDefinition,
+              List<TransitionDefinition> transitionDefinitions)
+          listener,
       {bool includeInherited = true}) async {
     for (var stateDefinition in _graph.stateDefinitions.values) {
-      await listener.call(stateDefinition, stateDefinition.getTransitions(includeInherited: includeInherited));
+      await listener.call(stateDefinition,
+          stateDefinition.getTransitions(includeInherited: includeInherited));
     }
   }
 

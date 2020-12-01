@@ -17,10 +17,16 @@ void main() {
     var som = machine.stateOfMind;
     var paths = som.activeLeafStates();
     expect(paths.length, equals(2));
-    var types = som.pathForLeafState(RunFan).path.map((sd) => sd.stateType).toList();
+    var types =
+        som.pathForLeafState(RunFan).path.map((sd) => sd.stateType).toList();
     expect(types, equals([RunFan, HandleEquipment, MaintainAir, VirtualRoot]));
-    types = som.pathForLeafState(HandleLamp).path.map((sd) => sd.stateType).toList();
-    expect(types, equals([HandleLamp, HandleEquipment, MaintainAir, VirtualRoot]));
+    types = som
+        .pathForLeafState(HandleLamp)
+        .path
+        .map((sd) => sd.stateType)
+        .toList();
+    expect(
+        types, equals([HandleLamp, HandleEquipment, MaintainAir, VirtualRoot]));
   }, skip: false);
 
   test('export', () async {
@@ -38,7 +44,11 @@ void _createMachine() {
       ..on<TurnOff, FinalState>()
       ..state<MonitorAir>((b) => b
 //        ..on<OnBadAir, CleanAir>()
-        ..onFork<OnBadAir>((b) => b..target<RunFan>()..target<HandleLamp>()..target<WaitForGoodAir>(),
+        ..onFork<OnBadAir>(
+            (b) => b
+              ..target<RunFan>()
+              ..target<HandleLamp>()
+              ..target<WaitForGoodAir>(),
             condition: (s, e) => e.quality < 10))
       ..coregion<CleanAir>((b) => b
         ..onExit((s, e) async => turnFanOff())

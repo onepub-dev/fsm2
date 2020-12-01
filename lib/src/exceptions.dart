@@ -30,7 +30,6 @@ class UnknownStateException implements Exception {
   String toString() => message;
 }
 
-
 class InvalidInitialStateException implements Exception {
   String message;
 
@@ -39,7 +38,6 @@ class InvalidInitialStateException implements Exception {
   @override
   String toString() => message;
 }
-
 
 // class InvalidNestedStateException implements Exception {
 //   String message;
@@ -71,7 +69,6 @@ class InvalidStateMachine implements Exception {
   @override
   String toString() => message;
 }
-
 
 /// An onJoin statement was used incorrectly.
 class OnJoinException implements Exception {

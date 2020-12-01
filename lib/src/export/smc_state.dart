@@ -22,8 +22,6 @@ class SMCState {
 
   SMCState({this.name, this.type});
 
-  
-
   ///
   /// Build the SMSState tree
   ///
@@ -101,7 +99,9 @@ class SMCState {
     }
   }
 
-  bool hasBody() => (children.isNotEmpty || transitions.isNotEmpty) && type != SMCStateType.root;
+  bool hasBody() =>
+      (children.isNotEmpty || transitions.isNotEmpty) &&
+      type != SMCStateType.root;
 }
 
 class SMCTransition {
@@ -111,7 +111,8 @@ class SMCTransition {
   String pseudoState;
 
   /// A single [TransitionDefinition] can result in multiple transition lines.
-  static List<SMCTransition> build(SMCState owner, TransitionDefinition<Event> transition) {
+  static List<SMCTransition> build(
+      SMCState owner, TransitionDefinition<Event> transition) {
     var transitions = <SMCTransition>[];
 
     // fork
@@ -147,7 +148,8 @@ class SMCTransition {
       }
       var smc = SMCTransition();
       smc.from = transition.fromStateDefinition.stateType.toString();
-      smc.to = ']${transition.targetStates[0].toString()}.Join'; // transition.targetStates[0].toString();
+      smc.to =
+          ']${transition.targetStates[0].toString()}.Join'; // transition.targetStates[0].toString();
       smc.label = transition.triggerEvents[0].toString();
       // smc.pseudoState = ']${transition.targetStates[0].toString()}.Join';
       parent.parent.transitions.add(smc);
@@ -167,7 +169,8 @@ class SMCTransition {
         var smc = SMCTransition();
         smc.from = owner.name;
         var target = transition.targetStates[0];
-        smc.to = (target == FinalState ? '${owner.name}.final' : target.toString());
+        smc.to =
+            (target == FinalState ? '${owner.name}.final' : target.toString());
         smc.label = (trigger ?? '').toString();
 
         /// The final transition is always placed outside the substate.

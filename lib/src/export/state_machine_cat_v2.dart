@@ -19,7 +19,8 @@ import 'smc_state.dart';
 /// ```
 class StartMachineCatV2Exporter {
   final StateMachine stateMachine;
-  final SMCState virtualRoot = SMCState(name: 'initial', type: SMCStateType.root);
+  final SMCState virtualRoot =
+      SMCState(name: 'initial', type: SMCStateType.root);
 
   /// creates a map of the terminal ordinals to what
   /// parent state they belong to.
@@ -49,7 +50,8 @@ class StartMachineCatV2Exporter {
 
     var ancestor = stateMachine.oldestAncestor(stateMachine.initialState);
 
-    raf.writeStringSync('initial => ${ancestor.toString()} : ${stateMachine.initialStateLabel};\n');
+    raf.writeStringSync(
+        'initial => ${ancestor.toString()} : ${stateMachine.initialStateLabel};\n');
 
     raf.closeSync();
   }
