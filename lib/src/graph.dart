@@ -1,6 +1,6 @@
 import 'package:fsm2/src/exceptions.dart';
 
-import 'state_definition.dart';
+import 'definitions/state_definition.dart';
 import 'types.dart';
 import 'virtual_root.dart';
 

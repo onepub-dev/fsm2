@@ -3,12 +3,12 @@ import 'package:fsm2/src/transitions/on_transition.dart';
 
 import 'fork_builder.dart';
 import 'graph_builder.dart';
-import 'state_machine.dart';
+import '../state_machine.dart';
 
-import 'exceptions.dart';
-import 'state_definition.dart';
-import 'transitions/join_transition.dart';
-import 'types.dart';
+import '../exceptions.dart';
+import '../definitions/state_definition.dart';
+import '../transitions/join_transition.dart';
+import '../types.dart';
 
 /// State builder.
 ///
@@ -54,30 +54,30 @@ class StateBuilder<S extends State> {
   /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
-  void on<E extends Event, TOSTATE extends State>(
-      {GuardCondition<E> condition, SideEffect sideEffect}) {
-    var onTransition = OnTransitionDefinition<S, E, TOSTATE>(
-        _stateDefinition, condition, TOSTATE, sideEffect);
+  void on<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
+    var onTransition = OnTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, TOSTATE, sideEffect);
 
     _stateDefinition.addTransition<E>(onTransition);
   }
 
   /// Adds a nested State definition as per the UML2
   /// specification for `hierarchically nested states`.
-  void state<C extends State>(BuildState<C> buildState) {
+  void state<C extends State>(BuildState<C> buildState, {bool pageBreak = false}) {
     _stateDefinition.addNestedState(buildState);
   }
 
   /// Adds a [coregion] State definition as per the UML2
   /// specification for `orthogonal regions`.
-  void coregion<CO extends State>(BuildCoRegion<CO> buildState) {
+  /// If [pageBreak] is set to true (default is false) then
+  /// This coregion and its nested children will be exported to a
+  /// separate page.
+  void coregion<CO extends State>(BuildCoRegion<CO> buildState, {bool pageBreak = false}) {
     _stateDefinition.addCoRegion(buildState);
   }
 
   /// Used to enter a co-region by targeting the set of states within the
   /// coregion to transition to.
-  void onFork<E extends Event>(BuildFork<E> buildFork,
-      {Function(State, E) condition}) {
+  void onFork<E extends Event>(BuildFork<E> buildFork, {Function(State, E) condition}) {
     final builder = ForkBuilder<E>();
     buildFork(builder);
     final definition = builder.build();
@@ -89,10 +89,8 @@ class StateBuilder<S extends State> {
 
   /// Adds an event to the set of events that must be triggered to leave the parent [coregion].
   /// Every onJoin in a coregion must target the same external state.
-  void onJoin<E extends Event, TOSTATE extends State>(
-      {GuardCondition<E> condition, SideEffect sideEffect}) {
-    var onTransition = JoinTransitionDefinition<S, E, TOSTATE>(
-        _stateDefinition, condition, sideEffect);
+  void onJoin<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
+    var onTransition = JoinTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, sideEffect);
 
     _stateDefinition.addTransition<E>(onTransition);
   }
@@ -115,14 +113,12 @@ class StateBuilder<S extends State> {
       return _stateDefinition;
     } else {
       /// If no initial state then the first state is the initial state.
-      if (_initialState == null &&
-          _stateDefinition.childStateDefinitions.isNotEmpty) {
+      if (_initialState == null && _stateDefinition.childStateDefinitions.isNotEmpty) {
         _initialState = _stateDefinition.childStateDefinitions[0].stateType;
       }
 
       assert(_initialState != null);
-      var sd = _stateDefinition.findStateDefintion(_initialState,
-          includeChildren: false);
+      var sd = _stateDefinition.findStateDefintion(_initialState, includeChildren: false);
       if (sd == null) {
         throw InvalidInitialStateException(
             'The initialState $_initialState MUST be a child state of ${_stateDefinition.stateType}.');

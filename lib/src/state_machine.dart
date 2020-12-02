@@ -8,8 +8,8 @@ import 'package:synchronized/synchronized.dart';
 import 'exceptions.dart';
 import 'export/state_machine_cat_v2.dart';
 import 'graph.dart';
-import 'graph_builder.dart';
-import 'state_definition.dart';
+import 'builders/graph_builder.dart';
+import 'definitions/state_definition.dart';
 import 'state_path.dart';
 import 'static_analysis.dart' as analysis;
 import 'transitions/transition_definition.dart';
@@ -274,7 +274,7 @@ class StateMachine {
   /// ```
   Future<void> export(String path) async {
     //var exporter = MermaidExporter(this);
-    var exporter = StartMachineCatV2Exporter(this);
+    var exporter = CatExporter(this);
     await exporter.export(path);
   }
 

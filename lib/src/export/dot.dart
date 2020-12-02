@@ -4,7 +4,7 @@ import 'package:meta/meta.dart';
 
 import 'package:fsm2/src/state_machine.dart';
 
-import '../state_definition.dart';
+import '../definitions/state_definition.dart';
 import '../virtual_root.dart';
 
 /// Class exports a [StateMachine] to a dot notation file so that the FMS can be visualised.

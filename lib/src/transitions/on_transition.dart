@@ -1,12 +1,11 @@
-import 'package:fsm2/src/state_definition.dart';
+import '../definitions/state_definition.dart';
 
 import '../types.dart';
 import 'transition_definition.dart';
 
 /// An [OnTransitionDefinition] is used to store details
 /// of an transition defined by [State.on]
-class OnTransitionDefinition<S extends State, E extends Event,
-    TOSTATE extends State> extends TransitionDefinition<E> {
+class OnTransitionDefinition<S extends State, E extends Event, TOSTATE extends State> extends TransitionDefinition<E> {
   /// If this [OnTransitionDefinition] is trigger this will be the new [State]
   /// the FSM. If [toState] is null then there MUST be an [eventHandler]
   /// which will be called to determine the new [State].
@@ -14,8 +13,8 @@ class OnTransitionDefinition<S extends State, E extends Event,
   /// [toState] is set by calling the [on] method against a [State]
   Type toState;
 
-  OnTransitionDefinition(StateDefinition stateDefinition,
-      GuardCondition<E> condition, this.toState, SideEffect sideEffect)
+  OnTransitionDefinition(
+      StateDefinition stateDefinition, GuardCondition<E> condition, this.toState, SideEffect sideEffect)
       : super(stateDefinition, condition: condition, sideEffect: sideEffect);
 
   @override

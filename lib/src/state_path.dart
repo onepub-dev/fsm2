@@ -1,5 +1,5 @@
 import 'graph.dart';
-import 'state_definition.dart';
+import 'definitions/state_definition.dart';
 import 'types.dart';
 import 'virtual_root.dart';
 
@@ -60,8 +60,7 @@ class PartialStatePath {
 /// This class should only be used to store
 /// a path which starts from an active leaf.
 class StatePath extends PartialStatePath {
-  StatePath(List<StateDefinition> path)
-      : super.fromPath(List.unmodifiable(path));
+  StatePath(List<StateDefinition> path) : super.fromPath(List.unmodifiable(path));
 
   /// Creates a [StatePath] from a leaf by trace
   /// up the graph to determine the complete list

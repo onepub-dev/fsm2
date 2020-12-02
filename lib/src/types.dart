@@ -1,10 +1,10 @@
-import 'package:fsm2/src/co_region_builder.dart';
+import 'builders/co_region_builder.dart';
 
-import 'fork_builder.dart';
-import 'graph_builder.dart';
-import 'join_builder.dart';
-import 'state_builder.dart';
-import 'state_definition.dart';
+import 'builders/fork_builder.dart';
+import 'builders/graph_builder.dart';
+import 'builders/join_builder.dart';
+import 'builders/state_builder.dart';
+import 'definitions/state_definition.dart';
 
 abstract class State {}
 
@@ -41,8 +41,7 @@ typedef OnExit = Future<void> Function(Type toState, Event event);
 
 /// Callback when a transition occurs.
 /// We pass, fromState, Event that triggered the transition and the target state.
-typedef TransitionListener = void Function(
-    StateDefinition, Event, StateDefinition);
+typedef TransitionListener = void Function(StateDefinition, Event, StateDefinition);
 
 /// The builder for a state.
 typedef BuildState<S extends State> = void Function(StateBuilder<S>);

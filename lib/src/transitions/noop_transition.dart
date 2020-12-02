@@ -1,5 +1,5 @@
 import '../graph.dart';
-import '../state_definition.dart';
+import '../definitions/state_definition.dart';
 import '../state_of_mind.dart';
 import '../types.dart';
 import 'transition_definition.dart';

@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'graph.dart';
-import 'state_definition.dart';
+import 'definitions/state_definition.dart';
 import 'types.dart';
 import 'virtual_root.dart';
 
@@ -28,11 +28,9 @@ import 'virtual_root.dart';
 /// Returns [true] if all States are reachable.
 bool analyse(Graph graph) {
   var allGood = true;
-  var stateDefinitionMap =
-      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
+  var stateDefinitionMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
-  var remainingStateMap =
-      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
+  var remainingStateMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
   remainingStateMap.remove(graph.initialState);
 
@@ -82,8 +80,7 @@ bool analyse(Graph graph) {
   for (var stateDefinition in stateDefinitionMap.values) {
     if (stateDefinition.stateType == VirtualRoot) continue;
     // log('Found state: ${stateDefinition.stateType}');
-    for (var transitionDefinition
-        in stateDefinition.getTransitions(includeInherited: false)) {
+    for (var transitionDefinition in stateDefinition.getTransitions(includeInherited: false)) {
       var targetStates = transitionDefinition.targetStates;
       for (var targetState in targetStates) {
         // Ignore our special terminal state.

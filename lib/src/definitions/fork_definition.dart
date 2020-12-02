@@ -1,4 +1,4 @@
-import 'types.dart';
+import '../types.dart';
 
 class ForkDefinition<E extends Event> {
   ForkDefinition();

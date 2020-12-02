@@ -1,8 +1,8 @@
 import 'graph_builder.dart';
 
-import 'join_definition.dart';
-import 'state_definition.dart';
-import 'types.dart';
+import '../definitions/join_definition.dart';
+import '../definitions/state_definition.dart';
+import '../types.dart';
 
 /// State builder.
 ///

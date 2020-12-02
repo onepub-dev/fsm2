@@ -1,6 +1,6 @@
-import 'package:fsm2/src/state_definition.dart';
+import '../definitions/state_definition.dart';
 
-import 'types.dart';
+import '../types.dart';
 
 class JoinDefinition<S extends State> {
   JoinDefinition(this.toState);

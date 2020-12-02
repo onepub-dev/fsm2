@@ -1,4 +1,4 @@
-import 'package:fsm2/src/state_definition.dart';
+import 'definitions/state_definition.dart';
 
 import 'state_path.dart';
 

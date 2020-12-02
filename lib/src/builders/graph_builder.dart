@@ -1,11 +1,11 @@
 import 'package:meta/meta.dart';
-import 'co_region_definition.dart';
-import 'state_definition.dart';
+import '../definitions/co_region_definition.dart';
+import '../definitions/state_definition.dart';
 import 'state_builder.dart';
-import 'state_machine.dart';
-import 'graph.dart';
-import 'types.dart';
-import 'virtual_root.dart';
+import '../state_machine.dart';
+import '../graph.dart';
+import '../types.dart';
+import '../virtual_root.dart';
 
 /// Builder for FSM.
 ///
