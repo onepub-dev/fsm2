@@ -1,12 +1,12 @@
+@Timeout(Duration(minutes: 10))
 import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 class Watcher extends Mock {
-  OnEnter onEnter;
-
-  OnExit onExit;
+  Future<void> onEnter(Type fromState, Event event);
+  Future<void> onExit(Type toState, Event event);
 
   void log(String message);
 }
@@ -21,13 +21,15 @@ void main() {
   });
 
   test('initial State should be Alive and Young', () async {
-    final machine = await _createMachine<Young>(watcher, human);
+    final machine = await _createMachine<Alive>(watcher, human);
+    await machine.waitUntilQuiescent;
+
     expect(machine.isInState<Alive>(), equals(true));
     expect(machine.isInState<Young>(), equals(true));
   });
 
   test('traverse tree', () async {
-    final machine = await _createMachine<Young>(watcher, human);
+    final machine = await _createMachine<Alive>(watcher, human);
     var states = <StateDefinition, StateDefinition>{};
     var transitions = <TransitionDefinition>[];
     await machine.traverseTree((sd, tds) {
@@ -40,28 +42,32 @@ void main() {
   });
 
   test('Test no op transition', () async {
-    final machine = await _createMachine<Young>(watcher, human);
-    await machine.applyEvent(OnBirthday());
+    final machine = await _createMachine<Alive>(watcher, human);
+    machine.applyEvent(OnBirthday());
+    await machine.waitUntilQuiescent;
     expect(machine.isInState<Alive>(), equals(true));
     expect(machine.isInState<Young>(), equals(true));
     verifyInOrder([watcher.log('OnBirthday')]);
   });
 
   test('Test simple transition', () async {
-    final machine = await _createMachine<Young>(watcher, human);
+    final machine = await _createMachine<Alive>(watcher, human);
     for (var i = 0; i < 19; i++) {
-      await machine.applyEvent(OnBirthday());
+      machine.applyEvent(OnBirthday());
     }
+    await machine.waitUntilQuiescent;
     expect(machine.isInState<Alive>(), equals(true));
     expect(machine.isInState<MiddleAged>(), equals(true));
     verifyInOrder([watcher.log('OnBirthday')]);
   });
 
   test('Test multiple transitions', () async {
-    final machine = await _createMachine<Young>(watcher, human);
-    await machine.applyEvent(OnBirthday());
+    final machine = await _createMachine<Alive>(watcher, human);
+    machine.applyEvent(OnBirthday());
+    await machine.waitUntilQuiescent;
     expect(machine.isInState<Young>(), equals(true));
-    await machine.applyEvent(OnDeath());
+    machine.applyEvent(OnDeath());
+    await machine.waitUntilQuiescent;
     expect(machine.isInState<Dead>(), equals(true));
 
     verifyInOrder([watcher.log('OnBirthday')]);
@@ -69,9 +75,10 @@ void main() {
 
   test('Invalid transition', () async {
     final watcher = Watcher();
-    final machine = await _createMachine<Purgatory>(watcher, human);
+    final machine = await _createMachine<Dead>(watcher, human);
     try {
-      await machine.applyEvent(OnBirthday());
+      machine.applyEvent(OnBirthday());
+      await machine.waitUntilQuiescent;
       fail('InvalidTransitionException not thrown');
     } catch (e) {
       expect(e, isA<InvalidTransitionException>());
@@ -85,40 +92,57 @@ void main() {
           ..state<Alive>((b) => b..state<Dead>((b) {})),
         production: true);
 
-    expect(await machine.analyse(), equals(false));
+    expect(machine.analyse(), equals(false));
   });
 
   test('Transition in nested state.', () async {
     final watcher = Watcher();
-    final machine = await _createMachine<Purgatory>(watcher, human);
+    final machine = await _createMachine<Dead>(watcher, human);
 
-    await machine.applyEvent(OnJudged(Judgement.good));
+    machine.applyEvent(OnJudged(Judgement.good));
+    await machine.waitUntilQuiescent;
 
     /// should be in both states.
     expect(machine.isInState<InHeaven>(), equals(true));
     expect(machine.isInState<Dead>(), equals(true));
   });
 
-  test('calls onExit', () async {
+  test('calls onExit/onEnter', () async {
     final watcher = Watcher();
-    final machine = await _createMachine<Young>(watcher, human);
-    await machine.applyEvent(OnBirthday());
-    // verify(watcher.onExit((s,e ) {} )));
+    final machine = await _createMachine<Alive>(watcher, human);
+
+    /// age this boy until they are middle aged.
+    var onBirthday = OnBirthday();
+    for (var i = 0; i < 19; i++) {
+      machine.applyEvent(onBirthday);
+    }
+    await machine.waitUntilQuiescent;
+    verify(await watcher.onExit(Young, onBirthday));
+    verify(await watcher.onEnter(MiddleAged, onBirthday));
+  });
+
+  test('Test onExit/onEnter for nested state change', () async {
+    final watcher = Watcher();
+    final machine = await _createMachine<Alive>(watcher, human);
+
+    /// age this boy until they are middle aged.
+    var onDeath = OnDeath();
+    machine.applyEvent(onDeath);
+    await machine.waitUntilQuiescent;
+    verify(await watcher.onExit(Young, onDeath));
+    verify(await watcher.onExit(Alive, onDeath));
+    verify(await watcher.onEnter(Dead, onDeath));
+    verify(await watcher.onEnter(Purgatory, onDeath));
   });
 
   test('Export', () async {
     final machine = await _createMachine<Alive>(watcher, human);
-    await machine.analyse();
-    await machine.export('test/gv/nested_test.gv');
+    machine.analyse();
+    machine.export('test/gv/nested_test.gv');
 
-    var lines = read('test/gv/nested_test.gv')
-        .toList()
-        .reduce((value, line) => value += '\n' + line);
+    var lines = read('test/gv/nested_test.gv').toList().reduce((value, line) => value += '\n' + line);
 
     expect(lines, equals(graph));
-
-    // .then(expectAsync0<bool>(() {}));
-    // expectAsync1<bool, String>((a) => machine.export('/tmp/fsm.txt'));
   });
 }
 
@@ -130,31 +154,26 @@ Future<StateMachine> _createMachine<S extends State>(
     ..initialState<S>()
     ..state<Alive>((b) => b
       ..initialState<Young>()
-      ..onEnter((s, e) async => print('onEnter $s as a result of $e'))
-      ..onExit((s, e) async => print('onExit $s as a result of $e'))
-      ..on<OnBirthday, Young>(
-          condition: (e) => human.age < 18, sideEffect: () async => human.age++)
-      ..on<OnBirthday, MiddleAged>(
-          condition: (e) => human.age < 50, sideEffect: () async => human.age++)
-      ..on<OnBirthday, Old>(
-          condition: (e) => human.age < 80, sideEffect: () async => human.age++)
+      ..onEnter((s, e) async => watcher.onEnter(s, e))
+      ..onExit((s, e) async => watcher.onExit(s, e))
+      ..on<OnBirthday, Young>(condition: (e) => human.age < 18, sideEffect: () async => human.age++)
+      ..on<OnBirthday, MiddleAged>(condition: (e) => human.age < 50, sideEffect: () async => human.age++)
+      ..on<OnBirthday, Old>(condition: (e) => human.age < 80, sideEffect: () async => human.age++)
       ..on<OnDeath, Purgatory>()
-      ..state<Young>((b) => b)
-      ..state<MiddleAged>((b) => b)
+      ..state<Young>((b) => b..onExit((s, e) async => watcher.onExit(s, e)))
+      ..state<MiddleAged>((b) => b..onEnter((s, e) async => watcher.onEnter(s, e)))
       ..state<Old>((b) => b))
     ..state<Dead>((b) => b
+      ..onEnter((s, e) async => watcher.onEnter(s, e))
 
       /// ..initialState<InHeaven>()
       ..state<Purgatory>((b) => b
-        ..on<OnJudged, Buddhist>(
-            condition: (e) => e.judgement == Judgement.good)
+        ..onEnter((s, e) async => watcher.onEnter(s, e))
+        ..on<OnJudged, Buddhist>(condition: (e) => e.judgement == Judgement.good)
         ..on<OnJudged, Catholic>(condition: (e) => e.judgement == Judgement.bad)
-        ..on<OnJudged, SalvationArmy>(
-            condition: (e) => e.judgement == Judgement.ugly))
+        ..on<OnJudged, SalvationArmy>(condition: (e) => e.judgement == Judgement.ugly))
       ..state<InHeaven>((b) => b..state<Buddhist>((b) => b))
-      ..state<InHell>((b) => b
-        ..state<Christian>(
-            (b) => b..state<SalvationArmy>((b) {})..state<Catholic>((b) => b))))
+      ..state<InHell>((b) => b..state<Christian>((b) => b..state<SalvationArmy>((b) {})..state<Catholic>((b) => b))))
     ..onTransition((from, event, to) => watcher.log('${event.runtimeType}')));
   return machine;
 }
@@ -201,78 +220,36 @@ class OnJudged implements Event {
   OnJudged(this.judgement);
 }
 
-var graph = '''digraph fsm2 {
-	InitialState [shape=point];
-	InitialState -> Young;
-	Young -> MiddleAged [label="OnBirthday"];
-	Young -> Old [label="OnBirthday"];
-	Young -> Purgatory [label="OnDeath"];
-	MiddleAged -> MiddleAged [label="OnBirthday"];
-	MiddleAged -> Old [label="OnBirthday"];
-	MiddleAged -> Purgatory [label="OnDeath"];
-	Old -> MiddleAged [label="OnBirthday"];
-	Old -> Old [label="OnBirthday"];
-	Old -> Purgatory [label="OnDeath"];
-	Purgatory -> Buddhist [label="OnJudged"];
-	Buddhist -> TerminalState1;
-	Purgatory -> Catholic [label="OnJudged"];
-	Catholic -> TerminalState2;
-	Purgatory -> SalvationArmy [label="OnJudged"];
-	SalvationArmy -> TerminalState3;
+var graph = '''
 
-	// State: Alive
-	subgraph cluster_Alive {
-		graph [label="Alive", bgcolor="/bugn9/1", fontsize="20" ];
-		// nested states
-		Young; MiddleAged; Old; 
-
-	}
-
-	// State: Dead
-	subgraph cluster_Dead {
-		graph [label="Dead", bgcolor="/bugn9/1", fontsize="20" ];
-		// nested states
-		Purgatory; Buddhist; SalvationArmy; Catholic; 
-
-		// State: InHeaven
-		subgraph cluster_InHeaven {
-			graph [label="InHeaven", bgcolor="/bugn9/2", fontsize="20" ];
-			// nested states
-			Buddhist; 
-			// terminal states
-			TerminalState1 [shape=point];
-
-		}
-
-		// State: InHell
-		subgraph cluster_InHell {
-			graph [label="InHell", bgcolor="/bugn9/2", fontsize="20" ];
-			// nested states
-			SalvationArmy; Catholic; 
-
-			// State: Christian
-			subgraph cluster_Christian {
-				graph [label="Christian", bgcolor="/bugn9/3", fontsize="20" ];
-				// nested states
-				SalvationArmy; Catholic; 
-				// terminal states
-				TerminalState2 [shape=point];
-				TerminalState3 [shape=point];
-
-			}
-
-		}
-
-		// State: Christian
-		subgraph cluster_Christian {
-			graph [label="Christian", bgcolor="/bugn9/2", fontsize="20" ];
-			// nested states
-			SalvationArmy; Catholic; 
-			// terminal states
-			TerminalState2 [shape=point];
-			TerminalState3 [shape=point];
-
-		}
-
-	}
-}''';
+Alive {
+	Young,
+	MiddleAged,
+	Old;
+	Young.initial => Young;
+	Alive => Young : OnBirthday;
+	Alive => MiddleAged : OnBirthday;
+	Alive => Old : OnBirthday;
+	Alive => Purgatory : OnDeath;
+},
+Dead {
+	Purgatory {
+		Purgatory => Buddhist : OnJudged;
+		Purgatory => Catholic : OnJudged;
+		Purgatory => SalvationArmy : OnJudged;
+	},
+	InHeaven {
+		Buddhist;
+		Buddhist.initial => Buddhist;
+	},
+	InHell {
+		Christian {
+			SalvationArmy,
+			Catholic;
+			SalvationArmy.initial => SalvationArmy;
+		};
+		Christian.initial => Christian;
+	};
+	Purgatory.initial => Purgatory;
+};
+initial => Alive : Alive;''';

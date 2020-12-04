@@ -41,7 +41,7 @@ class DotExporter {
       }
     });
 
-    await _saveToDot(path);
+     _saveToDot(path);
   }
 
   Future<void> _addEdgePath(StateDefinition stateDefinition,
@@ -50,7 +50,7 @@ class DotExporter {
 
     String cluster;
 
-    var targetStates = await transitionDefinition.targetStates;
+    var targetStates =  transitionDefinition.targetStates;
 
     for (var targetState in targetStates) {
       var toDef = stateMachine.findStateDefinition(targetState);

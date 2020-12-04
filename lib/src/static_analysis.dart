@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'graph.dart';
 import 'definitions/state_definition.dart';
 import 'types.dart';
@@ -23,7 +21,7 @@ import 'virtual_root.dart';
 ///
 /// * Checks that all transitions target a registered state.
 ///
-/// The [analyse] method logs any problems it finds.
+/// The [analyse] method prints any problems it finds.
 ///
 /// Returns [true] if all States are reachable.
 bool analyse(Graph graph) {
@@ -32,36 +30,47 @@ bool analyse(Graph graph) {
 
   var remainingStateMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
+  /// always remove the virtual root as is never directly used.
+  remainingStateMap.remove(VirtualRoot);
+  stateDefinitionMap.remove(VirtualRoot);
+
+  /// the initial state is alwasy reachable.
   remainingStateMap.remove(graph.initialState);
 
   /// Check each state is reachable
   for (var stateDefinition in stateDefinitionMap.values) {
-    if (stateDefinition.stateType != VirtualRoot) {
-      /// If the parent can be reached then the initial state can be reached.
-      remainingStateMap.remove(stateDefinition.initialState);
+    /// print('Found state: ${stateDefinition.stateType}');
+    for (var transitionDefinition in stateDefinition.getTransitions()) {
+      var targetStates = transitionDefinition.targetStates;
+      for (var targetState in targetStates) {
+        var targetDefinition = stateDefinitionMap[targetState];
 
-      /// log('Found state: ${stateDefinition.stateType}');
-      for (var transitionDefinition in stateDefinition.getTransitions()) {
-        var targetStates = transitionDefinition.targetStates;
-        for (var targetState in targetStates) {
-          remainingStateMap.remove(targetState);
+        /// we have a target for an unregistered state.
+        if (targetDefinition == null) {
+          /// this will be reported later.
+          continue;
+        }
+        remainingStateMap.remove(targetState);
+
+        /// If the targetDefinition can be reached then the initial state can be reached.
+        remainingStateMap.remove(targetDefinition.initialState);
+
+        // if the stateDefinition can be reached so can all its parents.
+        var parent = targetDefinition.parent;
+        while (parent.stateType != VirtualRoot) {
+          remainingStateMap.remove(parent.stateType);
+          parent = parent.parent;
         }
       }
-    }
-
-    /// abstract states cannot be transitioned to, so remove them
-    /// as we go.
-    if (stateDefinition.isAbstract) {
-      remainingStateMap.remove(stateDefinition.stateType);
     }
   }
 
   if (remainingStateMap.isNotEmpty) {
     allGood = false;
-    log('Error: The following States cannot be reached.');
+    print('Error: The following States cannot be reached.');
 
     for (var state in remainingStateMap.values) {
-      log('Error: State: ${state.stateType}');
+      print('Error: State: ${state.stateType}');
     }
   }
 
@@ -70,7 +79,7 @@ bool analyse(Graph graph) {
   for (var stateDefinition in graph.stateDefinitions.values) {
     if (seen.contains(stateDefinition.stateType)) {
       allGood = false;
-      log('Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
+      print('Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
     }
   }
 
@@ -79,7 +88,7 @@ bool analyse(Graph graph) {
   /// 2) the toState must be a leaf state
   for (var stateDefinition in stateDefinitionMap.values) {
     if (stateDefinition.stateType == VirtualRoot) continue;
-    // log('Found state: ${stateDefinition.stateType}');
+    // print('Found state: ${stateDefinition.stateType}');
     for (var transitionDefinition in stateDefinition.getTransitions(includeInherited: false)) {
       var targetStates = transitionDefinition.targetStates;
       for (var targetState in targetStates) {
@@ -88,49 +97,45 @@ bool analyse(Graph graph) {
         var toStateDefinition = graph.stateDefinitions[targetState];
         if (toStateDefinition == null) {
           allGood = false;
-          log('Found transition to non-existant state ${targetState}.');
+          print('Found transition to non-existant state ${targetState}.');
           continue;
         }
 
         // if (toStateDefinition.isAbstract) {
         //   allGood = false;
-        //   log('Found transition to abstract state ${targetState}. Only leaf states may be the target of a transition');
+        //   print('Found transition to abstract state ${targetState}. Only leaf states may be the target of a transition');
         // }
       }
     }
+  }
 
-    /// check that all [coregion]s have at least two children
-    for (var stateDefinition in stateDefinitionMap.values) {
-      if (stateDefinition.isCoRegion) {
-        if (stateDefinition.childStateDefinitions.isEmpty) {
-          allGood = false;
-          log('Found coregion ${stateDefinition.stateType} which has no children.');
-        }
+  /// check that all [coregion]s have at least two children
+  for (var stateDefinition in stateDefinitionMap.values) {
+    if (stateDefinition.isCoRegion) {
+      if (stateDefinition.childStateDefinitions.isEmpty) {
+        allGood = false;
+        print('Found coregion ${stateDefinition.stateType} which has no children.');
+      }
 
-        if (stateDefinition.childStateDefinitions.length == 1) {
-          allGood = false;
-          log('Found coregion ${stateDefinition.stateType} which has a single child. CoRegions must have at least two chilren.');
-        }
+      if (stateDefinition.childStateDefinitions.length == 1) {
+        allGood = false;
+        print(
+            'Found coregion ${stateDefinition.stateType} which has a single child. CoRegions must have at least two chilren.');
       }
     }
+  }
 
-    /// Check that all child joins of a coregion target the same external state
-    /// and that they only target states that are external to the coregion
-    // TODO:
+  /// Check that all child joins of a coregion target the same external state
+  /// and that they only target states that are external to the coregion
+  // TODO:
 
-    /// InitialStates MUST target a child state (i.e. they can't target a grand children)
-    for (var stateDefinition in stateDefinitionMap.values) {
-      if (stateDefinition.isCoRegion) {
-        if (stateDefinition.childStateDefinitions.isEmpty) {
-          allGood = false;
-          log('Found coregion ${stateDefinition.stateType} which has no children.');
-        }
-
-        if (stateDefinition.childStateDefinitions.length == 1) {
-          allGood = false;
-          log('Found coregion ${stateDefinition.stateType} which has a single child. CoRegions must have at least two chilren.');
-        }
-      }
+  /// InitialStates MUST target a child state (i.e. they can't target a grand children)
+  for (var stateDefinition in stateDefinitionMap.values) {
+    if (stateDefinition.initialState == null) continue;
+    if (!stateDefinition.isChild(stateDefinition.initialState)) {
+      allGood = false;
+      print(
+          'The initialState for ${stateDefinition.stateType} must target a child. ${stateDefinition.initialState} is not a child.');
     }
   }
 

@@ -39,7 +39,7 @@ class StartMachineCatExporter {
     //   }
     // });
 
-    await _save(path);
+     _save(path);
   }
 
   void _save(String path) {

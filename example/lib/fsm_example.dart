@@ -3,26 +3,28 @@ import 'package:fsm2/fsm2.dart';
 void main() async {
   final machine = StateMachine.create((g) => g
     ..initialState<Solid>()
-    ..state<Solid>((b) => b..on<OnMelted, Liquid>(sideEffect: () async => print('Melted')))
+    ..state<Solid>((b) => b
+      ..on<OnMelted, Liquid>(sideEffect: () async => print('Melted'))
+      ..onEnter((s, e) async => print('Entering ${s} State'))
+      ..onExit((s, e) async => print('Exiting ${s} State')))
     ..state<Liquid>((b) => b
-      ..onEnter((s, e) async => print('Entering ${s.runtimeType} State'))
-      ..onExit((s, e) async => print('Exiting ${s.runtimeType} State'))
+      ..onEnter((s, e) async => print('Entering ${s} State'))
+      ..onExit((s, e) async => print('Exiting ${s} State'))
       ..on<OnFroze, Solid>(sideEffect: () async => print('Frozen'))
       ..on<OnVaporized, Gas>(sideEffect: () async => print('Vaporized')))
-    ..state<Gas>((b) => b..on<OnCondensed, Liquid>(sideEffect: () async => print('Condensed')))
+    ..state<Gas>((b) => b
+      ..onEnter((s, e) async => print('Entering ${s} State'))
+      ..onExit((s, e) async => print('Exiting ${s} State'))
+      ..on<OnCondensed, Liquid>(sideEffect: () async => print('Condensed')))
     ..onTransition((from, e, to) =>
         print('Recieved Event ${e} in State ${from.stateType} transitioning to State ${to.stateType}')));
 
-  await machine.analyse();
-  await machine.export('test/test.gv');
+  machine.analyse();
+  machine.export('test/test.gv');
 
-  print(machine.isInState<Solid>()); // TRUE
+  machine.applyEvent(OnMelted());
 
-  await machine.applyEvent(OnMelted());
-  print(machine.isInState<Liquid>()); // TRUE
-
-  await machine.applyEvent(OnFroze());
-  print(machine.isInState<Solid>()); // TRUE
+  machine.applyEvent(OnFroze());
 }
 
 class Solid implements State {}

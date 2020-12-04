@@ -14,8 +14,7 @@ class GraphBuilder {
   Type _initialState;
   final _stateDefinitions = <StateDefinition>[];
   final List<TransitionListener> _onTransitionListeners = [];
-  final StateDefinition<VirtualRoot> virtualRoot =
-      StateDefinition<VirtualRoot>(VirtualRoot);
+  final StateDefinition<VirtualRoot> virtualRoot = StateDefinition<VirtualRoot>(VirtualRoot, false);
 
   String _initialStateLabel;
 
@@ -29,7 +28,7 @@ class GraphBuilder {
   void state<S extends State>(
     BuildState<S> buildState,
   ) {
-    final builder = StateBuilder<S>(S, virtualRoot, StateDefinition(S));
+    final builder = StateBuilder<S>(S, virtualRoot, StateDefinition(S, false));
     buildState(builder);
     final definition = builder.build();
 
@@ -57,23 +56,19 @@ class GraphBuilder {
   void coregion<S extends State>(
     BuildState<S> buildState,
   ) {
-    final builder = StateBuilder<S>(
-        S, StateDefinition(VirtualRoot), CoRegionDefinition(VirtualRoot));
+    final builder = StateBuilder<S>(S, StateDefinition(VirtualRoot, false), CoRegionDefinition(VirtualRoot, false));
     buildState(builder);
     final definition = builder.build();
     _stateDefinitions.add(definition);
   }
 
   /// Sets [listener] that will be called on each transition.
-  void onTransition(TransitionListener listener) =>
-      _onTransitionListeners.add(listener);
+  void onTransition(TransitionListener listener) => _onTransitionListeners.add(listener);
 
-  Graph build() => Graph(virtualRoot, _initialState, _stateDefinitions,
-      _onTransitionListeners, _initialStateLabel);
+  Graph build() => Graph(virtualRoot, _initialState, _stateDefinitions, _onTransitionListeners, _initialStateLabel);
 
   @visibleForTesting
 
   /// returns a shallow copy of the [_stateDefinitions] map.
-  List<StateDefinition> get stateDefinitions =>
-      List<StateDefinition>.from(_stateDefinitions);
+  List<StateDefinition> get stateDefinitions => List<StateDefinition>.from(_stateDefinitions);
 }

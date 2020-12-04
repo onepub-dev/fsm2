@@ -1,5 +1,3 @@
-
-#include: package:effective_dart/analysis_options.yaml
 include: package:pedantic/analysis_options.yaml
 
 # For lint rules and documentation, see http://dart-lang.github.io/linter/lints.
@@ -10,14 +8,9 @@ linter:
     lines_longer_than_80_chars: false
     camel_case_types: true
     always_declare_return_types: true
-    
-    await_only_futures: true
   
 
 analyzer:
-  
-  exclude: lib/templates/*.dart
   strong-mode:
     implicit-casts: false
     implicit-dynamic: false
-    

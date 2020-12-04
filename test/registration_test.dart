@@ -1,3 +1,4 @@
+import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:test/test.dart';
 
@@ -15,13 +16,18 @@ import 'package:test/test.dart';
 void main() {
   test('analyse', () async {
     var fsm = createMachine();
-    expect(await fsm.analyse(), equals(true));
+    expect(fsm.analyse(), equals(true));
   });
 
   test('Export', () async {
     var fsm = createMachine();
-    await fsm.export('test/gv/registration.gv'); // .then(expectAsync0<bool>(() {}));
-    // expectAsync1<bool, String>((a) => machine.export('/tmp/fsm.txt'));
+    var file = 'test/gv/registration.gv';
+    var exports = fsm.export(file);
+
+    for (var page in exports.pages) {
+      var lines = read(page.path).toList().reduce((value, line) => value += '\n' + line);
+      expect(lines, equals(graph));
+    }
   });
 }
 
@@ -59,59 +65,61 @@ StateMachine createMachine() {
               ..onEnter((s, e) async => RegistrationWizard.setType(RegistrationType.recoverAccount))
               ..on<OnUserNotFound, EmailRequired>()
               ..on<OnUserEnteredMobile, MobileNoAcquired>())
-            ..coregion<MobileAndRegistrationTypeAcquired>((builder) => builder
-              ..state<AcquireMobileNo>((builder) => builder
-                ..on<OnUserEnteredMobile, MobileNoAcquired>()
+            ..coregion<MobileAndRegistrationTypeAcquired>(
+              (builder) => builder
+                ..state<AcquireMobileNo>((builder) => builder
+                  ..on<OnUserEnteredMobile, MobileNoAcquired>()
 
-                /// HasMobileNo
-                ..state<MobileNoAcquired>((builder) => builder
-                  ..onEnter((s, e) async => fetchUserDetails())
-                  ..on<OnMobileValidated, AcquireUser>()
+                  /// HasMobileNo
+                  ..state<MobileNoAcquired>((builder) => builder
+                    ..onEnter((s, e) async => fetchUserDetails())
+                    ..on<OnMobileValidated, AcquireUser>()
 
-                  /// we fetch the users state based on their mobile.
-                  ..state<AcquireUser>((builder) => builder
-                    ..on<OnUserNotFound, EmailRequired>()
-                    ..on<OnUserDisabled, AccountDisabledTerminal>()
-                    ..on<OnUserEnabled, AccountEnabled>()
-                    ..on<OnUserAcquisitionFailed, UserAcquistionRetryRequired>())
+                    /// we fetch the users state based on their mobile.
+                    ..state<AcquireUser>((builder) => builder
+                      ..on<OnUserNotFound, EmailRequired>()
+                      ..on<OnUserDisabled, AccountDisabledTerminal>()
+                      ..on<OnUserEnabled, AccountEnabled>()
+                      ..on<OnUserAcquisitionFailed, UserAcquistionRetryRequired>())
 
-                  /// The user's account is active
-                  ..state<AccountEnabled>((builder) => builder
-                    ..on<OnInActiveCustomerFound, InactiveCustomerTerminal>()
-                    ..on<OnActiveCustomerFound, ActiveCustomer>()
-                    ..on<OnViableInvitiationFound, ViableInvitation>())
+                    /// The user's account is active
+                    ..state<AccountEnabled>((builder) => builder
+                      ..on<OnInActiveCustomerFound, InactiveCustomerTerminal>()
+                      ..on<OnActiveCustomerFound, ActiveCustomer>()
+                      ..on<OnViableInvitiationFound, ViableInvitation>())
 
-                  // state for each page in the wizard.
-                  ..coregion<Pages>((builder) => builder
-                    ..state<RegionPage>((builder) => builder
-                      ..initialState<RegionRequired>()
-                      ..on<OnRegionInvalid, RegionRequired>()
-                      ..on<OnRegionValidated, RegionAcquired>()
-                      ..on<OnRegionNotRequired, RegionNotRequired>()
-                      ..state<RegionRequired>((_) {})
-                      ..state<RegionAcquired>((_) {})
-                      ..state<RegionNotRequired>((_) {}))
-                    ..state<TrialPhonePage>((builder) => builder..initialState<TrialRequired>())
-                    ..on<OnTrailInvalid, TrialRequired>()
-                    ..on<OnTrailValidated, TrailAcquired>()
-                    ..on<OnTrialNotRequired, TrialNotRequired>()
-                    ..state<TrailRequired>((_) {})
-                    ..state<TrialAcquired>((_) {})
-                    ..state<TrialNotRequired>((_) {}))
-                  ..state<NamePage>((builder) => builder..initialState<NameRequired>())
-                  ..on<OnNameInvalid, NameRequired>()
-                  ..on<OnNameValidated, NameAcquired>()
-                  ..on<OnNameNotRequired, NameNotRequired>()
-                  ..state<NameRequired>((_) {})
-                  ..state<NameAcquired>((_) {})
-                  ..state<NameNotRequired>((_) {}))
-                ..state<EmailPage>((builder) => builder..initialState<EmailRequired>())
-                ..on<OnEmailInvalid, EmailRequired>()
-                ..on<OnEmailValidated, EmailAcquired>()
-                ..on<OnEmailNotRequired, EmailNotRequired>()
-                ..state<EmailRequired>((_) {})
-                ..state<EmailAcquired>((_) {})
-                ..state<EmailNotRequired>((_) {})), pageBreak: true)))
+                    // state for each page in the wizard.
+                    ..coregion<Pages>((builder) => builder
+                      ..state<RegionPage>((builder) => builder
+                        ..initialState<RegionRequired>()
+                        ..on<OnRegionInvalid, RegionRequired>()
+                        ..on<OnRegionValidated, RegionAcquired>()
+                        ..on<OnRegionNotRequired, RegionNotRequired>()
+                        ..state<RegionRequired>((_) {})
+                        ..state<RegionAcquired>((_) {})
+                        ..state<RegionNotRequired>((_) {}))
+                      ..state<TrialPhonePage>((builder) => builder..initialState<TrialRequired>())
+                      ..on<OnTrailInvalid, TrialRequired>()
+                      ..on<OnTrailValidated, TrailAcquired>()
+                      ..on<OnTrialNotRequired, TrialNotRequired>()
+                      ..state<TrailRequired>((_) {})
+                      ..state<TrialAcquired>((_) {})
+                      ..state<TrialNotRequired>((_) {}))
+                    ..state<NamePage>((builder) => builder..initialState<NameRequired>())
+                    ..on<OnNameInvalid, NameRequired>()
+                    ..on<OnNameValidated, NameAcquired>()
+                    ..on<OnNameNotRequired, NameNotRequired>()
+                    ..state<NameRequired>((_) {})
+                    ..state<NameAcquired>((_) {})
+                    ..state<NameNotRequired>((_) {}))
+                  ..state<EmailPage>((builder) => builder..initialState<EmailRequired>())
+                  ..on<OnEmailInvalid, EmailRequired>()
+                  ..on<OnEmailValidated, EmailAcquired>()
+                  ..on<OnEmailNotRequired, EmailNotRequired>()
+                  ..state<EmailRequired>((_) {})
+                  ..state<EmailAcquired>((_) {})
+                  ..state<EmailNotRequired>((_) {})),
+            )))
         ..onTransition(log),
       production: true);
 
@@ -258,3 +266,85 @@ class OnRegistrationType implements Event {
 }
 
 void log(StateDefinition from, Event event, StateDefinition to) {}
+
+var graph = '''
+
+AppLaunched {
+	AppLaunched => RegistrationRequired : OnForceRegistration;
+	AppLaunched => RegistrationRequired : OnMissingApiKey;
+	AppLaunched => Registered : OnHasApiKey;
+},
+Registered {
+	Registered => RegistrationRequired : OnForceRegistration;
+},
+RegistrationRequired {
+	RegistrationTypeAcquired {
+		NewOrganisation,
+		RecoverAccount {
+			RecoverAccount => EmailRequired : OnUserNotFound;
+		},
+		AcceptInvitation {
+			AcceptInvitation => EmailRequired : OnUserNotFound;
+			AcceptInvitation => MobileNoAcquired : OnUserEnteredMobile;
+		},
+		MobileAndRegistrationTypeAcquired.parallel [label="MobileAndRegistrationTypeAcquired"] {
+			AcquireMobileNo {
+				MobileNoAcquired {
+					AcquireUser {
+						AcquireUser => EmailRequired : OnUserNotFound;
+						AcquireUser => AccountDisabledTerminal : OnUserDisabled;
+						AcquireUser => AccountEnabled : OnUserEnabled;
+						AcquireUser => UserAcquistionRetryRequired : OnUserAcquisitionFailed;
+					},
+					AccountEnabled {
+						AccountEnabled => InactiveCustomerTerminal : OnInActiveCustomerFound;
+						AccountEnabled => ActiveCustomer : OnActiveCustomerFound;
+						AccountEnabled => ViableInvitation : OnViableInvitiationFound;
+					},
+					Pages.parallel [label="Pages"] {
+						RegionPage {
+							RegionRequired,
+							RegionAcquired,
+							RegionNotRequired;
+							RegionRequired.initial => RegionRequired;
+							RegionPage => RegionRequired : OnRegionInvalid;
+							RegionPage => RegionAcquired : OnRegionValidated;
+							RegionPage => RegionNotRequired : OnRegionNotRequired;
+						},
+						TrialPhonePage,
+						TrailRequired,
+						TrialAcquired,
+						TrialNotRequired;
+						Pages.parallel => TrialRequired : OnTrailInvalid;
+						Pages.parallel => TrailAcquired : OnTrailValidated;
+						Pages.parallel => TrialNotRequired : OnTrialNotRequired;
+					},
+					NamePage,
+					NameRequired,
+					NameAcquired,
+					NameNotRequired;
+					AcquireUser.initial => AcquireUser;
+					MobileNoAcquired => AcquireUser : OnMobileValidated;
+					MobileNoAcquired => NameRequired : OnNameInvalid;
+					MobileNoAcquired => NameAcquired : OnNameValidated;
+					MobileNoAcquired => NameNotRequired : OnNameNotRequired;
+				},
+				EmailPage,
+				EmailRequired,
+				EmailAcquired,
+				EmailNotRequired;
+				MobileNoAcquired.initial => MobileNoAcquired;
+				AcquireMobileNo => MobileNoAcquired : OnUserEnteredMobile;
+				AcquireMobileNo => EmailRequired : OnEmailInvalid;
+				AcquireMobileNo => EmailAcquired : OnEmailValidated;
+				AcquireMobileNo => EmailNotRequired : OnEmailNotRequired;
+			};
+		};
+		NewOrganisation.initial => NewOrganisation;
+	};
+	RegistrationTypeAcquired.initial => RegistrationTypeAcquired;
+	RegistrationRequired => AcceptInvitation : OnRegistrationType;
+	RegistrationRequired => NewOrganisation : OnRegistrationType;
+	RegistrationRequired => RecoverAccount : OnRegistrationType;
+};
+initial => AppLaunched : AppLaunched;''';

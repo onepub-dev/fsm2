@@ -1,5 +1,3 @@
-library fsm;
-
 export 'src/state_machine.dart';
 export 'src/builders/graph_builder.dart';
 export 'src/builders/state_builder.dart';

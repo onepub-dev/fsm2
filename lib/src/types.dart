@@ -19,6 +19,10 @@ abstract class State {}
 /// icon  will be displayed when you export your statemachine to a diagram.
 class FinalState extends State {}
 
+/// Used by the [StateMachine.history] to represent a pseudo 'first' event that
+/// that indicates how we got in the FSM initialState.
+class InitialEvent extends Event {}
+
 /// Class used to represent an implicit event to a terminal [State].
 ///
 /// A [State] is considered terminal if it has no explicit transitions ([on], [onFork], [onJoin])
@@ -41,6 +45,8 @@ typedef OnExit = Future<void> Function(Type toState, Event event);
 
 /// Callback when a transition occurs.
 /// We pass, fromState, Event that triggered the transition and the target state.
+/// A single event may result in multiple calls to the listener when we have
+/// active concurrent regions.
 typedef TransitionListener = void Function(StateDefinition, Event, StateDefinition);
 
 /// The builder for a state.

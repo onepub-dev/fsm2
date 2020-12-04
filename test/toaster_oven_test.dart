@@ -4,8 +4,8 @@ import 'package:test/test.dart';
 void main() {
   test('export', () async {
     final machine = _createMachine();
-    await machine.analyse();
-    await machine.export('test/gv/toaster_oven.gv');
+    machine.analyse();
+    machine.export('test/gv/toaster_oven.gv');
   }, skip: false);
 }
 

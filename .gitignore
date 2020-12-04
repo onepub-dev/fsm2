@@ -16,3 +16,4 @@ doc/api/
 *.g.dart
 .history
 test/gv/
+test/test.gv

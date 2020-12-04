@@ -6,21 +6,28 @@ StateMachine machine;
 void main() {
   test('export', () async {
     _createMachine();
-    await machine.analyse();
-    await machine.export('test/gv/life_test.gv');
+     machine.analyse();
+     machine.export('test/gv/life_test.gv');
 
-    var graph = '''digraph fsm2 {
-	InitialState [shape=point];
-	InitialState -> Twinkle;
-	Twinkle -> Gestation [label="Conception"];
-	Gestation -> Baby [label="Born"];
-	Baby -> Teenager [label="Puberty"];
-	Teenager -> Adult [label="GetDrunk"];
-	Adult -> Dead [label="Death"];
-	Dead -> TerminalState1;
-// terminal states
-TerminalState1 [shape=point];
-}''';
+    var graph = '''
+
+Twinkle {
+	Twinkle => Gestation : Conception;
+},
+Gestation {
+	Gestation => Baby : Born;
+},
+Baby {
+	Baby => Teenager : Puberty;
+},
+Teenager {
+	Teenager => Adult : GetDrunk;
+},
+Adult {
+	Adult => Dead : Death;
+},
+Dead;
+initial => Twinkle : Twinkle;''';
 
     var lines = read('test/gv/life_test.gv')
         .toList()
@@ -40,10 +47,6 @@ void _createMachine() {
     ..state<Adult>((b) => b..on<Death, Dead>())
     ..state<Dead>((b) {}));
 }
-
-void turnFanOn() {}
-
-void turnFanOff() {}
 
 class Twinkle implements State {}
 

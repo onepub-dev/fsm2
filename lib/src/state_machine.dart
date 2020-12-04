@@ -3,15 +3,20 @@ import 'dart:collection';
 import 'dart:developer';
 import 'package:fsm2/src/state_of_mind.dart';
 import 'package:fsm2/src/types.dart';
+import 'package:meta/meta.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:completer_ex/completer_ex.dart';
 
 import 'exceptions.dart';
-import 'export/state_machine_cat_v2.dart';
+
+import 'export/exporter.dart';
+import 'export/smcat.dart';
 import 'graph.dart';
 import 'builders/graph_builder.dart';
 import 'definitions/state_definition.dart';
 import 'state_path.dart';
 import 'static_analysis.dart' as analysis;
+import 'tracker.dart';
 import 'transitions/transition_definition.dart';
 import 'virtual_root.dart';
 
@@ -24,7 +29,7 @@ import 'virtual_root.dart';
 
 class _QueuedEvent {
   Event event;
-  Completer<StateOfMind> completer = Completer();
+  var completer = CompleterEx<void>();
 
   _QueuedEvent(this.event);
 }
@@ -33,13 +38,17 @@ class StateMachine {
   /// only one transition can be happening at at time.
   final lock = Lock();
 
+  /// If production mode is off then we track
+  /// each transition to aid with debugging.
+  /// The first entry in the history will
+  final history = <Tracker>[];
+
   /// To avoid deadlocks if an event is generated during
   /// a transition we queue transitions.
   final eventQueue = Queue<_QueuedEvent>();
 
   /// Returns [Stream] of States.
-  final StreamController<StateOfMind> _controller =
-      StreamController.broadcast();
+  final StreamController<StateOfMind> _controller = StreamController.broadcast();
 
   final Graph _graph;
 
@@ -55,15 +64,16 @@ class StateMachine {
   /// expect them. Instead these transitions are logged.
   ///
   /// [production] defaults to false.
-  factory StateMachine.create(BuildGraph buildGraph,
-      {bool production = false}) {
+  factory StateMachine.create(BuildGraph buildGraph, {bool production = false}) {
     final graphBuilder = GraphBuilder();
 
     buildGraph(graphBuilder);
     var machine = StateMachine._(graphBuilder.build(), production: production);
 
-    if (!production && !machine.analyse()) {
-      throw InvalidStateMachine('Check logs');
+    if (!production) {
+      if (!machine.analyse()) {
+        throw InvalidStateMachine('Check logs');
+      }
     }
 
     return machine;
@@ -74,24 +84,25 @@ class StateMachine {
 
     /// If no initial state then the first state is the initial state.
     if (initialState == null && _graph.stateDefinitions.isNotEmpty) {
-      _graph.initialState = initialState = _graph.stateDefinitions.values
-          .firstWhere((sd) => sd.stateType != VirtualRoot)
-          .stateType;
+      _graph.initialState =
+          initialState = _graph.stateDefinitions.values.firstWhere((sd) => sd.stateType != VirtualRoot).stateType;
     }
 
     assert(initialState != null);
 
+    if (!production) {
+      history.add(Tracker(_stateOfMind, InitialEvent()));
+    }
+
     if (!_graph.isTopLevelState(initialState)) {
-      throw InvalidInitialStateException(
-          'The initialState $initialState MUST be a top level state.');
+      throw InvalidInitialStateException('The initialState $initialState MUST be a top level state.');
     }
 
     var initialSd = _graph.findStateDefinition(initialState);
 
     /// Find the initial state by chaining down through the initialStates looking for a leaf.
     if (!_loadStateOfMind(initialSd)) {
-      throw InvalidInitialStateException(
-          'The top level initialState $initialState must lead to a leaf state.');
+      throw InvalidInitialStateException('The top level initialState $initialState must lead to a leaf state.');
     }
   }
 
@@ -101,14 +112,12 @@ class StateMachine {
       return true;
     } else {
       /// search child for a leaf.
-      var child = initialState.findStateDefintion(initialState.initialState,
-          includeChildren: false);
+      var child = initialState.findStateDefintion(initialState.initialState, includeChildren: false);
       return _loadStateOfMind(child);
     }
   }
 
-  List<StateDefinition<State>> get topStateDefinitions =>
-      _graph.topStateDefinitions;
+  List<StateDefinition<State>> get topStateDefinitions => _graph.topStateDefinitions;
 
   String get initialStateLabel => _graph.initialStateLabel;
 
@@ -142,6 +151,7 @@ class StateMachine {
   ///
   /// If [state] is not a known [State] then an [UnknownStateException]
   /// is thrown.
+  @visibleForTesting
   bool isInState<S extends State>() {
     if (_stateOfMind.isInState(S)) return true;
 
@@ -160,14 +170,12 @@ class StateMachine {
     return false;
   }
 
+  @visibleForTesting
   StateOfMind get stateOfMind {
     return _stateOfMind;
   }
 
   /// Call this method with an [event] to transition to a new [State].
-  ///
-  /// Returns a [StateOfMind] object that describes the new set of [State]s
-  /// the FSM entered as a result of the event.
   ///
   /// Calls to [applyEvent] are serialized as a transition must
   /// complete before the next transition begins (otherwise the state
@@ -175,6 +183,10 @@ class StateMachine {
   ///
   /// A queueing mechanism is used to avoid dead locks, as such
   /// you can call [applyEvent] even whilst in the middle of a call to [applyEvent].
+  ///
+  /// Events MUST be handled asynchronously.
+  /// If you need to take an action once an event completes you need to use
+  /// a [sideEffect] or [onEnter].
   ///
   /// Throws a [UnknownStateException] if the [event] results in a
   /// transition to a [State] that hasn't been registered.
@@ -184,43 +196,54 @@ class StateMachine {
   /// When in [production] mode we supress this exception to make the FSM
   /// more forgiving.
   ///
-  Future<StateOfMind> applyEvent<E extends Event>(E event) async {
+  void applyEvent<E extends Event>(E event) {
     var qe = _QueuedEvent(event);
     eventQueue.add(qe);
 
     /// process the event on a microtask.
     Future.delayed(Duration(microseconds: 0), () => _dispatch());
-    return qe.completer.future;
   }
 
   /// dequeue the next event and transition it.
   void _dispatch() async {
     assert(eventQueue.isNotEmpty);
-    var event = eventQueue.removeFirst();
+    var event = eventQueue.first;
 
     try {
-      _stateOfMind = await _actualApplyEvent(event.event);
-      event.completer.complete(stateOfMind);
+      await _actualApplyEvent(event.event);
+      event.completer.complete();
     } on InvalidTransitionException catch (e) {
       if (production) {
         print('InvalidTransitionException suppressed: $e');
 
-        /// We just return the current [StateOfMind]
-        event.completer.complete(_stateOfMind);
+        event.completer.complete();
       } else {
         event.completer.completeError(e);
       }
     } catch (e) {
       event.completer.completeError(e);
+    } finally {
+      /// now we have finished processing the event we can remove it from the queue.
+      eventQueue.removeFirst();
     }
   }
 
-  Future<StateOfMind> _actualApplyEvent<E extends Event>(E event) async {
+  /// Returns true if the event queue is empty
+  bool get _isQuiescent => eventQueue.isEmpty;
+
+  /// waits until all events have been processed.
+  /// @visibleForTesting
+  Future<void> get waitUntilQuiescent async {
+    while (!_isQuiescent) {
+      await eventQueue.last.completer.future;
+    }
+  }
+
+  Future<void> _actualApplyEvent<E extends Event>(E event) async {
     /// only one transition at a time.
     return lock.synchronized(() async {
       for (var stateDefinition in _stateOfMind.activeLeafStates()) {
-        var transitionDefinition = await stateDefinition
-            .findTriggerableTransition(stateDefinition.stateType, event);
+        var transitionDefinition = await stateDefinition.findTriggerableTransition(stateDefinition.stateType, event);
 
         _graph.onTransitionListeners.forEach((onTransition) {
           // Some transitions (fork) have multiple targets so we need to
@@ -234,12 +257,13 @@ class StateMachine {
           }
         });
 
-        _stateOfMind = await transitionDefinition.trigger(
-            _graph, _stateOfMind, stateDefinition.stateType, event);
-        _controller.add(_stateOfMind);
+        _stateOfMind = await transitionDefinition.trigger(_graph, _stateOfMind, stateDefinition.stateType, event);
+      }
+      if (production == false) {
+        history.add(Tracker(_stateOfMind, event));
       }
 
-      return _stateOfMind;
+      _controller.add(_stateOfMind);
     });
   }
 
@@ -272,22 +296,19 @@ class StateMachine {
   /// ```
   /// xdot <path>
   /// ```
-  Future<void> export(String path) async {
+  ExportedPages export(String path) {
     //var exporter = MermaidExporter(this);
-    var exporter = CatExporter(this);
-    await exporter.export(path);
+    var exporter = SMCatExporter(this);
+    return exporter.export(path);
   }
 
   /// Traverses the State tree calling listener for each state
   /// and each statically defined transition.
   Future<void> traverseTree(
-      void Function(StateDefinition stateDefinition,
-              List<TransitionDefinition> transitionDefinitions)
-          listener,
+      void Function(StateDefinition stateDefinition, List<TransitionDefinition> transitionDefinitions) listener,
       {bool includeInherited = true}) async {
     for (var stateDefinition in _graph.stateDefinitions.values) {
-      await listener.call(stateDefinition,
-          stateDefinition.getTransitions(includeInherited: includeInherited));
+      listener.call(stateDefinition, stateDefinition.getTransitions(includeInherited: includeInherited));
     }
   }
 

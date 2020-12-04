@@ -1,106 +1,92 @@
+import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:fsm2/src/types.dart';
 import 'package:fsm2/src/virtual_root.dart';
 import 'package:test/test.dart';
 
-StateMachine machine;
-void main() {
+void main() async {
   test('fork', () async {
-    _createMachine();
+    var machine = createMachine();
     expect(machine.isInState<MonitorAir>(), equals(true));
-    await machine.applyEvent(OnBadAir());
+    machine.applyEvent(OnBadAir());
+    await machine.waitUntilQuiescent;
     expect(machine.isInState<RunFan>(), equals(true));
     expect(machine.isInState<HandleLamp>(), equals(true));
-    expect(machine.isInState<HandleEquipment>(), equals(true));
+    expect(machine.isInState<CleanAir>(), equals(true));
     expect(machine.isInState<MaintainAir>(), equals(true));
 
     var som = machine.stateOfMind;
     var paths = som.activeLeafStates();
-    expect(paths.length, equals(2));
-    var types =
-        som.pathForLeafState(RunFan).path.map((sd) => sd.stateType).toList();
-    expect(types, equals([RunFan, HandleEquipment, MaintainAir, VirtualRoot]));
-    types = som
-        .pathForLeafState(HandleLamp)
-        .path
-        .map((sd) => sd.stateType)
-        .toList();
-    expect(
-        types, equals([HandleLamp, HandleEquipment, MaintainAir, VirtualRoot]));
+    expect(paths.length, equals(3));
+    var types = som.pathForLeafState(RunFan).path.map((sd) => sd.stateType).toList();
+    expect(types, equals([RunFan, CleanAir, MaintainAir, VirtualRoot]));
+    types = som.pathForLeafState(HandleLamp).path.map((sd) => sd.stateType).toList();
+    expect(types, equals([HandleLamp, CleanAir, MaintainAir, VirtualRoot]));
+    types = som.pathForLeafState(WaitForGoodAir).path.map((sd) => sd.stateType).toList();
+    expect(types, equals([WaitForGoodAir, CleanAir, MaintainAir, VirtualRoot]));
+    print('done1');
+    print('done2');
   }, skip: false);
 
   test('export', () async {
-    _createMachine();
+    var machine = createMachine();
+    machine.export('test/gv/cleaning_air_test.gv');
+    var lines = read('test/gv/cleaning_air_test.gv').toList().reduce((value, line) => value += '\n' + line);
 
-    await machine.export('test/gv/cleaning_air_test.gv');
+    expect(lines, equals(smcGraph));
   }, skip: false);
 }
 
-void _createMachine() {
+StateMachine createMachine() {
+  StateMachine machine;
   machine = StateMachine.create((g) => g
     ..initialState<MaintainAir>(label: 'TurnOn')
     ..state<MaintainAir>((b) => b
       ..initialState<MonitorAir>()
       ..on<TurnOff, FinalState>()
       ..state<MonitorAir>((b) => b
-//        ..on<OnBadAir, CleanAir>()
-        ..onFork<OnBadAir>(
-            (b) => b
-              ..target<RunFan>()
-              ..target<HandleLamp>()
-              ..target<WaitForGoodAir>(),
+        ..onFork<OnBadAir>((b) => b..target<RunFan>()..target<HandleLamp>()..target<WaitForGoodAir>(),
             condition: (s, e) => e.quality < 10))
       ..coregion<CleanAir>((b) => b
         ..onExit((s, e) async => turnFanOff())
-        ..onExit((s, e) async => turnLightOff(), label: 'TurnLightOn')
+        ..onExit((s, e) async => await turnLightOff(machine), label: 'TurnLightOn')
         //..onJoin<MonitorAir>((b) => b..on<OnRunning>()..on<OnLampOn>()..on<OnGoodAir>())
         ..state<RunFan>((b) => b
           ..onEnter((s, e) async => turnFanOn())
           ..onJoin<OnRunning, MonitorAir>(condition: ((e) => 2 > 1)))
         // ..onJoin<OnFred, AAAMonitorAir>(condition: ((e) => 2 > 1)))
         ..state<HandleLamp>((b) => b
-          ..onEnter((s, e) async => turnLightOn(), label: 'TurnLightOn')
+          ..onEnter((s, e) async => await turnLightOn(machine), label: 'TurnLightOn')
           ..onJoin<OnLampOn, MonitorAir>())
         ..state<WaitForGoodAir>((b) => b..onJoin<OnGoodAir, MonitorAir>()
             // ..on<OnBadAir, WaitForGoodAir>()
-            ))));
+            )))
+    ..onTransition((s, e, st) {}));
+
+  return machine;
 }
 
-var smcGraph = '''initial,
-MaintainAir
-{
-  MonitorAir {
-    MonitorAir => CleanAir.parallel : OnBadAir;
-  },
+var smcGraph = '''
 
-	CleanAir.parallel [label="CleanAir"]
-	{
-    ]CleanAir.Fork1,
+MaintainAir {
+	MonitorAir,
+	CleanAir.parallel [label="CleanAir"] {
 		RunFan,
 		HandleLamp,
 		WaitForGoodAir;
-    initial.cleanair => ]CleanAir.Fork1;
-    WaitForGoodAir => WaitForGoodAir : OnBadAir;
- 
-    ]CleanAir.Fork1=> RunFan;
-    ]CleanAir.Fork1=> HandleLamp;
-    ]CleanAir.Fork1=> WaitForGoodAir;
-
-    RunFan => ]HandleEquipmentJoin1 : OnRunning;
-    HandleLamp => ]HandleEquipmentJoin1: OnLampOn;
-    WaitForGoodAir => ]HandleEquipmentJoin1 : GoodAir;
-    ]HandleEquipmentJoin1=> cleanair.final ;
-
-    CleanAir.parallel  => MonitorAir : GoodAir;
-
 	};
-  initial.MonitorAir => MonitorAir ;
-  MonitorAir => final.MaintainAir ;
+	MonitorAir.initial => MonitorAir;
+	MonitorAir => ]MonitorAir.Fork : OnBadAir;
+	]MonitorAir.Fork => RunFan : ;
+	]MonitorAir.Fork => HandleLamp : ;
+	]MonitorAir.Fork => WaitForGoodAir : ;
+	RunFan => ]MonitorAir.Join : OnRunning;
+	]MonitorAir.Join => MonitorAir : ;
+	HandleLamp => ]MonitorAir.Join : OnLampOn;
+	WaitForGoodAir => ]MonitorAir.Join : OnGoodAir;
 };
-
-initial => MaintainAir : TurnOn;
-MaintainAir => final : TurnOff;
-''';
+MaintainAir => MaintainAir.final : TurnOff;
+initial => MaintainAir : TurnOn;''';
 
 var graph = '''stateDiagram-v2
     [*] --> MaintainAir
@@ -136,11 +122,11 @@ var graph = '''stateDiagram-v2
 
 void turnFanOn() {}
 
-void turnLightOn() {
+Future<void> turnLightOn(StateMachine machine) async {
   machine.applyEvent(OnLampOn());
 }
 
-void turnLightOff() {
+Future<void> turnLightOff(StateMachine machine) async {
   machine.applyEvent(OnLampOff());
 }
 

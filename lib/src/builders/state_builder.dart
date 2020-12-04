@@ -63,7 +63,7 @@ class StateBuilder<S extends State> {
   /// Adds a nested State definition as per the UML2
   /// specification for `hierarchically nested states`.
   void state<C extends State>(BuildState<C> buildState, {bool pageBreak = false}) {
-    _stateDefinition.addNestedState(buildState);
+    _stateDefinition.addNestedState(buildState,  pageBreak: pageBreak);
   }
 
   /// Adds a [coregion] State definition as per the UML2
@@ -72,7 +72,7 @@ class StateBuilder<S extends State> {
   /// This coregion and its nested children will be exported to a
   /// separate page.
   void coregion<CO extends State>(BuildCoRegion<CO> buildState, {bool pageBreak = false}) {
-    _stateDefinition.addCoRegion(buildState);
+    _stateDefinition.addCoRegion(buildState, pageBreak: pageBreak);
   }
 
   /// Used to enter a co-region by targeting the set of states within the

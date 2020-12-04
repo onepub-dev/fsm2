@@ -38,7 +38,7 @@ class MermaidExporter {
     //   }
     // });
 
-    await _save(path);
+     _save(path);
   }
 
   void _save(String path) {

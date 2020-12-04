@@ -15,7 +15,11 @@ class StateDefinition<S extends State> {
 
   Type initialState;
 
-  StateDefinition(this.stateType);
+  /// If true the this state and all child states
+  /// will be printed on a separate page.
+  bool pageBreak;
+
+  StateDefinition(this.stateType, this.pageBreak);
 
   /// If this is a nested state the [parent]
   /// is a link to the parent of this state.
@@ -88,7 +92,7 @@ class StateDefinition<S extends State> {
   /// If no matching [event] can be found for the [fromState] then an [InvalidTransitionException] is thrown.
   ///
   /// When searching for an event we have to do a recursive search (starting at the [fromState])
-  /// up the tree of nested states as any events on an ancestor [State] also apply to the child [fromState].
+  /// up the tree of nested states as any transitions on an ancestor [State] also apply to the child [fromState].
   ///
   Future<TransitionDefinition> findTriggerableTransition<E extends Event>(Type fromState, E event) async {
     TransitionDefinition transitionDefinition;
@@ -204,11 +208,12 @@ class StateDefinition<S extends State> {
   }
 
   /// Adds a child state to this state definition.
-  void addNestedState<C extends State>(BuildState<C> buildState) {
-    final builder = StateBuilder<C>(C, this, StateDefinition(C));
+  void addNestedState<C extends State>(BuildState<C> buildState, {bool pageBreak}) {
+    final builder = StateBuilder<C>(C, this, StateDefinition(C, pageBreak));
     //builder.parent = this;
     buildState(builder);
     final definition = builder.build();
+    definition.pageBreak = pageBreak;
     definition.setParent(this);
     childStateDefinitions.add(definition);
   }
@@ -217,11 +222,12 @@ class StateDefinition<S extends State> {
   /// A state may have any number of [coregion]s.
   /// All [coregion]s simultaneously have a state
   /// This allows
-  void addCoRegion<CO extends State>(BuildCoRegion<CO> buildState) {
-    final builder = CoRegionBuilder<CO>(CO, this, CoRegionDefinition(CO));
+  void addCoRegion<CO extends State>(BuildCoRegion<CO> buildState, {bool pageBreak}) {
+    final builder = CoRegionBuilder<CO>(CO, this, CoRegionDefinition(CO, pageBreak));
     //  builder.parent = this;
     buildState(builder);
     final definition = builder.build();
+    definition.pageBreak = pageBreak;
     definition.setParent(this);
     childStateDefinitions.add(definition);
   }
@@ -269,5 +275,9 @@ class StateDefinition<S extends State> {
         throw NullChoiceMustBeLastException(eventType);
       }
     }
+  }
+
+  bool isChild(Type initialState) {
+    return childStateDefinitions.map((sd) => sd.stateType).contains(initialState);
   }
 }

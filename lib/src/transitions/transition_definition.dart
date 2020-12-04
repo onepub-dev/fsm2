@@ -59,13 +59,13 @@ abstract class TransitionDefinition< // S extends State,
     var enterPath = dedupPaths(enterPaths);
 
     var fromStateDefinition = graph.stateDefinitions[fromState];
-    callOnExits(fromStateDefinition, event, exitPath);
+    await callOnExits(fromStateDefinition, event, exitPath);
 
     if (sideEffect != null) await sideEffect();
 
     // when entering we must start from the root and work
     // towards the leaf.
-    callOnEnters(enterPath.reversed.toList(), event);
+    await callOnEnters(enterPath.reversed.toList(), event);
 
     for (var statePath in exitPaths.toSet()) {
       /// check that a transition occured
@@ -124,7 +124,7 @@ abstract class TransitionDefinition< // S extends State,
   /// To do this we walk up the tree (towards the root) and call onExit
   /// for each ancestor up to but not including the common
   /// ancestor of the state we are entering.
-  void callOnExits(StateDefinition fromState, Event event, List<StateDefinition> states) async {
+  Future<void> callOnExits(StateDefinition fromState, Event event, List<StateDefinition> states) async {
     for (var fromState in states) {
       if (fromState.onExit != null) {
         await fromState.onExit(fromState.stateType, event);
@@ -139,7 +139,7 @@ abstract class TransitionDefinition< // S extends State,
   /// ancestor of the state we are exiting.
   ///
   /// Can you join a concurrent state
-  void callOnEnters(List<StateDefinition> paths, Event event) async {
+  Future<void> callOnEnters(List<StateDefinition> paths, Event event) async {
     for (var toStateDefinition in paths) {
       if (toStateDefinition.onEnter != null) {
         await toStateDefinition.onEnter(toStateDefinition.stateType, event);
