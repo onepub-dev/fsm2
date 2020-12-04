@@ -1,3 +1,17 @@
+# 0.10.1
+updated the readme.md
+
+# 0.10.0
+Added watcher which re-renders svg and displays it. repalced .gv with .smcat. Minor fixes to the engine.
+work on statecat implementation.
+refactor directories.
+Use correct example layout
+
+# 0.10.0
+Added watcher which re-renders svg and displays it. repalced .gv with .smcat. Minor fixes to the engine.
+work on statecat implementation.
+Use correct example layout
+
 # 0.9.2
 co-regions implemented. 
 diagramming now works.

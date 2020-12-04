@@ -18,11 +18,20 @@ void main() async {
     var som = machine.stateOfMind;
     var paths = som.activeLeafStates();
     expect(paths.length, equals(3));
-    var types = som.pathForLeafState(HandleFan).path.map((sd) => sd.stateType).toList();
+    var types =
+        som.pathForLeafState(HandleFan).path.map((sd) => sd.stateType).toList();
     expect(types, equals([HandleFan, CleanAir, MaintainAir, VirtualRoot]));
-    types = som.pathForLeafState(HandleLamp).path.map((sd) => sd.stateType).toList();
+    types = som
+        .pathForLeafState(HandleLamp)
+        .path
+        .map((sd) => sd.stateType)
+        .toList();
     expect(types, equals([HandleLamp, CleanAir, MaintainAir, VirtualRoot]));
-    types = som.pathForLeafState(WaitForGoodAir).path.map((sd) => sd.stateType).toList();
+    types = som
+        .pathForLeafState(WaitForGoodAir)
+        .path
+        .map((sd) => sd.stateType)
+        .toList();
     expect(types, equals([WaitForGoodAir, CleanAir, MaintainAir, VirtualRoot]));
     print('done1');
     print('done2');
@@ -31,7 +40,9 @@ void main() async {
   test('export', () async {
     var machine = createMachine();
     machine.export('test/smcat/cleaning_air_test.smcat');
-    var lines = read('test/smcat/cleaning_air_test.smcat').toList().reduce((value, line) => value += '\n' + line);
+    var lines = read('test/smcat/cleaning_air_test.smcat')
+        .toList()
+        .reduce((value, line) => value += '\n' + line);
 
     expect(lines, equals(smcGraph));
   }, skip: false);
@@ -49,25 +60,33 @@ StateMachine createMachine() {
     ..initialState<MaintainAir>()
     ..state<MaintainAir>((b) => b
       ..state<MonitorAir>((b) => b
-        ..onFork<OnBadAir>((b) => b..target<HandleFan>()..target<HandleLamp>()..target<WaitForGoodAir>(),
+        ..onFork<OnBadAir>(
+            (b) => b
+              ..target<HandleFan>()
+              ..target<HandleLamp>()
+              ..target<WaitForGoodAir>(),
             condition: (s, e) => e.quality < 10))
       ..coregion<CleanAir>((b) => b
         ..state<HandleFan>((b) => b
           ..onEnter((s, e) async => fanOn = true)
           ..onExit((s, e) async => fanOn = false)
           ..onJoin<OnFanRunning, MonitorAir>(condition: ((e) => e.speed > 5))
-          ..state<FanOff>((b) => b..on<OnTurnFanOn, FanOn>(sideEffect: () async => lightOn = true))
+          ..state<FanOff>((b) =>
+              b..on<OnTurnFanOn, FanOn>(sideEffect: () async => lightOn = true))
           ..state<FanOn>((b) => b
             ..onEnter((s, e) async => machine.applyEvent(OnFanRunning()))
-            ..on<OnTurnFanOff, FanOff>(sideEffect: () async => lightOn = false)))
+            ..on<OnTurnFanOff, FanOff>(
+                sideEffect: () async => lightOn = false)))
         ..state<HandleLamp>((b) => b
           ..onEnter((s, e) async => lightOn = true)
           ..onExit((s, e) async => lightOn = false)
           ..onJoin<OnLampOn, MonitorAir>()
-          ..state<LampOff>((b) => b..on<OnTurnLampOn, LampOn>(sideEffect: () async => lightOn = true))
+          ..state<LampOff>((b) => b
+            ..on<OnTurnLampOn, LampOn>(sideEffect: () async => lightOn = true))
           ..state<LampOn>((b) => b
             ..onEnter((s, e) async => machine.applyEvent(OnLampOn()))
-            ..on<OnTurnLampOff, LampOff>(sideEffect: () async => lightOn = false)))
+            ..on<OnTurnLampOff, LampOff>(
+                sideEffect: () async => lightOn = false)))
         ..state<WaitForGoodAir>((b) => b..onJoin<OnGoodAir, MonitorAir>())))
     ..onTransition((s, e, st) {}));
 
