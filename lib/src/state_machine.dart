@@ -242,8 +242,12 @@ class StateMachine {
   Future<void> _actualApplyEvent<E extends Event>(E event) async {
     /// only one transition at a time.
     return lock.synchronized(() async {
+      var dispatched = false;
       for (var stateDefinition in _stateOfMind.activeLeafStates()) {
         var transitionDefinition = await stateDefinition.findTriggerableTransition(stateDefinition.stateType, event);
+        if (transitionDefinition == null) continue;
+
+        dispatched = true;
 
         _graph.onTransitionListeners.forEach((onTransition) {
           // Some transitions (fork) have multiple targets so we need to
@@ -259,6 +263,11 @@ class StateMachine {
 
         _stateOfMind = await transitionDefinition.trigger(_graph, _stateOfMind, stateDefinition.stateType, event);
       }
+
+      if (!dispatched) {
+        throw InvalidTransitionException(_stateOfMind, event);
+      }
+
       if (production == false) {
         history.add(Tracker(_stateOfMind, event));
       }

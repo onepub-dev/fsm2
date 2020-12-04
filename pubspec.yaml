@@ -17,3 +17,7 @@ dev_dependencies:
   test: ^1.6.0
   mockito: ^4.1.1
   dcli: ^0.34.0
+
+
+executables:
+  fsm2:

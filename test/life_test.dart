@@ -7,7 +7,7 @@ void main() {
   test('export', () async {
     _createMachine();
      machine.analyse();
-     machine.export('test/gv/life_test.gv');
+     machine.export('test/smcat/life_test.smcat');
 
     var graph = '''
 
@@ -29,7 +29,7 @@ Adult {
 Dead;
 initial => Twinkle : Twinkle;''';
 
-    var lines = read('test/gv/life_test.gv')
+    var lines = read('test/smcat/life_test.smcat')
         .toList()
         .reduce((value, line) => value += '\n' + line);
 

@@ -138,9 +138,9 @@ void main() {
   test('Export', () async {
     final machine = await _createMachine<Alive>(watcher, human);
     machine.analyse();
-    machine.export('test/gv/nested_test.gv');
+    machine.export('test/smcat/nested_test.smcat');
 
-    var lines = read('test/gv/nested_test.gv').toList().reduce((value, line) => value += '\n' + line);
+    var lines = read('test/smcat/nested_test.smcat').toList().reduce((value, line) => value += '\n' + line);
 
     expect(lines, equals(graph));
   });

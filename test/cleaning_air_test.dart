@@ -10,7 +10,7 @@ void main() async {
     expect(machine.isInState<MonitorAir>(), equals(true));
     machine.applyEvent(OnBadAir());
     await machine.waitUntilQuiescent;
-    expect(machine.isInState<RunFan>(), equals(true));
+    expect(machine.isInState<HandleFan>(), equals(true));
     expect(machine.isInState<HandleLamp>(), equals(true));
     expect(machine.isInState<CleanAir>(), equals(true));
     expect(machine.isInState<MaintainAir>(), equals(true));
@@ -18,8 +18,8 @@ void main() async {
     var som = machine.stateOfMind;
     var paths = som.activeLeafStates();
     expect(paths.length, equals(3));
-    var types = som.pathForLeafState(RunFan).path.map((sd) => sd.stateType).toList();
-    expect(types, equals([RunFan, CleanAir, MaintainAir, VirtualRoot]));
+    var types = som.pathForLeafState(HandleFan).path.map((sd) => sd.stateType).toList();
+    expect(types, equals([HandleFan, CleanAir, MaintainAir, VirtualRoot]));
     types = som.pathForLeafState(HandleLamp).path.map((sd) => sd.stateType).toList();
     expect(types, equals([HandleLamp, CleanAir, MaintainAir, VirtualRoot]));
     types = som.pathForLeafState(WaitForGoodAir).path.map((sd) => sd.stateType).toList();
@@ -30,8 +30,8 @@ void main() async {
 
   test('export', () async {
     var machine = createMachine();
-    machine.export('test/gv/cleaning_air_test.gv');
-    var lines = read('test/gv/cleaning_air_test.gv').toList().reduce((value, line) => value += '\n' + line);
+    machine.export('test/smcat/cleaning_air_test.smcat');
+    var lines = read('test/smcat/cleaning_air_test.smcat').toList().reduce((value, line) => value += '\n' + line);
 
     expect(lines, equals(smcGraph));
   }, skip: false);
@@ -39,28 +39,36 @@ void main() async {
 
 StateMachine createMachine() {
   StateMachine machine;
+
+  // ignore: unused_local_variable
+  var lightOn = false;
+  // ignore: unused_local_variable
+  var fanOn = false;
+
   machine = StateMachine.create((g) => g
-    ..initialState<MaintainAir>(label: 'TurnOn')
+    ..initialState<MaintainAir>()
     ..state<MaintainAir>((b) => b
-      ..initialState<MonitorAir>()
-      ..on<TurnOff, FinalState>()
       ..state<MonitorAir>((b) => b
-        ..onFork<OnBadAir>((b) => b..target<RunFan>()..target<HandleLamp>()..target<WaitForGoodAir>(),
+        ..onFork<OnBadAir>((b) => b..target<HandleFan>()..target<HandleLamp>()..target<WaitForGoodAir>(),
             condition: (s, e) => e.quality < 10))
       ..coregion<CleanAir>((b) => b
-        ..onExit((s, e) async => turnFanOff())
-        ..onExit((s, e) async => await turnLightOff(machine), label: 'TurnLightOn')
-        //..onJoin<MonitorAir>((b) => b..on<OnRunning>()..on<OnLampOn>()..on<OnGoodAir>())
-        ..state<RunFan>((b) => b
-          ..onEnter((s, e) async => turnFanOn())
-          ..onJoin<OnRunning, MonitorAir>(condition: ((e) => 2 > 1)))
-        // ..onJoin<OnFred, AAAMonitorAir>(condition: ((e) => 2 > 1)))
+        ..state<HandleFan>((b) => b
+          ..onEnter((s, e) async => fanOn = true)
+          ..onExit((s, e) async => fanOn = false)
+          ..onJoin<OnFanRunning, MonitorAir>(condition: ((e) => e.speed > 5))
+          ..state<FanOff>((b) => b..on<OnTurnFanOn, FanOn>(sideEffect: () async => lightOn = true))
+          ..state<FanOn>((b) => b
+            ..onEnter((s, e) async => machine.applyEvent(OnFanRunning()))
+            ..on<OnTurnFanOff, FanOff>(sideEffect: () async => lightOn = false)))
         ..state<HandleLamp>((b) => b
-          ..onEnter((s, e) async => await turnLightOn(machine), label: 'TurnLightOn')
-          ..onJoin<OnLampOn, MonitorAir>())
-        ..state<WaitForGoodAir>((b) => b..onJoin<OnGoodAir, MonitorAir>()
-            // ..on<OnBadAir, WaitForGoodAir>()
-            )))
+          ..onEnter((s, e) async => lightOn = true)
+          ..onExit((s, e) async => lightOn = false)
+          ..onJoin<OnLampOn, MonitorAir>()
+          ..state<LampOff>((b) => b..on<OnTurnLampOn, LampOn>(sideEffect: () async => lightOn = true))
+          ..state<LampOn>((b) => b
+            ..onEnter((s, e) async => machine.applyEvent(OnLampOn()))
+            ..on<OnTurnLampOff, LampOff>(sideEffect: () async => lightOn = false)))
+        ..state<WaitForGoodAir>((b) => b..onJoin<OnGoodAir, MonitorAir>())))
     ..onTransition((s, e, st) {}));
 
   return machine;
@@ -69,24 +77,40 @@ StateMachine createMachine() {
 var smcGraph = '''
 
 MaintainAir {
-	MonitorAir,
+	MonitorAir {
+		MonitorAir => ]MonitorAir.Fork : OnBadAir;
+		]MonitorAir.Fork => HandleFan : ;
+		]MonitorAir.Fork => HandleLamp : ;
+		]MonitorAir.Fork => WaitForGoodAir : ;
+	},
 	CleanAir.parallel [label="CleanAir"] {
-		RunFan,
-		HandleLamp,
+		HandleFan {
+			FanOff {
+				FanOff => FanOn : OnTurnFanOn;
+			},
+			FanOn {
+				FanOn => FanOff : OnTurnFanOff;
+			};
+			FanOff.initial => FanOff;
+		},
+		HandleLamp {
+			LampOff {
+				LampOff => LampOn : OnTurnLampOn;
+			},
+			LampOn {
+				LampOn => LampOff : OnTurnLampOff;
+			};
+			LampOff.initial => LampOff;
+		},
 		WaitForGoodAir;
+		HandleFan => ]MonitorAir.Join : OnFanRunning;
+		]MonitorAir.Join => MonitorAir : ;
+		HandleLamp => ]MonitorAir.Join : OnLampOn;
+		WaitForGoodAir => ]MonitorAir.Join : OnGoodAir;
 	};
 	MonitorAir.initial => MonitorAir;
-	MonitorAir => ]MonitorAir.Fork : OnBadAir;
-	]MonitorAir.Fork => RunFan : ;
-	]MonitorAir.Fork => HandleLamp : ;
-	]MonitorAir.Fork => WaitForGoodAir : ;
-	RunFan => ]MonitorAir.Join : OnRunning;
-	]MonitorAir.Join => MonitorAir : ;
-	HandleLamp => ]MonitorAir.Join : OnLampOn;
-	WaitForGoodAir => ]MonitorAir.Join : OnGoodAir;
 };
-MaintainAir => MaintainAir.final : TurnOff;
-initial => MaintainAir : TurnOn;''';
+initial => MaintainAir : MaintainAir;''';
 
 var graph = '''stateDiagram-v2
     [*] --> MaintainAir
@@ -127,7 +151,7 @@ Future<void> turnLightOn(StateMachine machine) async {
 }
 
 Future<void> turnLightOff(StateMachine machine) async {
-  machine.applyEvent(OnLampOff());
+  machine.applyEvent(OnTurnLampOff());
 }
 
 void turnFanOff() {}
@@ -136,9 +160,17 @@ class MonitorAir implements State {}
 
 class CleanAir implements State {}
 
-class RunFan implements State {}
+class HandleFan implements State {}
+
+class FanOn implements State {}
+
+class FanOff implements State {}
 
 class HandleLamp implements State {}
+
+class LampOff implements State {}
+
+class LampOn implements State {}
 
 class HandleEquipment implements State {}
 
@@ -150,11 +182,19 @@ class OnBadAir implements Event {
   int quality;
 }
 
-class OnLampOff implements Event {}
+class OnTurnLampOff implements Event {}
 
-class OnRunning implements Event {}
+class OnTurnLampOn implements Event {}
 
 class OnLampOn implements Event {}
+
+class OnTurnFanOff implements Event {}
+
+class OnTurnFanOn implements Event {}
+
+class OnFanRunning implements Event {
+  int get speed => 6;
+}
 
 class OnGoodAir implements Event {}
 

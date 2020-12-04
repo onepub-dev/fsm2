@@ -21,7 +21,7 @@ void main() {
 
   test('Export', () async {
     var fsm = createMachine();
-    var file = 'test/gv/registration.gv';
+    var file = 'test/smcat/registration.smcat';
     var exports = fsm.export(file);
 
     for (var page in exports.pages) {

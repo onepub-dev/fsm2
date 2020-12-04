@@ -92,13 +92,13 @@ class StateDefinition<S extends State> {
   /// If no matching [event] can be found for the [fromState] then an [InvalidTransitionException] is thrown.
   ///
   /// When searching for an event we have to do a recursive search (starting at the [fromState])
-  /// up the tree of nested states as any transitions on an ancestor [State] also apply to the child [fromState].
+  /// up the tree of nested states as any events on an ancestor [State] also apply to the child [fromState].
   ///
   Future<TransitionDefinition> findTriggerableTransition<E extends Event>(Type fromState, E event) async {
     TransitionDefinition transitionDefinition;
 
     if (!hasTransition(fromState, event)) {
-      throw InvalidTransitionException(fromState, event);
+      return null;
     }
 
     /// does the current state definition have a transition for the give event.

@@ -1,5 +1,6 @@
 import 'definitions/state_definition.dart';
 
+import 'state_of_mind.dart';
 import 'types.dart';
 
 class NullChoiceMustBeLastException implements Exception {
@@ -7,18 +8,16 @@ class NullChoiceMustBeLastException implements Exception {
   NullChoiceMustBeLastException(this.eventType);
 
   @override
-  String toString() =>
-      "The Event ${eventType} already has a transition with a null 'choice'. Only one is allowed";
+  String toString() => "The Event ${eventType} already has a transition with a null 'choice'. Only one is allowed";
 }
 
 class InvalidTransitionException implements Exception {
-  Type fromState;
   Event event;
-  InvalidTransitionException(this.fromState, this.event);
+  StateOfMind stateOfMind;
+  InvalidTransitionException(this.stateOfMind, this.event);
 
   @override
-  String toString() =>
-      'There is no transition for Event ${event.runtimeType} from the State ${fromState}.';
+  String toString() => 'There is no transition for Event ${event.runtimeType} from the State ${stateOfMind}.';
 }
 
 class UnknownStateException implements Exception {
@@ -53,8 +52,7 @@ class DuplicateStateException implements Exception {
   String message;
 
   DuplicateStateException(StateDefinition<State> state)
-      : message =
-            'The state ${state.stateType} is already in use. Every State must be unique.';
+      : message = 'The state ${state.stateType} is already in use. Every State must be unique.';
 
   @override
   String toString() => message;

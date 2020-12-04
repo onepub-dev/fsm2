@@ -25,7 +25,8 @@ class SMCTransition {
       smc.from = from;
       smc.to = ']$from.Fork';
       smc.label = transition.triggerEvents[0].toString();
-      owner.parent.transitions.add(smc);
+      // owner.parent.transitions.add(smc);
+      owner.transitions.add(smc);
 
       for (var target in transition.targetStates) {
         // var parent = owner;
@@ -38,7 +39,8 @@ class SMCTransition {
         pseudoToState.from = smc.to;
         pseudoToState.to = '${target.toString()}';
         pseudoToState.label = '';
-        owner.parent.transitions.add(pseudoToState);
+        //owner.parent.transitions.add(pseudoToState);
+        owner.transitions.add(pseudoToState);
       }
     }
 
@@ -54,14 +56,16 @@ class SMCTransition {
       smc.to = ']${transition.targetStates[0].toString()}.Join'; // transition.targetStates[0].toString();
       smc.label = transition.triggerEvents[0].toString();
       // smc.pseudoState = ']${transition.targetStates[0].toString()}.Join';
-      parent.parent.transitions.add(smc);
+      // parent.parent.transitions.add(smc);
+      parent.transitions.add(smc);
 
       /// need to create a pseudostate to display the join bar.
       var pseudoToState = SMCTransition();
       pseudoToState.from = ']${transition.targetStates[0].toString()}.Join';
       pseudoToState.to = transition.targetStates[0].toString();
       pseudoToState.label = '';
-      parent.parent.transitions.add(pseudoToState);
+      // parent.parent.transitions.add(pseudoToState);
+      parent.transitions.add(pseudoToState);
     }
     // on
     else //  (transition is OnTransition)

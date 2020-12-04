@@ -35,7 +35,7 @@ void main() {
   test('export', () async {
     final machine = _createMachine<Solid>(watcher);
     machine.analyse();
-    machine.export('test/gv/fsm_test.gv');
+    machine.export('test/smcat/fsm_test.smcat');
 
     var graph = '''
 
@@ -51,7 +51,7 @@ Gas {
 };
 initial => Solid : Solid;''';
 
-    var lines = read('test/gv/fsm_test.gv').toList().reduce((value, line) => value += '\n' + line);
+    var lines = read('test/smcat/fsm_test.smcat').toList().reduce((value, line) => value += '\n' + line);
 
     expect(lines, equals(graph));
   });

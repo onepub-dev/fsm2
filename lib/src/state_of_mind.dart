@@ -51,4 +51,26 @@ class StateOfMind {
     }
     return defs;
   }
+
+  @override
+  String toString() {
+    var details = '';
+
+    var firststate = true;
+    for (var statePath in _leafPaths) {
+      if (!firststate) {
+        details += '\n  or ';
+      }
+      firststate = false;
+      var firstpart = true;
+      for (var path in statePath.path) {
+        if (!firstpart) {
+          details += '->';
+        }
+        firstpart = false;
+        details += path.stateType.toString();
+      }
+    }
+    return details;
+  }
 }

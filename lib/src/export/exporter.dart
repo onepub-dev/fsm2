@@ -12,10 +12,10 @@ abstract class Exporter {
 }
 
 class ExportedPages {
-  var pages = <ExportPage>[];
+  var pages = <ExportedPage>[];
 
   void add(String file) {
-    pages.add(ExportPage(file));
+    pages.add(ExportedPage(file));
   }
 
   void write(int page, String string) {
@@ -23,11 +23,11 @@ class ExportedPages {
   }
 }
 
-class ExportPage {
+class ExportedPage {
   final String path;
   RandomAccessFile raf;
 
-  ExportPage(this.path) {
+  ExportedPage(this.path) {
     var file = File(path);
     raf = file.openSync(mode: FileMode.write);
   }

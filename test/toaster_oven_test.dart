@@ -5,7 +5,7 @@ void main() {
   test('export', () async {
     final machine = _createMachine();
     machine.analyse();
-    machine.export('test/gv/toaster_oven.gv');
+    machine.export('test/smcat/toaster_oven.smcat');
   }, skip: false);
 }
 

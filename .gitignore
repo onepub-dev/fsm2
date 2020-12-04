@@ -17,3 +17,4 @@ doc/api/
 .history
 test/gv/
 test/test.gv
+test/smcat/

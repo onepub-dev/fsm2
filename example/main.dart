@@ -20,7 +20,7 @@ void main() async {
         print('Recieved Event ${e} in State ${from.stateType} transitioning to State ${to.stateType}')));
 
   machine.analyse();
-  machine.export('test/test.gv');
+  machine.export('test/smcat/water.smcat');
 
   machine.applyEvent(OnMelted());
 
