@@ -6,8 +6,8 @@ StateMachine machine;
 void main() {
   test('export', () async {
     _createMachine();
-     machine.analyse();
-     machine.export('test/smcat/life_test.smcat');
+    machine.analyse();
+    machine.export('test/smcat/life_test.smcat');
 
     var graph = '''
 

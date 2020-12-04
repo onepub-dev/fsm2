@@ -22,7 +22,8 @@ class SMCState {
   List<SMCTransition> transitions = <SMCTransition>[];
   List<SMCState> children = <SMCState>[];
 
-  SMCState({@required this.name, @required this.type, @required this.pageBreak});
+  SMCState(
+      {@required this.name, @required this.type, @required this.pageBreak});
 
   ///
   /// Build the SMSState tree
@@ -88,7 +89,8 @@ class SMCState {
 
     /// Write out the initial state if this isn't a leaf
     if (initialChildState != null) {
-      exporter.write('${initialChildState}.initial => $initialChildState;', page: page, indent: indent + 1);
+      exporter.write('${initialChildState}.initial => $initialChildState;',
+          page: page, indent: indent + 1);
     }
 
     /// write out child transitions
@@ -101,5 +103,7 @@ class SMCState {
     }
   }
 
-  bool hasBody() => (children.isNotEmpty || transitions.isNotEmpty) && type != SMCStateType.root;
+  bool hasBody() =>
+      (children.isNotEmpty || transitions.isNotEmpty) &&
+      type != SMCStateType.root;
 }

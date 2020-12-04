@@ -47,7 +47,8 @@ typedef OnExit = Future<void> Function(Type toState, Event event);
 /// We pass, fromState, Event that triggered the transition and the target state.
 /// A single event may result in multiple calls to the listener when we have
 /// active concurrent regions.
-typedef TransitionListener = void Function(StateDefinition, Event, StateDefinition);
+typedef TransitionListener = void Function(
+    StateDefinition, Event, StateDefinition);
 
 /// The builder for a state.
 typedef BuildState<S extends State> = void Function(StateBuilder<S>);

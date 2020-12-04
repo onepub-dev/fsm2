@@ -76,7 +76,8 @@ void main(List<String> args) async {
     showUsage(parser);
   }
 
-  await generateAll(parsed.rest, parsed.wasParsed('show'), parsed.wasParsed('watch'));
+  await generateAll(
+      parsed.rest, parsed.wasParsed('show'), parsed.wasParsed('watch'));
 }
 
 Future<void> generateAll(List<String> rest, bool show, bool watch) async {
@@ -103,7 +104,8 @@ Future<void> generateAll(List<String> rest, bool show, bool watch) async {
           generate(one, show);
           watchList.add(file);
         } else {
-          printerr(orange('No files found that match the pattern: $pattern or $one'));
+          printerr(orange(
+              'No files found that match the pattern: $pattern or $one'));
         }
       }
     }
@@ -142,7 +144,8 @@ void generate(String path, bool show) {
 void showUsage(ArgParser parser) {
   print('Usage: ${Script.current.exeName} <base name of myfsm2>\n');
   print('Converts a set of smcat files into svg files.');
-  print('If your smcat file has multiple parts due to page breaks then each page will be processed.');
+  print(
+      'If your smcat file has multiple parts due to page breaks then each page will be processed.');
   print(parser.usage);
   exit(1);
 }
@@ -171,12 +174,16 @@ Future<void> watchFiles(List<String> files) async {
 }
 
 void watchFile(String file) {
-  File(file).watch(events: FileSystemEvent.all).listen((event) => controller.add(event));
+  File(file)
+      .watch(events: FileSystemEvent.all)
+      .listen((event) => controller.add(event));
 }
 
 void watchDirectory(String projectRoot) {
   print('watching ${projectRoot}');
-  Directory(projectRoot).watch(events: FileSystemEvent.all).listen((event) => controller.add(event));
+  Directory(projectRoot)
+      .watch(events: FileSystemEvent.all)
+      .listen((event) => controller.add(event));
 }
 
 void onFileSystemEvent(FileSystemEvent event) async {
@@ -212,7 +219,9 @@ void delayedGeneration() {
 
 void onCreateEvent(FileSystemCreateEvent event) async {
   if (event.isDirectory) {
-    Directory(event.path).watch(events: FileSystemEvent.all).listen((event) => controller.add(event));
+    Directory(event.path)
+        .watch(events: FileSystemEvent.all)
+        .listen((event) => controller.add(event));
   } else {
     if (lastDeleted != null) {
       if (basename(event.path) == basename(lastDeleted)) {

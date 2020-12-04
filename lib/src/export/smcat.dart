@@ -25,7 +25,8 @@ import 'smc_state.dart';
 
 class SMCatExporter implements Exporter {
   final StateMachine stateMachine;
-  final SMCState virtualRoot = SMCState(name: 'initial', type: SMCStateType.root, pageBreak: false);
+  final SMCState virtualRoot =
+      SMCState(name: 'initial', type: SMCStateType.root, pageBreak: false);
 
   final exports = ExportedPages();
 
@@ -49,8 +50,11 @@ class SMCatExporter implements Exporter {
 
     var ancestor = stateMachine.oldestAncestor(stateMachine.initialState);
 
-    write('initial => ${ancestor.toString()} : ${stateMachine.initialStateLabel};',
-        page: 0, indent: 0, endOfLine: true);
+    write(
+        'initial => ${ancestor.toString()} : ${stateMachine.initialStateLabel};',
+        page: 0,
+        indent: 0,
+        endOfLine: true);
 
     _closePageFiles();
 
@@ -99,7 +103,8 @@ class SMCatExporter implements Exporter {
 
   /// writes a string to the given page file.
   @override
-  void write(String string, {@required int indent, @required int page, bool endOfLine = false}) {
+  void write(String string,
+      {@required int indent, @required int page, bool endOfLine = false}) {
     exports.write(page, '\n${_indent(indent)}$string');
     if (endOfLine) exports.write(page, '\n');
   }

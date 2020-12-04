@@ -26,9 +26,11 @@ import 'virtual_root.dart';
 /// Returns [true] if all States are reachable.
 bool analyse(Graph graph) {
   var allGood = true;
-  var stateDefinitionMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
+  var stateDefinitionMap =
+      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
-  var remainingStateMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
+  var remainingStateMap =
+      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
   /// always remove the virtual root as is never directly used.
   remainingStateMap.remove(VirtualRoot);
@@ -79,7 +81,8 @@ bool analyse(Graph graph) {
   for (var stateDefinition in graph.stateDefinitions.values) {
     if (seen.contains(stateDefinition.stateType)) {
       allGood = false;
-      print('Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
+      print(
+          'Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
     }
   }
 
@@ -89,7 +92,8 @@ bool analyse(Graph graph) {
   for (var stateDefinition in stateDefinitionMap.values) {
     if (stateDefinition.stateType == VirtualRoot) continue;
     // print('Found state: ${stateDefinition.stateType}');
-    for (var transitionDefinition in stateDefinition.getTransitions(includeInherited: false)) {
+    for (var transitionDefinition
+        in stateDefinition.getTransitions(includeInherited: false)) {
       var targetStates = transitionDefinition.targetStates;
       for (var targetState in targetStates) {
         // Ignore our special terminal state.
@@ -114,7 +118,8 @@ bool analyse(Graph graph) {
     if (stateDefinition.isCoRegion) {
       if (stateDefinition.childStateDefinitions.isEmpty) {
         allGood = false;
-        print('Found coregion ${stateDefinition.stateType} which has no children.');
+        print(
+            'Found coregion ${stateDefinition.stateType} which has no children.');
       }
 
       if (stateDefinition.childStateDefinitions.length == 1) {
