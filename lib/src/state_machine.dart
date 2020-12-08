@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:developer';
+
+import 'package:completer_ex/completer_ex.dart';
 import 'package:fsm2/src/state_of_mind.dart';
 import 'package:fsm2/src/types.dart';
 import 'package:meta/meta.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:completer_ex/completer_ex.dart';
 
+import 'builders/graph_builder.dart';
+import 'definitions/state_definition.dart';
 import 'exceptions.dart';
-
 import 'export/exporter.dart';
 import 'export/smcat.dart';
 import 'graph.dart';
-import 'builders/graph_builder.dart';
-import 'definitions/state_definition.dart';
 import 'state_path.dart';
 import 'static_analysis.dart' as analysis;
 import 'tracker.dart';
@@ -29,7 +29,7 @@ import 'virtual_root.dart';
 
 class _QueuedEvent {
   Event event;
-  var completer = CompleterEx<void>();
+  final _completer = CompleterEx<void>();
 
   _QueuedEvent(this.event);
 }
@@ -68,7 +68,7 @@ class StateMachine {
     final graphBuilder = GraphBuilder();
 
     buildGraph(graphBuilder);
-    var machine = StateMachine._(graphBuilder.build(), production: production);
+    final machine = StateMachine._(graphBuilder.build(), production: production);
 
     if (!production) {
       if (!machine.analyse()) {
@@ -98,7 +98,7 @@ class StateMachine {
       throw InvalidInitialStateException('The initialState $initialState MUST be a top level state.');
     }
 
-    var initialSd = _graph.findStateDefinition(initialState);
+    final initialSd = _graph.findStateDefinition(initialState);
 
     /// Find the initial state by chaining down through the initialStates looking for a leaf.
     if (!_loadStateOfMind(initialSd)) {
@@ -112,7 +112,7 @@ class StateMachine {
       return true;
     } else {
       /// search child for a leaf.
-      var child = initialState.findStateDefintion(initialState.initialState, includeChildren: false);
+      final child = initialState.findStateDefintion(initialState.initialState, includeChildren: false);
       return _loadStateOfMind(child);
     }
   }
@@ -157,9 +157,9 @@ class StateMachine {
 
     /// climb the tree of nested states.
 
-    var def = _graph.findStateDefinition(S);
+    final def = _graph.findStateDefinition(S);
     if (def == null) {
-      throw UnknownStateException('The state ${S} has not been registered');
+      throw UnknownStateException('The state $S has not been registered');
     }
     var parent = def.parent;
     while (parent.stateType != VirtualRoot) {
@@ -197,31 +197,31 @@ class StateMachine {
   /// more forgiving.
   ///
   void applyEvent<E extends Event>(E event) {
-    var qe = _QueuedEvent(event);
+    final qe = _QueuedEvent(event);
     eventQueue.add(qe);
 
     /// process the event on a microtask.
-    Future.delayed(Duration(microseconds: 0), () => _dispatch());
+    Future.delayed(const Duration(), () => _dispatch());
   }
 
   /// dequeue the next event and transition it.
-  void _dispatch() async {
+  Future<void> _dispatch()  async {
     assert(eventQueue.isNotEmpty);
-    var event = eventQueue.first;
+    final event = eventQueue.first;
 
     try {
       await _actualApplyEvent(event.event);
-      event.completer.complete();
+      event._completer.complete();
     } on InvalidTransitionException catch (e) {
       if (production) {
-        print('InvalidTransitionException suppressed: $e');
+        log('InvalidTransitionException suppressed: $e');
 
-        event.completer.complete();
+        event._completer.complete();
       } else {
-        event.completer.completeError(e);
+        event._completer.completeError(e);
       }
     } catch (e) {
-      event.completer.completeError(e);
+      event._completer.completeError(e);
     } finally {
       /// now we have finished processing the event we can remove it from the queue.
       eventQueue.removeFirst();
@@ -235,7 +235,7 @@ class StateMachine {
   /// @visibleForTesting
   Future<void> get waitUntilQuiescent async {
     while (!_isQuiescent) {
-      await eventQueue.last.completer.future;
+      await eventQueue.last._completer.future;
     }
   }
 
@@ -243,23 +243,23 @@ class StateMachine {
     /// only one transition at a time.
     return lock.synchronized(() async {
       var dispatched = false;
-      for (var stateDefinition in _stateOfMind.activeLeafStates()) {
-        var transitionDefinition = await stateDefinition.findTriggerableTransition(stateDefinition.stateType, event);
+      for (final stateDefinition in _stateOfMind.activeLeafStates()) {
+        final transitionDefinition = await stateDefinition.findTriggerableTransition(stateDefinition.stateType, event);
         if (transitionDefinition == null) continue;
 
         dispatched = true;
 
-        _graph.onTransitionListeners.forEach((onTransition) {
+        for (final onTransition in _graph.onTransitionListeners) {
           // Some transitions (fork) have multiple targets so we need to
           // report a transition to each of them.
-          for (var targetStateType in transitionDefinition.targetStates) {
-            var targetState = _graph.findStateDefinition(targetStateType);
+          for (final targetState in transitionDefinition.targetStates) {
+            final targetStateType = _graph.findStateDefinition(targetState);
             if (!production) {
-              log('transition: from: ${stateDefinition.stateType} event: ${event.runtimeType} to: ${targetState.stateType}');
+              log('transition: from: ${stateDefinition.stateType} event: ${event.runtimeType} to: ${targetStateType.stateType}');
             }
-            onTransition(stateDefinition, event, targetState);
+            onTransition(stateDefinition, event, targetStateType);
           }
-        });
+        }
 
         _stateOfMind = await transitionDefinition.trigger(_graph, _stateOfMind, stateDefinition.stateType, event);
       }
@@ -307,7 +307,7 @@ class StateMachine {
   /// ```
   ExportedPages export(String path) {
     //var exporter = MermaidExporter(this);
-    var exporter = SMCatExporter(this);
+    final exporter = SMCatExporter(this);
     return exporter.export(path);
   }
 
@@ -316,7 +316,7 @@ class StateMachine {
   Future<void> traverseTree(
       void Function(StateDefinition stateDefinition, List<TransitionDefinition> transitionDefinitions) listener,
       {bool includeInherited = true}) async {
-    for (var stateDefinition in _graph.stateDefinitions.values) {
+    for (final stateDefinition in _graph.stateDefinitions.values) {
       listener.call(stateDefinition, stateDefinition.getTransitions(includeInherited: includeInherited));
     }
   }
@@ -325,12 +325,16 @@ class StateMachine {
     return _graph.findStateDefinition(stateType);
   }
 
+  StateDefinition<State> findStateDefinitionFromString(String stateTypeName) {
+    return _graph.findStateDefinitionFromString(stateTypeName);
+  }
+
   /// Returns the oldest ancestor for the state.
   /// If the state has no ancestors then we return the state.
   /// The VirtualRoot is not considered an ancestor and will
   /// never be returned.
   Type oldestAncestor(Type state) {
-    var sd = findStateDefinition(state);
+    final sd = findStateDefinition(state);
 
     var ancestor = sd;
 

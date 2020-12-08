@@ -4,9 +4,9 @@ import 'package:fsm2/src/types.dart';
 import 'package:fsm2/src/virtual_root.dart';
 import 'package:test/test.dart';
 
-void main() async {
+void main()  {
   test('fork', () async {
-    var machine = createMachine();
+    final machine = createMachine();
     expect(machine.isInState<MonitorAir>(), equals(true));
     machine.applyEvent(OnBadAir());
     await machine.waitUntilQuiescent;
@@ -15,8 +15,8 @@ void main() async {
     expect(machine.isInState<CleanAir>(), equals(true));
     expect(machine.isInState<MaintainAir>(), equals(true));
 
-    var som = machine.stateOfMind;
-    var paths = som.activeLeafStates();
+    final som = machine.stateOfMind;
+    final paths = som.activeLeafStates();
     expect(paths.length, equals(3));
     var types =
         som.pathForLeafState(HandleFan).path.map((sd) => sd.stateType).toList();
@@ -33,18 +33,20 @@ void main() async {
         .map((sd) => sd.stateType)
         .toList();
     expect(types, equals([WaitForGoodAir, CleanAir, MaintainAir, VirtualRoot]));
+    // ignore: avoid_print
     print('done1');
+    // ignore: avoid_print
     print('done2');
   }, skip: false);
 
   test('export', () async {
-    var machine = createMachine();
+    final machine = createMachine();
     machine.export('test/smcat/cleaning_air_test.smcat');
-    var lines = read('test/smcat/cleaning_air_test.smcat')
+    final lines = read('test/smcat/cleaning_air_test.smcat')
         .toList()
-        .reduce((value, line) => value += '\n' + line);
+        .reduce((value, line) => value += '\n$line');
 
-    expect(lines, equals(smcGraph));
+    expect(lines, equals(_smcGraph));
   }, skip: false);
 }
 
@@ -56,6 +58,7 @@ StateMachine createMachine() {
   // ignore: unused_local_variable
   var fanOn = false;
 
+  // ignore: join_return_with_assignment
   machine = StateMachine.create((g) => g
     ..initialState<MaintainAir>()
     ..state<MaintainAir>((b) => b
@@ -93,7 +96,7 @@ StateMachine createMachine() {
   return machine;
 }
 
-var smcGraph = '''
+var _smcGraph = '''
 
 MaintainAir {
 	MonitorAir {
@@ -131,7 +134,9 @@ MaintainAir {
 };
 initial => MaintainAir : MaintainAir;''';
 
-var graph = '''stateDiagram-v2
+// ignore: unused_element
+var _graph = '''
+stateDiagram-v2
     [*] --> MaintainAir
     state MaintainAir {
         [*] --> MonitorAir 

@@ -1,5 +1,5 @@
-import 'graph.dart';
 import 'definitions/state_definition.dart';
+import 'graph.dart';
 import 'types.dart';
 import 'virtual_root.dart';
 
@@ -8,9 +8,9 @@ class PartialStatePath {
   /// List of states from the leaf (stored as the first element in the array) to the root state.
   final List<StateDefinition> _path;
 
-  PartialStatePath._internal() : _path = <StateDefinition>[];
-
   PartialStatePath() : this._internal();
+
+  PartialStatePath._internal() : _path = <StateDefinition>[];
 
   PartialStatePath.fromPath(this._path);
 
@@ -22,7 +22,7 @@ class PartialStatePath {
   bool get isNotEmpty => _path.isNotEmpty;
 
   bool isInState(Type state) {
-    for (var stateDef in _path) {
+    for (final stateDef in _path) {
       if (stateDef.stateType == state) return true;
     }
     return false;
@@ -48,6 +48,7 @@ class PartialStatePath {
   int _hashCode;
   @override
   int get hashCode {
+    // ignore: join_return_with_assignment
     _hashCode ??= _path.fold(0, (hash, def) => hash += def.stateType.hashCode);
     return _hashCode;
   }
@@ -60,15 +61,14 @@ class PartialStatePath {
 /// This class should only be used to store
 /// a path which starts from an active leaf.
 class StatePath extends PartialStatePath {
-  StatePath(List<StateDefinition> path)
-      : super.fromPath(List.unmodifiable(path));
+  StatePath(List<StateDefinition> path) : super.fromPath(List.unmodifiable(path));
 
   /// Creates a [StatePath] from a leaf by trace
   /// up the graph to determine the complete list
   /// of ancestors to the root.
   StatePath.fromLeaf(Graph graph, Type leafState) {
-    var ancestors = PartialStatePath();
-    ancestors.addAncestor((graph.findStateDefinition(leafState)));
+    final ancestors = PartialStatePath();
+    ancestors.addAncestor(graph.findStateDefinition(leafState));
     var parent = graph.getParent(leafState);
 
     while (parent != VirtualRoot) {

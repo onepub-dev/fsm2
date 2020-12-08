@@ -1,6 +1,7 @@
+import 'package:stacktrace_impl/stacktrace_impl.dart';
+
 import 'state_of_mind.dart';
 import 'types.dart';
-import 'package:stacktrace_impl/stacktrace_impl.dart';
 
 class Tracker {
   StackTraceImpl stackTrace;

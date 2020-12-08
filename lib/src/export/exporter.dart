@@ -5,15 +5,15 @@ import 'package:meta/meta.dart';
 abstract class Exporter {
   /// writes to a new line by writting a leading \n
   /// and the writing [indent]  tabs.
-  void write(String string,
-      {@required int indent, @required int page, bool endOfLine = false});
+  void write(String string, {@required int indent, @required int page, bool endOfLine = false});
 
   /// append to an existing line
   void append(String string, {@required int page, bool endOfLine = false});
 }
 
 class ExportedPages {
-  var pages = <ExportedPage>[];
+  /// The set of page files that have been exported.
+  List<ExportedPage> pages = <ExportedPage>[];
 
   void add(String file) {
     pages.add(ExportedPage(file));
@@ -29,7 +29,7 @@ class ExportedPage {
   RandomAccessFile raf;
 
   ExportedPage(this.path) {
-    var file = File(path);
+    final file = File(path);
     raf = file.openSync(mode: FileMode.write);
   }
 

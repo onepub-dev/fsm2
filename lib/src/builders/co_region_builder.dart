@@ -4,9 +4,7 @@ import '../types.dart';
 import 'state_builder.dart';
 
 class CoRegionBuilder<S extends State> extends StateBuilder<S> {
-  CoRegionBuilder(
-      Type stateType, StateDefinition parent, CoRegionDefinition<S> coRegion)
-      : super(stateType, parent, coRegion);
+  CoRegionBuilder(StateDefinition parent, CoRegionDefinition<S> coRegion) : super(parent, coRegion);
 
   // void onJoin<JS extends State>(BuildJoin<JS> buildJoin, {Function(JS, Event) condition}) {
   //   final builder = JoinBuilder<JS>(_stateDefinition);

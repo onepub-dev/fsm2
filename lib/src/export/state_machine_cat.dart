@@ -30,7 +30,7 @@ class StartMachineCatExporter {
   /// var terminalsOwnedByRegion = <Type, List<int>>{};
   StartMachineCatExporter(this.stateMachine);
 
-  void export(String path) async {
+  void export(String path)  {
     // await stateMachine.traverseTree((stateDefinition, transitionDefinitions) async {
     //   for (var transitionDefinition in transitionDefinitions) {
     //     if (stateDefinition.isLeaf) {
@@ -43,16 +43,16 @@ class StartMachineCatExporter {
   }
 
   void _save(String path) {
-    var file = File(path);
-    var raf = file.openSync(mode: FileMode.write);
+    final file = File(path);
+    final raf = file.openSync(mode: FileMode.write);
 
     /// version
     raf.writeStringSync('initial,\n');
 
-    var level = 0;
+    const level = 0;
 
     var firstpass = true;
-    for (var sd in stateMachine.topStateDefinitions) {
+    for (final sd in stateMachine.topStateDefinitions) {
       if (!firstpass) {
         raf.writeStringSync(',\n');
       }
@@ -73,6 +73,7 @@ class StartMachineCatExporter {
   }
 
   void writeRegion(RandomAccessFile raf, StateDefinition<State> sd, int level) {
+    // ignore: parameter_assignments
     level++;
 
     /// start the region
@@ -88,7 +89,7 @@ class StartMachineCatExporter {
     var firstpass = true;
     var sawState = false;
 
-    for (var child in sd.childStateDefinitions) {
+    for (final child in sd.childStateDefinitions) {
       if (!firstpass) {
         raf.writeStringSync(',\n');
       }
@@ -111,6 +112,7 @@ class StartMachineCatExporter {
   }
 
   void writeState(RandomAccessFile raf, StateDefinition<State> sd, int level) {
+    // ignore: parameter_assignments
     level++;
     raf.writeStringSync('${indent(level)}${sd.stateType}');
 
@@ -120,7 +122,7 @@ class StartMachineCatExporter {
   void writeTransitions(RandomAccessFile raf, StateDefinition sd, int level) {
     var firstpass = true;
 
-    for (var transition in sd.getTransitions(includeInherited: false)) {
+    for (final transition in sd.getTransitions(includeInherited: false)) {
       if (firstpass) {
         raf.writeStringSync('${indent(level)}\n');
         firstpass = false;
@@ -149,12 +151,12 @@ class StartMachineCatExporter {
     /// forks are pseudo states which in mermaid need a name.
     /// as we model them as a transition we don't have a name.
     /// As such we use the states name followed by a unqiue id to generate a name.
-    var forkName = ']${sd.stateType}$pseudoStateId';
+    final forkName = ']${sd.stateType}$pseudoStateId';
     raf.writeStringSync('${indent(level)}$forkName; \n');
 
     /// Add a transition into the fork
     raf.writeStringSync(
-        '${indent(level)}${transition.fromStateDefinition.stateType} => ${forkName};\n');
+        '${indent(level)}${transition.fromStateDefinition.stateType} => $forkName;\n');
     // raf.writeStringSync('${indent(level)}[*] => $forkName;\n');
 
     // /// now add a transition from the fork to each target.
@@ -172,7 +174,7 @@ class StartMachineCatExporter {
     /// joins are pseudo states which in mermaid need a name.
     /// as we model them as a transition we don't have a name.
     /// As such we use the states name followed by a unqiue id to generate a name.
-    var joinName = ']${sd.stateType}$pseudoStateId';
+    final joinName = ']${sd.stateType}$pseudoStateId';
     raf.writeStringSync('${indent(level)}$joinName \n');
 
     // for (var state in sd.childStateDefinitions.values) {

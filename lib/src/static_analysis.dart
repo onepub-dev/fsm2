@@ -1,5 +1,5 @@
-import 'graph.dart';
 import 'definitions/state_definition.dart';
+import 'graph.dart';
 import 'types.dart';
 import 'virtual_root.dart';
 
@@ -26,11 +26,9 @@ import 'virtual_root.dart';
 /// Returns [true] if all States are reachable.
 bool analyse(Graph graph) {
   var allGood = true;
-  var stateDefinitionMap =
-      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
+  final stateDefinitionMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
-  var remainingStateMap =
-      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
+  final remainingStateMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
   /// always remove the virtual root as is never directly used.
   remainingStateMap.remove(VirtualRoot);
@@ -40,12 +38,12 @@ bool analyse(Graph graph) {
   remainingStateMap.remove(graph.initialState);
 
   /// Check each state is reachable
-  for (var stateDefinition in stateDefinitionMap.values) {
+  for (final stateDefinition in stateDefinitionMap.values) {
     /// print('Found state: ${stateDefinition.stateType}');
-    for (var transitionDefinition in stateDefinition.getTransitions()) {
-      var targetStates = transitionDefinition.targetStates;
-      for (var targetState in targetStates) {
-        var targetDefinition = stateDefinitionMap[targetState];
+    for (final transitionDefinition in stateDefinition.getTransitions()) {
+      final targetStates = transitionDefinition.targetStates;
+      for (final targetState in targetStates) {
+        final targetDefinition = stateDefinitionMap[targetState];
 
         /// we have a target for an unregistered state.
         if (targetDefinition == null) {
@@ -69,39 +67,41 @@ bool analyse(Graph graph) {
 
   if (remainingStateMap.isNotEmpty) {
     allGood = false;
+    // ignore: avoid_print
     print('Error: The following States cannot be reached.');
 
-    for (var state in remainingStateMap.values) {
+    for (final state in remainingStateMap.values) {
+      // ignore: avoid_print
       print('Error: State: ${state.stateType}');
     }
   }
 
   /// check for duplicate states.
-  var seen = <Type>{};
-  for (var stateDefinition in graph.stateDefinitions.values) {
+  final seen = <Type>{};
+  for (final stateDefinition in graph.stateDefinitions.values) {
     if (seen.contains(stateDefinition.stateType)) {
       allGood = false;
-      print(
-          'Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
+      // ignore: avoid_print
+      print('Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
     }
   }
 
   /// Check that no transition points to an  invalid state.
   /// 1) the toState must be defined
   /// 2) the toState must be a leaf state
-  for (var stateDefinition in stateDefinitionMap.values) {
+  for (final stateDefinition in stateDefinitionMap.values) {
     if (stateDefinition.stateType == VirtualRoot) continue;
     // print('Found state: ${stateDefinition.stateType}');
-    for (var transitionDefinition
-        in stateDefinition.getTransitions(includeInherited: false)) {
-      var targetStates = transitionDefinition.targetStates;
-      for (var targetState in targetStates) {
+    for (final transitionDefinition in stateDefinition.getTransitions(includeInherited: false)) {
+      final targetStates = transitionDefinition.targetStates;
+      for (final targetState in targetStates) {
         // Ignore our special terminal state.
         if (targetState == FinalState) continue;
-        var toStateDefinition = graph.stateDefinitions[targetState];
+        final toStateDefinition = graph.stateDefinitions[targetState];
         if (toStateDefinition == null) {
           allGood = false;
-          print('Found transition to non-existant state ${targetState}.');
+          // ignore: avoid_print
+          print('Found transition to non-existant state $targetState.');
           continue;
         }
 
@@ -114,16 +114,17 @@ bool analyse(Graph graph) {
   }
 
   /// check that all [coregion]s have at least two children
-  for (var stateDefinition in stateDefinitionMap.values) {
+  for (final stateDefinition in stateDefinitionMap.values) {
     if (stateDefinition.isCoRegion) {
       if (stateDefinition.childStateDefinitions.isEmpty) {
         allGood = false;
-        print(
-            'Found coregion ${stateDefinition.stateType} which has no children.');
+        // ignore: avoid_print
+        print('Found coregion ${stateDefinition.stateType} which has no children.');
       }
 
       if (stateDefinition.childStateDefinitions.length == 1) {
         allGood = false;
+        // ignore: avoid_print
         print(
             'Found coregion ${stateDefinition.stateType} which has a single child. CoRegions must have at least two chilren.');
       }
@@ -135,10 +136,11 @@ bool analyse(Graph graph) {
   // TODO:
 
   /// InitialStates MUST target a child state (i.e. they can't target a grand children)
-  for (var stateDefinition in stateDefinitionMap.values) {
+  for (final stateDefinition in stateDefinitionMap.values) {
     if (stateDefinition.initialState == null) continue;
     if (!stateDefinition.isChild(stateDefinition.initialState)) {
       allGood = false;
+      // ignore: avoid_print
       print(
           'The initialState for ${stateDefinition.stateType} must target a child. ${stateDefinition.initialState} is not a child.');
     }

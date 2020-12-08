@@ -9,7 +9,7 @@ void main() {
     machine.analyse();
     machine.export('test/smcat/life_test.smcat');
 
-    var graph = '''
+    const graph = '''
 
 Twinkle {
 	Twinkle => Gestation : Conception;
@@ -29,9 +29,9 @@ Adult {
 Dead;
 initial => Twinkle : Twinkle;''';
 
-    var lines = read('test/smcat/life_test.smcat')
+    final lines = read('test/smcat/life_test.smcat')
         .toList()
-        .reduce((value, line) => value += '\n' + line);
+        .reduce((value, line) => value += '\n$line');
 
     expect(lines, equals(graph));
   });

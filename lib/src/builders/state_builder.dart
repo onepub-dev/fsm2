@@ -1,14 +1,13 @@
 import 'package:fsm2/src/transitions/fork_transition.dart';
 import 'package:fsm2/src/transitions/on_transition.dart';
 
-import 'fork_builder.dart';
-import 'graph_builder.dart';
-import '../state_machine.dart';
-
-import '../exceptions.dart';
 import '../definitions/state_definition.dart';
+import '../exceptions.dart';
+import '../state_machine.dart';
 import '../transitions/join_transition.dart';
 import '../types.dart';
+import 'fork_builder.dart';
+import 'graph_builder.dart';
 
 /// State builder.
 ///
@@ -20,7 +19,7 @@ class StateBuilder<S extends State> {
   /// If there are no child states then this is just 'this'.
   Type _initialState;
 
-  StateBuilder(Type stateType, StateDefinition parent, this._stateDefinition) {
+  StateBuilder(StateDefinition parent, this._stateDefinition) {
     _stateDefinition.setParent(parent);
   }
 
@@ -59,7 +58,7 @@ class StateBuilder<S extends State> {
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
   void on<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
-    var onTransition = OnTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, TOSTATE, sideEffect);
+    final onTransition = OnTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, TOSTATE, sideEffect);
 
     _stateDefinition.addTransition<E>(onTransition);
   }
@@ -85,7 +84,7 @@ class StateBuilder<S extends State> {
     buildFork(builder);
     final definition = builder.build();
 
-    var choice = ForkTransitionDefinition<S, E>(_stateDefinition, definition);
+    final choice = ForkTransitionDefinition<S, E>(_stateDefinition, definition);
 
     _stateDefinition.addTransition(choice);
   }
@@ -93,7 +92,7 @@ class StateBuilder<S extends State> {
   /// Adds an event to the set of events that must be triggered to leave the parent [coregion].
   /// Every onJoin in a coregion must target the same external state.
   void onJoin<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
-    var onTransition = JoinTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, sideEffect);
+    final onTransition = JoinTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, sideEffect);
 
     _stateDefinition.addTransition<E>(onTransition);
   }
@@ -121,7 +120,7 @@ class StateBuilder<S extends State> {
       }
 
       assert(_initialState != null);
-      var sd = _stateDefinition.findStateDefintion(_initialState, includeChildren: false);
+      final sd = _stateDefinition.findStateDefintion(_initialState, includeChildren: false);
       if (sd == null) {
         throw InvalidInitialStateException(
             'The initialState $_initialState MUST be a child state of ${_stateDefinition.stateType}.');

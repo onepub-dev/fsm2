@@ -1,4 +1,5 @@
 import 'package:fsm2/src/state_machine.dart';
+import 'package:tree_iterator/tree_iterator.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart';
 
@@ -25,8 +26,7 @@ import 'smc_state.dart';
 
 class SMCatExporter implements Exporter {
   final StateMachine stateMachine;
-  final SMCState virtualRoot =
-      SMCState(name: 'initial', type: SMCStateType.root, pageBreak: false);
+  final SMCState virtualRoot = SMCState(name: 'initial', type: SMCStateType.root, pageBreak: false);
 
   final exports = ExportedPages();
 
@@ -40,21 +40,18 @@ class SMCatExporter implements Exporter {
   }
 
   ExportedPages _save(String path) {
-    var smcRoot = _build();
+    final smcRoot = _build();
 
     _openPageFiles(smcRoot, path);
 
-    var indent = 0;
-    smcRoot.write(this, indent: indent, page: 0);
+    const indent = 0;
+    smcRoot.write(this, indent: indent);
     // raf.writeStringSync(';\n');
 
-    var ancestor = stateMachine.oldestAncestor(stateMachine.initialState);
+    final ancestor = stateMachine.oldestAncestor(stateMachine.initialState);
 
-    write(
-        'initial => ${ancestor.toString()} : ${stateMachine.initialStateLabel};',
-        page: 0,
-        indent: 0,
-        endOfLine: true);
+    write('initial => ${ancestor.toString()} : ${stateMachine.initialStateLabel};',
+        page: 0, indent: 0, endOfLine: true);
 
     _closePageFiles();
 
@@ -62,15 +59,22 @@ class SMCatExporter implements Exporter {
   }
 
   SMCState _build() {
-    for (var child in stateMachine.topStateDefinitions) {
-      virtualRoot.addChild(SMCState.build(virtualRoot, child));
+    virtualRoot.pageNo = 0;
+    for (final child in stateMachine.topStateDefinitions) {
+      virtualRoot.addChild(SMCState.build(stateMachine, virtualRoot, child, page: 0));
     }
+
+    // we can only build the transitions once the full statemachine tree is built.
+    traverseTree<SMCState>(virtualRoot, (node) => node.children, (node) {
+      node.buildTransitions(stateMachine);
+      return true;
+    });
 
     return virtualRoot;
   }
 
   void _closePageFiles() {
-    for (var page in exports.pages) {
+    for (final page in exports.pages) {
       page.close();
     }
   }
@@ -82,11 +86,11 @@ class SMCatExporter implements Exporter {
       exports.add(filepath);
     } else {
       pageBreaks++;
-      var ext = extension(filepath);
-      var base = basenameWithoutExtension(filepath);
-      var dir = dirname(filepath);
+      final ext = extension(filepath);
+      final base = basenameWithoutExtension(filepath);
+      final dir = dirname(filepath);
       for (var i = 1; i <= pageBreaks; i++) {
-        exports.add('${join(dir, base)}.$pageBreaks$ext');
+        exports.add('${join(dir, base)}.$i$ext');
       }
     }
   }
@@ -95,7 +99,7 @@ class SMCatExporter implements Exporter {
     var pageBreaks = 0;
 
     if (smcRoot.pageBreak) pageBreaks++;
-    for (var child in smcRoot.children) {
+    for (final child in smcRoot.children) {
       pageBreaks += _countPageBreaks(child);
     }
     return pageBreaks;
@@ -103,8 +107,7 @@ class SMCatExporter implements Exporter {
 
   /// writes a string to the given page file.
   @override
-  void write(String string,
-      {@required int indent, @required int page, bool endOfLine = false}) {
+  void write(String string, {@required int indent, @required int page, bool endOfLine = false}) {
     exports.write(page, '\n${_indent(indent)}$string');
     if (endOfLine) exports.write(page, '\n');
   }

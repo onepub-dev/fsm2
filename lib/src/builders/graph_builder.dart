@@ -1,11 +1,12 @@
 import 'package:meta/meta.dart';
+
 import '../definitions/co_region_definition.dart';
 import '../definitions/state_definition.dart';
-import 'state_builder.dart';
-import '../state_machine.dart';
 import '../graph.dart';
+import '../state_machine.dart';
 import '../types.dart';
 import '../virtual_root.dart';
+import 'state_builder.dart';
 
 /// Builder for FSM.
 ///
@@ -28,7 +29,7 @@ class GraphBuilder {
   void state<S extends State>(
     BuildState<S> buildState,
   ) {
-    final builder = StateBuilder<S>(S, virtualRoot, StateDefinition(S));
+    final builder = StateBuilder<S>(virtualRoot, StateDefinition(S));
     buildState(builder);
     final definition = builder.build();
 
@@ -56,7 +57,7 @@ class GraphBuilder {
   void coregion<S extends State>(
     BuildState<S> buildState,
   ) {
-    final builder = StateBuilder<S>(S, StateDefinition(VirtualRoot), CoRegionDefinition(VirtualRoot));
+    final builder = StateBuilder<S>(StateDefinition(VirtualRoot), CoRegionDefinition(VirtualRoot));
     buildState(builder);
     final definition = builder.build();
     _stateDefinitions.add(definition);

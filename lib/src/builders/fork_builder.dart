@@ -1,7 +1,6 @@
 import '../definitions/fork_definition.dart';
-import 'graph_builder.dart';
-
 import '../types.dart';
+import 'graph_builder.dart';
 
 /// State builder.
 ///

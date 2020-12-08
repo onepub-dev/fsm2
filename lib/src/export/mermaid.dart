@@ -29,7 +29,7 @@ class MermaidExporter {
   /// var terminalsOwnedByRegion = <Type, List<int>>{};
   MermaidExporter(this.stateMachine);
 
-  void export(String path) async {
+  void export(String path)  {
     // await stateMachine.traverseTree((stateDefinition, transitionDefinitions) async {
     //   for (var transitionDefinition in transitionDefinitions) {
     //     if (stateDefinition.isLeaf) {
@@ -42,15 +42,15 @@ class MermaidExporter {
   }
 
   void _save(String path) {
-    var file = File(path);
-    var raf = file.openSync(mode: FileMode.write);
+    final file = File(path);
+    final raf = file.openSync(mode: FileMode.write);
 
     /// version
     raf.writeStringSync('stateDiagram-v2\n');
 
-    var level = 0;
+    const level = 0;
 
-    for (var sd in stateMachine.topStateDefinitions) {
+    for (final sd in stateMachine.topStateDefinitions) {
       if (sd.isAbstract) {
         writeRegion(raf, sd, level);
       } else {
@@ -66,6 +66,7 @@ class MermaidExporter {
   }
 
   void writeRegion(RandomAccessFile raf, StateDefinition<State> sd, int level) {
+    // ignore: parameter_assignments
     level++;
 
     /// Delcare the enter/exit points for the region
@@ -74,7 +75,7 @@ class MermaidExporter {
     raf.writeStringSync('${indent(level)}${sd.stateType} --> [*]\n');
     raf.writeStringSync('${indent(level)}state ${sd.stateType} {\n');
 
-    for (var child in sd.childStateDefinitions) {
+    for (final child in sd.childStateDefinitions) {
       if (child.isAbstract) {
         writeRegion(raf, child, level);
       } else {
@@ -86,6 +87,7 @@ class MermaidExporter {
   }
 
   void writeState(RandomAccessFile raf, StateDefinition<State> sd, int level) {
+    // ignore: parameter_assignments
     level++;
     raf.writeStringSync('${indent(level)}${sd.stateType}\n');
 
@@ -95,7 +97,7 @@ class MermaidExporter {
   void writeTransitions(RandomAccessFile raf, StateDefinition sd, int level) {
     var pseudoStateId = 1;
 
-    for (var transition in sd.getTransitions(includeInherited: false)) {
+    for (final transition in sd.getTransitions(includeInherited: false)) {
       if (transition is ForkTransitionDefinition) {
         writeFork(raf, sd, transition, level, pseudoStateId);
       } else if (transition is JoinTransitionDefinition) {
@@ -115,17 +117,17 @@ class MermaidExporter {
     /// forks are pseudo states which in mermaid need a name.
     /// as we model them as a transition we don't have a name.
     /// As such we use the states name followed by a unqiue id to generate a name.
-    var forkName = '${sd.stateType}$pseudoStateId';
+    final forkName = '${sd.stateType}$pseudoStateId';
     raf.writeStringSync('${indent(level)}state $forkName <<fork>> \n');
 
     /// Add a transition into the fork
     raf.writeStringSync(
-        '${indent(level)}${transition.fromStateDefinition.stateType} --> ${forkName}\n');
+        '${indent(level)}${transition.fromStateDefinition.stateType} --> $forkName\n');
     raf.writeStringSync('${indent(level)}[*] --> $forkName\n');
 
     /// now add a transition from the fork to each target.
-    for (var target in transition.targetStates) {
-      raf.writeStringSync('${indent(level)}$forkName --> ${target}\n');
+    for (final target in transition.targetStates) {
+      raf.writeStringSync('${indent(level)}$forkName --> $target\n');
     }
   }
 
@@ -138,7 +140,7 @@ class MermaidExporter {
     /// joins are pseudo states which in mermaid need a name.
     /// as we model them as a transition we don't have a name.
     /// As such we use the states name followed by a unqiue id to generate a name.
-    var joinName = '${sd.stateType}$pseudoStateId';
+    final joinName = '${sd.stateType}$pseudoStateId';
     raf.writeStringSync('${indent(level)}state $joinName <<join>> \n');
 
     /// Add a transition into the fork
@@ -149,7 +151,7 @@ class MermaidExporter {
     //   raf.writeStringSync('${indent(level)}${event} --> $joinName\n');
     // }
 
-    for (var state in sd.childStateDefinitions) {
+    for (final state in sd.childStateDefinitions) {
       raf.writeStringSync('${indent(level)}${state.stateType} --> $joinName\n');
     }
 

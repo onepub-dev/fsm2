@@ -1,8 +1,6 @@
-import 'graph_builder.dart';
-
 import '../definitions/join_definition.dart';
-import '../definitions/state_definition.dart';
 import '../types.dart';
+import 'graph_builder.dart';
 
 /// State builder.
 ///
@@ -10,8 +8,7 @@ import '../types.dart';
 class JoinBuilder<S extends State> {
   final JoinDefinition<S> _joinDefinition;
 
-  JoinBuilder(StateDefinition stateDefinition)
-      : _joinDefinition = JoinDefinition<S>(S);
+  JoinBuilder() : _joinDefinition = JoinDefinition<S>(S);
 
   JoinDefinition build() => _joinDefinition;
 

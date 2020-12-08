@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:fsm2/src/state_of_mind.dart';
 
-import '../graph.dart';
 import '../definitions/state_definition.dart';
+import '../graph.dart';
 import '../state_path.dart';
 import '../types.dart';
 
@@ -32,35 +32,33 @@ abstract class TransitionDefinition< // S extends State,
   /// implementation detail of the [Transition] implementation.
   List<Type> get triggerEvents;
 
-  TransitionDefinition(this.fromStateDefinition,
-      {this.condition, this.sideEffect});
+  TransitionDefinition(this.fromStateDefinition, {this.condition, this.sideEffect});
 
   /// Applies [event] to the  current statemachine and returns the resulting
   /// [StateOfMind].
   ///
   /// As the statemachine can be in multiple states the [state] argument indicates what
   /// [State] the [event] is to be processed againts.
-  Future<StateOfMind> trigger(
-      Graph graph, StateOfMind stateOfMind, Type fromState, Event event) async {
-    var exitPaths = <PartialStatePath>[];
-    var enterPaths = <PartialStatePath>[];
+  Future<StateOfMind> trigger(Graph graph, StateOfMind stateOfMind, Type fromState, Event event) async {
+    final exitPaths = <PartialStatePath>[];
+    final enterPaths = <PartialStatePath>[];
 
-    for (var targetState in targetStates) {
-      var toStateDefinition = graph.stateDefinitions[targetState];
+    for (final targetState in targetStates) {
+      final toStateDefinition = graph.stateDefinitions[targetState];
 
-      var fromPath = StatePath.fromLeaf(graph, fromState);
-      var toPath = StatePath.fromLeaf(graph, toStateDefinition.stateType);
+      final fromPath = StatePath.fromLeaf(graph, fromState);
+      final toPath = StatePath.fromLeaf(graph, toStateDefinition.stateType);
 
-      var commonAncestor = findCommonAncestor(graph, fromPath, toPath);
+      final commonAncestor = findCommonAncestor(graph, fromPath, toPath);
 
       exitPaths.add(getExitPath(fromPath, commonAncestor));
       enterPaths.add(getEnterPath(toPath, commonAncestor));
     }
 
-    var exitPath = dedupPaths(exitPaths);
-    var enterPath = dedupPaths(enterPaths);
+    final exitPath = dedupPaths(exitPaths);
+    final enterPath = dedupPaths(enterPaths);
 
-    var fromStateDefinition = graph.stateDefinitions[fromState];
+    final fromStateDefinition = graph.stateDefinitions[fromState];
     await callOnExits(fromStateDefinition, event, exitPath);
 
     if (sideEffect != null) await sideEffect();
@@ -69,14 +67,14 @@ abstract class TransitionDefinition< // S extends State,
     // towards the leaf.
     await callOnEnters(enterPath.reversed.toList(), event);
 
-    for (var statePath in exitPaths.toSet()) {
+    for (final statePath in exitPaths.toSet()) {
       /// check that a transition occured
       if (statePath.isNotEmpty) {
         stateOfMind.removePath(statePath.fullPath(graph));
       }
     }
 
-    for (var statePath in enterPaths.toSet()) {
+    for (final statePath in enterPaths.toSet()) {
       /// check that a transition occured
       if (statePath.isNotEmpty) {
         stateOfMind.addPath(statePath.fullPath(graph));
@@ -86,11 +84,10 @@ abstract class TransitionDefinition< // S extends State,
     return stateOfMind;
   }
 
-  PartialStatePath getExitPath(
-      StatePath fromAncestors, StateDefinition commonAncestor) {
-    var exitTargets = PartialStatePath();
+  PartialStatePath getExitPath(StatePath fromAncestors, StateDefinition commonAncestor) {
+    final exitTargets = PartialStatePath();
 
-    for (var fromAncestor in fromAncestors.path) {
+    for (final fromAncestor in fromAncestors.path) {
       if (fromAncestor.stateType == commonAncestor.stateType) break;
 
       exitTargets.addAncestor(fromAncestor);
@@ -98,11 +95,10 @@ abstract class TransitionDefinition< // S extends State,
     return exitTargets;
   }
 
-  PartialStatePath getEnterPath(
-      StatePath toAncestors, StateDefinition commonAncestor) {
-    var enterTargets = PartialStatePath();
+  PartialStatePath getEnterPath(StatePath toAncestors, StateDefinition commonAncestor) {
+    final enterTargets = PartialStatePath();
 
-    for (var toAncestor in toAncestors.path) {
+    for (final toAncestor in toAncestors.path) {
       if (toAncestor.stateType == commonAncestor.stateType) break;
 
       enterTargets.addAncestor(toAncestor);
@@ -114,11 +110,10 @@ abstract class TransitionDefinition< // S extends State,
   /// to the [fromState] and [targetStates]
   ///
   /// If no common ancestor is found then null is returned;
-  StateDefinition findCommonAncestor(
-      Graph graph, StatePath fromAncestors, StatePath toAncestors) {
-    var toAncestorSet = toAncestors.path.toSet();
+  StateDefinition findCommonAncestor(Graph graph, StatePath fromAncestors, StatePath toAncestors) {
+    final toAncestorSet = toAncestors.path.toSet();
 
-    for (var ancestor in fromAncestors.path) {
+    for (final ancestor in fromAncestors.path) {
       if (toAncestorSet.contains(ancestor)) return ancestor;
     }
     return null;
@@ -129,9 +124,8 @@ abstract class TransitionDefinition< // S extends State,
   /// To do this we walk up the tree (towards the root) and call onExit
   /// for each ancestor up to but not including the common
   /// ancestor of the state we are entering.
-  Future<void> callOnExits(StateDefinition fromState, Event event,
-      List<StateDefinition> states) async {
-    for (var fromState in states) {
+  Future<void> callOnExits(StateDefinition fromState, Event event, List<StateDefinition> states) async {
+    for (final fromState in states) {
       if (fromState.onExit != null) {
         await fromState.onExit(fromState.stateType, event);
       }
@@ -146,7 +140,7 @@ abstract class TransitionDefinition< // S extends State,
   ///
   /// Can you join a concurrent state
   Future<void> callOnEnters(List<StateDefinition> paths, Event event) async {
-    for (var toStateDefinition in paths) {
+    for (final toStateDefinition in paths) {
       if (toStateDefinition.onEnter != null) {
         await toStateDefinition.onEnter(toStateDefinition.stateType, event);
       }
@@ -159,17 +153,15 @@ abstract class TransitionDefinition< // S extends State,
   /// ancestor.
   /// We also dedup the States as we build the path.
   List<StateDefinition> dedupPaths(List<PartialStatePath> paths) {
-    var maxLength = paths.fold<int>(
-        0, (longest, element) => max(longest, element.path.length));
+    final maxLength = paths.fold<int>(0, (longest, element) => max(longest, element.path.length));
 
-    var seenPaths = <StateDefinition>{};
-    var orderedPaths = <StateDefinition>[];
+    final seenPaths = <StateDefinition>{};
+    final orderedPaths = <StateDefinition>[];
     for (var i = 0; i < maxLength; i++) {
-      for (var statePath in paths) {
+      for (final statePath in paths) {
         /// Only take if the path is long enough
         if (statePath.path.length >= (maxLength - i)) {
-          var ofInterest =
-              statePath.path[i - (maxLength - statePath.path.length)];
+          final ofInterest = statePath.path[i - (maxLength - statePath.path.length)];
           if (!seenPaths.contains(ofInterest)) orderedPaths.add(ofInterest);
           seenPaths.add(ofInterest);
         }

@@ -13,7 +13,7 @@ class StateOfMind {
   final _leafPaths = <StatePath>[];
 
   bool isInState(Type state) {
-    for (var statePath in _leafPaths) {
+    for (final statePath in _leafPaths) {
       if (statePath.isInState(state)) return true;
     }
     return false;
@@ -21,7 +21,7 @@ class StateOfMind {
 
   void removePath(StatePath path) {
     StatePath toBeRemoved;
-    for (var statePath in _leafPaths) {
+    for (final statePath in _leafPaths) {
       if (statePath == path) toBeRemoved = statePath;
     }
 
@@ -34,7 +34,7 @@ class StateOfMind {
   }
 
   StatePath pathForLeafState(Type leafState) {
-    for (var path in _leafPaths) {
+    for (final path in _leafPaths) {
       if (path.leaf.stateType == leafState) {
         return path;
       }
@@ -44,9 +44,9 @@ class StateOfMind {
 
   /// returns a StateDefinition for all active states
   List<StateDefinition> activeLeafStates() {
-    var defs = <StateDefinition>[];
+    final defs = <StateDefinition>[];
 
-    for (var active in _leafPaths) {
+    for (final active in _leafPaths) {
       defs.add(active.leaf);
     }
     return defs;
@@ -54,23 +54,23 @@ class StateOfMind {
 
   @override
   String toString() {
-    var details = '';
+    final details = StringBuffer();
 
     var firststate = true;
-    for (var statePath in _leafPaths) {
+    for (final statePath in _leafPaths) {
       if (!firststate) {
-        details += '\n  or ';
+        details.write('\n  or ');
       }
       firststate = false;
       var firstpart = true;
-      for (var path in statePath.path) {
+      for (final path in statePath.path) {
         if (!firstpart) {
-          details += '->';
+          details.write('->');
         }
         firstpart = false;
-        details += path.stateType.toString();
+        details.write(path.stateType.toString());
       }
     }
-    return details;
+    return details.toString();
   }
 }

@@ -9,7 +9,7 @@ class NullChoiceMustBeLastException implements Exception {
 
   @override
   String toString() =>
-      "The Event ${eventType} already has a transition with a null 'choice'. Only one is allowed";
+      "The Event $eventType already has a transition with a null 'choice'. Only one is allowed";
 }
 
 class InvalidTransitionException implements Exception {
@@ -19,7 +19,7 @@ class InvalidTransitionException implements Exception {
 
   @override
   String toString() =>
-      'There is no transition for Event ${event.runtimeType} from the State ${stateOfMind}.';
+      'There is no transition for Event ${event.runtimeType} from the State $stateOfMind.';
 }
 
 class UnknownStateException implements Exception {

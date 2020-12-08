@@ -1,8 +1,7 @@
 import '../builders/co_region_builder.dart';
+import '../builders/state_builder.dart';
 import '../definitions/co_region_definition.dart';
 import '../exceptions.dart';
-import '../builders/state_builder.dart';
-
 import '../transitions/noop_transition.dart';
 import '../transitions/transition_definition.dart';
 import '../types.dart';
@@ -17,7 +16,7 @@ class StateDefinition<S extends State> {
 
   /// If true the this state and all child states
   /// will be printed on a separate page.
-  bool pageBreak;
+  bool pageBreak = false;
 
   StateDefinition(this.stateType);
 
@@ -46,6 +45,7 @@ class StateDefinition<S extends State> {
   /// The are in the same order as the builder declares them.
   final List<StateDefinition> childStateDefinitions = [];
 
+  // ignore: use_setters_to_change_properties
   void setParent<P extends State>(StateDefinition<P> parent) {
     // log('set parent = ${parent.stateType} on ${stateType} ${hashCode}');
     _parent = parent;
@@ -55,14 +55,14 @@ class StateDefinition<S extends State> {
   /// this state in the tree.
   /// i.e. every possible child/grandchild/... state.
   List<StateDefinition> get nestedStateDefinitions {
-    var definitions = <StateDefinition>[];
+    final definitions = <StateDefinition>[];
 
     if (childStateDefinitions.isEmpty) return definitions;
 
-    for (var stateDefinition in childStateDefinitions) {
+    for (final stateDefinition in childStateDefinitions) {
       definitions.add(stateDefinition);
 
-      var nested = stateDefinition.nestedStateDefinitions;
+      final nested = stateDefinition.nestedStateDefinitions;
       definitions.addAll(nested);
     }
     return definitions;
@@ -70,12 +70,14 @@ class StateDefinition<S extends State> {
 
   /// callback used when we enter this [State].
   /// Provide provide a default no-op implementation.
+  // ignore: prefer_function_declarations_over_variables
   OnEnter onEnter = (Type toState, Event event) {
     return null;
   };
 
   /// callback used when we exiting this [State].
   /// Provide provide a default no-op implementation.
+  // ignore: prefer_function_declarations_over_variables
   OnExit onExit = (Type fromState, Event event) {
     return null;
   };
@@ -118,13 +120,13 @@ class StateDefinition<S extends State> {
   /// returns a [NoOpTransitionDefinition] if none of the transitions would be triggered
   /// or if there where no transitions for [event].
   Future<TransitionDefinition> _evaluateTransitions<E extends Event>(E event) async {
-    var transitionChoices = _eventTranstionsMap[event.runtimeType] as List<TransitionDefinition<E>>;
+    final transitionChoices = _eventTranstionsMap[event.runtimeType] as List<TransitionDefinition<E>>;
 
     if (transitionChoices == null) {
       return NoOpTransitionDefinition<S, E>(this, E);
     }
 
-    return await evaluateConditions(transitionChoices, event);
+    return evaluateConditions(transitionChoices, event);
   }
 
   /// Evaluates each guard condition for the given [event]  from [fromState]
@@ -137,9 +139,9 @@ class StateDefinition<S extends State> {
   Future<TransitionDefinition<E>> evaluateConditions<E extends Event>(
       List<TransitionDefinition<E>> transitionChoices, E event) async {
     assert(transitionChoices.isNotEmpty);
-    for (var transitionDefinition in transitionChoices) {
+    for (final transitionDefinition in transitionChoices) {
       /// hack to get around typedef inheritance issues.
-      dynamic a = transitionDefinition;
+      final dynamic a = transitionDefinition;
       if ((a.condition as dynamic) == null || (a.condition(event) as bool)) {
         /// static transition
         return transitionDefinition;
@@ -153,7 +155,7 @@ class StateDefinition<S extends State> {
   /// We need to check any parent states as we inherit
   /// transitions from all our ancestors.
   bool get isTerminal {
-    return getTransitions(includeInherited: true).isEmpty;
+    return getTransitions().isEmpty;
     // return _eventTranstionsMap.isNotEmpty && (parent == null || parent.isTerminal);
   }
 
@@ -177,9 +179,9 @@ class StateDefinition<S extends State> {
   /// Set [includeInherited] to false to exclude inherited transitions.
   ///
   List<TransitionDefinition> getTransitions({bool includeInherited = true}) {
-    var transitionDefinitions = <TransitionDefinition>[];
+    final transitionDefinitions = <TransitionDefinition>[];
 
-    for (var transitions in _eventTranstionsMap.values) {
+    for (final transitions in _eventTranstionsMap.values) {
       transitionDefinitions.addAll(transitions);
     }
 
@@ -211,7 +213,7 @@ class StateDefinition<S extends State> {
   void addNestedState<C extends State>(
     BuildState<C> buildState,
   ) {
-    final builder = StateBuilder<C>(C, this, StateDefinition(C));
+    final builder = StateBuilder<C>(this, StateDefinition(C));
     //builder.parent = this;
     buildState(builder);
     final definition = builder.build();
@@ -224,7 +226,7 @@ class StateDefinition<S extends State> {
   /// All [coregion]s simultaneously have a state
   /// This allows
   void addCoRegion<CO extends State>(BuildCoRegion<CO> buildState) {
-    final builder = CoRegionBuilder<CO>(CO, this, CoRegionDefinition(CO));
+    final builder = CoRegionBuilder<CO>(this, CoRegionDefinition(CO));
     //  builder.parent = this;
     buildState(builder);
     final definition = builder.build();
@@ -236,7 +238,7 @@ class StateDefinition<S extends State> {
   /// for a [StateDefinition] of type [stateDefinitionType];
   StateDefinition<State> findStateDefintion(Type stateDefinitionType, {bool includeChildren = true}) {
     StateDefinition found;
-    for (var stateDefinition in childStateDefinitions) {
+    for (final stateDefinition in childStateDefinitions) {
       if (stateDefinition.stateType == stateDefinitionType) {
         found = stateDefinition;
         break;
@@ -256,7 +258,7 @@ class StateDefinition<S extends State> {
   /// as any transitions on parent states can also be applied
   ///
   bool hasTransition<E extends Event>(Type fromState, E event) {
-    var transitions = getTransitions();
+    final transitions = getTransitions();
     // var transitions = _eventTranstionsMap[event.runtimeType];
 
     if (transitions == null || transitions.isEmpty) return false;
@@ -268,9 +270,9 @@ class StateDefinition<S extends State> {
 
   void checkHasNoNullChoices(Type eventType) {
     if (_eventTranstionsMap[eventType] == null) return;
-    for (var transitionDefinition in _eventTranstionsMap[eventType]) {
+    for (final transitionDefinition in _eventTranstionsMap[eventType]) {
       // darts generic typedefs are broken for inheritence
-      dynamic a = transitionDefinition;
+      final dynamic a = transitionDefinition;
       if ((a.condition as dynamic) == null) {
         throw NullChoiceMustBeLastException(eventType);
       }

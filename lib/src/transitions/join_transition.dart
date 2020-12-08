@@ -10,8 +10,8 @@ import 'transition_definition.dart';
 /// [E] the event that triggers this transition
 /// [S] the state that we will transition to once all other Joins are triggered
 ///  for the parent [coregion]
-class JoinTransitionDefinition<S extends State, E extends Event,
-    TOSTATE extends State> extends TransitionDefinition<E> {
+class JoinTransitionDefinition<S extends State, E extends Event, TOSTATE extends State>
+    extends TransitionDefinition<E> {
   final JoinDefinition definition;
 
   /// The ancestor coregion this join is associated with.
@@ -23,8 +23,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
     GuardCondition<E> condition,
     SideEffect sideEffect,
   )   : definition = JoinDefinition(TOSTATE),
-        super(parentStateDefinition,
-            sideEffect: sideEffect, condition: condition) {
+        super(parentStateDefinition, sideEffect: sideEffect, condition: condition) {
     definition.addEvent(E);
 
     var parent = parentStateDefinition;
@@ -34,8 +33,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
     }
 
     if (parent.stateType == VirtualRoot) {
-      throw OnJoinException(
-          'onJoin for ${parentStateDefinition.stateType} MUST have a coregion anscestor.');
+      throw OnJoinException('onJoin for ${parentStateDefinition.stateType} MUST have a coregion anscestor.');
     }
   }
 

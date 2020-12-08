@@ -37,7 +37,7 @@ void main() {
     machine.analyse();
     machine.export('test/smcat/fsm_test.smcat');
 
-    var graph = '''
+    const graph = '''
 
 Solid {
 	Solid => Liquid : OnMelted;
@@ -51,9 +51,9 @@ Gas {
 };
 initial => Solid : Solid;''';
 
-    var lines = read('test/smcat/fsm_test.smcat')
+    final lines = read('test/smcat/fsm_test.smcat')
         .toList()
-        .reduce((value, line) => value += '\n' + line);
+        .reduce((value, line) => value += '\n$line');
 
     expect(lines, equals(graph));
   });
@@ -132,7 +132,8 @@ StateMachine _createMachine<S extends State>(
           ..state<Gas>((b) => b
             ..on<OnCondensed, Liquid>(
                 sideEffect: () async => watcher.log(onCondensedMessage)))
-          ..onTransition((from, event, to) => print('${from} ${event} ${to} ')),
+          // ignore: avoid_print
+          ..onTransition((from, event, to) => print('$from $event $to ')),
         production: true);
 
 const onMeltedMessage = 'onMeltedMessage';
