@@ -1,3 +1,17 @@
+# 0.12.0
+Added test of expected output when exporting page break tests.
+improved unit tests for page breaks.
+partial move to nullsaftey packages.
+Made watch option more robust in the face of rendering errors. Added Page No.s to svg output.
+Improvements to state rendering for straddled states.
+Fixed bugs with join and fork rendering. Removed duplicate psuedo transitions.
+Added condition and sideEffect labels.
+
+
+# 0.11.0
+Major work on the creation of svgs. We now support adding page breaks to the statemachine to have the digram span multiple pages.
+added lint package.
+
 # 0.10.1
 updated the readme.md
 

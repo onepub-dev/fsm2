@@ -14,12 +14,14 @@ import '../test/cleaning_air_test.dart';
 ///
 
 void main(List<String> args) {
-  var machine = createMachine();
+  final machine = createMachine();
   machine.export('clean_air.smcat');
 }
 
 void showUsage(ArgParser parser) {
+  // ingore: avoid_print
   print('Usage: gen_smcat.dart -v -prompt <a questions>');
+  // ingore: avoid_print
   print(parser.usage);
   exit(1);
 }
