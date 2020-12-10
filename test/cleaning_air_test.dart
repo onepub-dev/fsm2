@@ -4,7 +4,7 @@ import 'package:fsm2/src/types.dart';
 import 'package:fsm2/src/virtual_root.dart';
 import 'package:test/test.dart';
 
-void main()  {
+void main() {
   test('fork', () async {
     final machine = createMachine();
     expect(machine.isInState<MonitorAir>(), equals(true));
@@ -100,10 +100,10 @@ var _smcGraph = '''
 
 MaintainAir {
 	MonitorAir {
-		MonitorAir => ]MonitorAir.Fork : OnBadAir;
-		]MonitorAir.Fork => HandleFan : ;
-		]MonitorAir.Fork => HandleLamp : ;
-		]MonitorAir.Fork => WaitForGoodAir : ;
+		MonitorAir => ]MonitorAir.fork : OnBadAir;
+		]MonitorAir.fork => HandleFan ;
+		]MonitorAir.fork => HandleLamp ;
+		]MonitorAir.fork => WaitForGoodAir ;
 	},
 	CleanAir.parallel [label="CleanAir"] {
 		HandleFan {
@@ -125,10 +125,10 @@ MaintainAir {
 			LampOff.initial => LampOff;
 		},
 		WaitForGoodAir;
-		HandleFan => ]MonitorAir.Join : OnFanRunning;
-		]MonitorAir.Join => MonitorAir : ;
-		HandleLamp => ]MonitorAir.Join : OnLampOn;
-		WaitForGoodAir => ]MonitorAir.Join : OnGoodAir;
+		HandleFan => ]MonitorAir.join : OnFanRunning;
+		HandleLamp => ]MonitorAir.join : OnLampOn;
+		WaitForGoodAir => ]MonitorAir.join : OnGoodAir;
+		]MonitorAir.join => MonitorAir ;
 	};
 	MonitorAir.initial => MonitorAir;
 };
