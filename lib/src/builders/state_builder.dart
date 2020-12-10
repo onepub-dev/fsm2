@@ -57,8 +57,17 @@ class StateBuilder<S extends State> {
   /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
-  void on<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
-    final onTransition = OnTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, TOSTATE, sideEffect);
+  ///
+  /// The [conditionLabel] is optional and is only used when exporting. The [conditionLabel] is used
+  /// to annotate the transition on the diagram.
+  void on<E extends Event, TOSTATE extends State>(
+      {GuardCondition<E> condition,
+      SideEffect sideEffect,
+      String conditionLabel,
+      String sideEffectLabel}) {
+    final onTransition = OnTransitionDefinition<S, E, TOSTATE>(
+        _stateDefinition, condition, TOSTATE, sideEffect,
+        conditionLabel: conditionLabel, sideEffectLabel: sideEffectLabel);
 
     _stateDefinition.addTransition<E>(onTransition);
   }
@@ -79,7 +88,8 @@ class StateBuilder<S extends State> {
 
   /// Used to enter a co-region by targeting the set of states within the
   /// coregion to transition to.
-  void onFork<E extends Event>(BuildFork<E> buildFork, {Function(State, E) condition}) {
+  void onFork<E extends Event>(BuildFork<E> buildFork,
+      {Function(State, E) condition}) {
     final builder = ForkBuilder<E>();
     buildFork(builder);
     final definition = builder.build();
@@ -91,8 +101,10 @@ class StateBuilder<S extends State> {
 
   /// Adds an event to the set of events that must be triggered to leave the parent [coregion].
   /// Every onJoin in a coregion must target the same external state.
-  void onJoin<E extends Event, TOSTATE extends State>({GuardCondition<E> condition, SideEffect sideEffect}) {
-    final onTransition = JoinTransitionDefinition<S, E, TOSTATE>(_stateDefinition, condition, sideEffect);
+  void onJoin<E extends Event, TOSTATE extends State>(
+      {GuardCondition<E> condition, SideEffect sideEffect}) {
+    final onTransition = JoinTransitionDefinition<S, E, TOSTATE>(
+        _stateDefinition, condition, sideEffect);
 
     _stateDefinition.addTransition<E>(onTransition);
   }
@@ -115,12 +127,14 @@ class StateBuilder<S extends State> {
       return _stateDefinition;
     } else {
       /// If no initial state then the first state is the initial state.
-      if (_initialState == null && _stateDefinition.childStateDefinitions.isNotEmpty) {
+      if (_initialState == null &&
+          _stateDefinition.childStateDefinitions.isNotEmpty) {
         _initialState = _stateDefinition.childStateDefinitions[0].stateType;
       }
 
       assert(_initialState != null);
-      final sd = _stateDefinition.findStateDefintion(_initialState, includeChildren: false);
+      final sd = _stateDefinition.findStateDefintion(_initialState,
+          includeChildren: false);
       if (sd == null) {
         throw InvalidInitialStateException(
             'The initialState $_initialState MUST be a child state of ${_stateDefinition.stateType}.');

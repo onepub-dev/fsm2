@@ -20,9 +20,17 @@ abstract class TransitionDefinition< // S extends State,
   /// will be fired in preference to a null [condition].
   final GuardCondition<E> condition;
 
+  /// An optional label used only on the exported diagrams to given the [condition]
+  /// a descriptive label.  @See [label]
+  final String conditionLabel;
+
   /// The [SideEffect] function to call when this choice is
   /// selected as the transition.
   final SideEffect sideEffect;
+
+  /// An optional label used only on the exported diagrams to given the [consideEffectdition]
+  /// a descriptive label.  @See [label]
+  final String sideEffectLabel;
 
   /// list of the target states the will be transitioned into.
   List<Type> get targetStates;
@@ -32,14 +40,40 @@ abstract class TransitionDefinition< // S extends State,
   /// implementation detail of the [Transition] implementation.
   List<Type> get triggerEvents;
 
-  TransitionDefinition(this.fromStateDefinition, {this.condition, this.sideEffect});
+  TransitionDefinition(this.fromStateDefinition,
+      {this.condition,
+      this.sideEffect,
+      this.conditionLabel,
+      this.sideEffectLabel});
+
+  /// Returns a transition label for use on exported diagrams. The
+  /// label takes the standard UML2 form of:
+  /// ```
+  /// transition[condition]/sideeffect
+  /// ```
+  String get label => labelForTrigger(triggerEvents[0]);
+
+  String labelForTrigger(Type trigger) {
+    final buf = StringBuffer();
+
+    buf.write(trigger.toString());
+
+    if (conditionLabel != null) {
+      buf.write(' [$conditionLabel]');
+    }
+    if (sideEffectLabel != null) {
+      buf.write('/$sideEffectLabel');
+    }
+    return buf.toString();
+  }
 
   /// Applies [event] to the  current statemachine and returns the resulting
   /// [StateOfMind].
   ///
   /// As the statemachine can be in multiple states the [state] argument indicates what
   /// [State] the [event] is to be processed againts.
-  Future<StateOfMind> trigger(Graph graph, StateOfMind stateOfMind, Type fromState, Event event) async {
+  Future<StateOfMind> trigger(
+      Graph graph, StateOfMind stateOfMind, Type fromState, Event event) async {
     final exitPaths = <PartialStatePath>[];
     final enterPaths = <PartialStatePath>[];
 
@@ -84,7 +118,8 @@ abstract class TransitionDefinition< // S extends State,
     return stateOfMind;
   }
 
-  PartialStatePath getExitPath(StatePath fromAncestors, StateDefinition commonAncestor) {
+  PartialStatePath getExitPath(
+      StatePath fromAncestors, StateDefinition commonAncestor) {
     final exitTargets = PartialStatePath();
 
     for (final fromAncestor in fromAncestors.path) {
@@ -95,7 +130,8 @@ abstract class TransitionDefinition< // S extends State,
     return exitTargets;
   }
 
-  PartialStatePath getEnterPath(StatePath toAncestors, StateDefinition commonAncestor) {
+  PartialStatePath getEnterPath(
+      StatePath toAncestors, StateDefinition commonAncestor) {
     final enterTargets = PartialStatePath();
 
     for (final toAncestor in toAncestors.path) {
@@ -110,7 +146,8 @@ abstract class TransitionDefinition< // S extends State,
   /// to the [fromState] and [targetStates]
   ///
   /// If no common ancestor is found then null is returned;
-  StateDefinition findCommonAncestor(Graph graph, StatePath fromAncestors, StatePath toAncestors) {
+  StateDefinition findCommonAncestor(
+      Graph graph, StatePath fromAncestors, StatePath toAncestors) {
     final toAncestorSet = toAncestors.path.toSet();
 
     for (final ancestor in fromAncestors.path) {
@@ -124,7 +161,8 @@ abstract class TransitionDefinition< // S extends State,
   /// To do this we walk up the tree (towards the root) and call onExit
   /// for each ancestor up to but not including the common
   /// ancestor of the state we are entering.
-  Future<void> callOnExits(StateDefinition fromState, Event event, List<StateDefinition> states) async {
+  Future<void> callOnExits(StateDefinition fromState, Event event,
+      List<StateDefinition> states) async {
     for (final fromState in states) {
       if (fromState.onExit != null) {
         await fromState.onExit(fromState.stateType, event);
@@ -153,7 +191,8 @@ abstract class TransitionDefinition< // S extends State,
   /// ancestor.
   /// We also dedup the States as we build the path.
   List<StateDefinition> dedupPaths(List<PartialStatePath> paths) {
-    final maxLength = paths.fold<int>(0, (longest, element) => max(longest, element.path.length));
+    final maxLength = paths.fold<int>(
+        0, (longest, element) => max(longest, element.path.length));
 
     final seenPaths = <StateDefinition>{};
     final orderedPaths = <StateDefinition>[];
@@ -161,7 +200,8 @@ abstract class TransitionDefinition< // S extends State,
       for (final statePath in paths) {
         /// Only take if the path is long enough
         if (statePath.path.length >= (maxLength - i)) {
-          final ofInterest = statePath.path[i - (maxLength - statePath.path.length)];
+          final ofInterest =
+              statePath.path[i - (maxLength - statePath.path.length)];
           if (!seenPaths.contains(ofInterest)) orderedPaths.add(ofInterest);
           seenPaths.add(ofInterest);
         }
