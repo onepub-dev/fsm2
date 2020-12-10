@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 
 import 'exporter.dart';
 import 'smc_state.dart';
+import 'smc_transition.dart';
 
 /// Class exports a [StateMachine] to a state-machine-cat notation file so that the FMS can be visualised.
 ///
@@ -26,7 +27,12 @@ import 'smc_state.dart';
 
 class SMCatExporter implements Exporter {
   final StateMachine stateMachine;
-  final SMCState virtualRoot = SMCState(name: 'initial', type: SMCStateType.root, pageBreak: false);
+  final SMCState virtualRoot =
+      SMCState(name: 'initial', type: SMCStateType.root, pageBreak: false);
+
+  /// we need to suppress any duplicate transitions which can
+  /// happen when we are forking.
+  Set<SMCTransition> seenTransitions = <SMCTransition>{};
 
   final exports = ExportedPages();
 
@@ -50,8 +56,11 @@ class SMCatExporter implements Exporter {
 
     final ancestor = stateMachine.oldestAncestor(stateMachine.initialState);
 
-    write('initial => ${ancestor.toString()} : ${stateMachine.initialStateLabel};',
-        page: 0, indent: 0, endOfLine: true);
+    write(
+        'initial => ${ancestor.toString()} : ${stateMachine.initialStateLabel};',
+        page: 0,
+        indent: 0,
+        endOfLine: true);
 
     _closePageFiles();
 
@@ -61,12 +70,38 @@ class SMCatExporter implements Exporter {
   SMCState _build() {
     virtualRoot.pageNo = 0;
     for (final child in stateMachine.topStateDefinitions) {
-      virtualRoot.addChild(SMCState.build(stateMachine, virtualRoot, child, page: 0));
+      virtualRoot
+          .addChild(SMCState.build(stateMachine, virtualRoot, child, page: 0));
     }
 
     // we can only build the transitions once the full statemachine tree is built.
     traverseTree<SMCState>(virtualRoot, (node) => node.children, (node) {
       node.buildTransitions(stateMachine);
+
+      return true;
+    });
+
+    /// now remove duplicates.
+    /// We can't do this in the above traverseTree as transitions can be
+    /// added to an ancestor so we can't see them easily
+    ///
+    ///
+    traverseTree<SMCState>(virtualRoot, (node) => node.children, (node) {
+      final toBeRemoved = <SMCTransition>[];
+
+      /// mark any duplicate transitions.
+      for (final transition in node.transitions) {
+        if (seenTransitions.contains(transition)) {
+          toBeRemoved.add(transition);
+        } else {
+          seenTransitions.add(transition);
+        }
+      }
+
+      // remove any marked transitions.
+      for (final transition in toBeRemoved) {
+        node.transitions.remove(transition);
+      }
       return true;
     });
 
@@ -107,7 +142,8 @@ class SMCatExporter implements Exporter {
 
   /// writes a string to the given page file.
   @override
-  void write(String string, {@required int indent, @required int page, bool endOfLine = false}) {
+  void write(String string,
+      {@required int indent, @required int page, bool endOfLine = false}) {
     exports.write(page, '\n${_indent(indent)}$string');
     if (endOfLine) exports.write(page, '\n');
   }
