@@ -39,32 +39,42 @@ StateMachine createMachine() {
         /// AppLaunched
         ..state<AppLaunched>((builder) => builder
           ..onEnter((s, e) async => fetchUserStatus())
-          ..on<OnForceRegistration, RegistrationRequired>(sideEffect: () async => RegistrationWizard.restart())
+          ..on<OnForceRegistration, RegistrationRequired>(
+              sideEffect: () async => RegistrationWizard.restart())
           // ignore: avoid_print
-          ..on<OnMissingApiKey, RegistrationRequired>(sideEffect: () async => print('hi'))
+          ..on<OnMissingApiKey, RegistrationRequired>(
+              // ignore: avoid_print
+              sideEffect: () async => print('hi'))
           ..on<OnHasApiKey, Registered>())
 
         /// Registered is normally the final state we are looking for
         /// but there a few circumstance where we force the user to register.
-        ..state<Registered>((builder) =>
-            builder..on<OnForceRegistration, RegistrationRequired>(sideEffect: () async => RegistrationWizard.restart))
+        ..state<Registered>((builder) => builder
+          ..on<OnForceRegistration, RegistrationRequired>(
+              sideEffect: () async => RegistrationWizard.restart))
 
         ///RegistrationRequired
         ..state<RegistrationRequired>((builder) => builder
-          ..on<OnRegistrationType, AcceptInvitation>(condition: (e) => e.type == RegistrationType.acceptInvite)
-          ..on<OnRegistrationType, NewOrganisation>(condition: (e) => e.type == RegistrationType.newOrganisation)
-          ..on<OnRegistrationType, RecoverAccount>(condition: (e) => e.type == RegistrationType.recoverAccount)
+          ..on<OnRegistrationType, AcceptInvitation>(
+              condition: (e) => e.type == RegistrationType.acceptInvite)
+          ..on<OnRegistrationType, NewOrganisation>(
+              condition: (e) => e.type == RegistrationType.newOrganisation)
+          ..on<OnRegistrationType, RecoverAccount>(
+              condition: (e) => e.type == RegistrationType.recoverAccount)
 
           /// HasRegistrationType
           ..state<RegistrationTypeAcquired>((builder) => builder
             ..pageBreak
-            ..state<NewOrganisation>((builder) =>
-                builder..onEnter((s, e) async => RegistrationWizard.setType(RegistrationType.acceptInvite)))
+            ..state<NewOrganisation>((builder) => builder
+              ..onEnter((s, e) async =>
+                  RegistrationWizard.setType(RegistrationType.acceptInvite)))
             ..state<RecoverAccount>((builder) => builder
-              ..onEnter((s, e) async => RegistrationWizard.setType(RegistrationType.newOrganisation))
+              ..onEnter((s, e) async =>
+                  RegistrationWizard.setType(RegistrationType.newOrganisation))
               ..on<OnUserNotFound, EmailRequired>())
             ..state<AcceptInvitation>((builder) => builder
-              ..onEnter((s, e) async => RegistrationWizard.setType(RegistrationType.recoverAccount))
+              ..onEnter((s, e) async =>
+                  RegistrationWizard.setType(RegistrationType.recoverAccount))
               ..on<OnUserNotFound, EmailRequired>()
               ..on<OnUserEnteredMobile, MobileNoAcquired>())
             ..coregion<MobileAndRegistrationTypeAcquired>((builder) => builder
@@ -85,10 +95,7 @@ StateMachine createMachine() {
                     ..on<OnUserAcquisitionFailed, UserAcquistionRetryRequired>())
 
                   /// The user's account is active
-                  ..state<AccountEnabled>((builder) => builder
-                    ..on<OnInActiveCustomerFound, InactiveCustomerTerminal>()
-                    ..on<OnActiveCustomerFound, ActiveCustomer>()
-                    ..on<OnViableInvitiationFound, ViableInvitation>())
+                  ..state<AccountEnabled>((builder) => builder..on<OnInActiveCustomerFound, InactiveCustomerTerminal>()..on<OnActiveCustomerFound, ActiveCustomer>()..on<OnViableInvitiationFound, ViableInvitation>())
 
                   // state for each page in the wizard.
                   ..coregion<Pages>((builder) => builder

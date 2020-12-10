@@ -5,9 +5,10 @@ import 'types.dart';
 import 'virtual_root.dart';
 
 class Graph {
-  Graph(
-      this.virtualRoot, this.initialState, this.topStateDefinitions, this.onTransitionListeners, this.initialStateLabel)
-      : stateDefinitions = _expandStateDefinitions(virtualRoot, topStateDefinitions);
+  Graph(this.virtualRoot, this.initialState, this.topStateDefinitions,
+      this.onTransitionListeners, this.initialStateLabel)
+      : stateDefinitions =
+            _expandStateDefinitions(virtualRoot, topStateDefinitions);
 
   StateDefinition<VirtualRoot> virtualRoot;
   Type initialState;
@@ -24,7 +25,8 @@ class Graph {
 
   /// searches the entire tree of [StateDefinition] looking for a matching
   /// state.
-  StateDefinition findStateDefinition(Type runtimeType) => stateDefinitions[runtimeType];
+  StateDefinition findStateDefinition(Type runtimeType) =>
+      stateDefinitions[runtimeType];
 
   /// Checks if the given [stateType] is a top level state.
   bool isTopLevelState(Type stateType) {
@@ -46,7 +48,8 @@ class Graph {
   /// wire the top state definitions into the stateDefinition map
   /// and into the [VirtualRoot]
   static Map<Type, StateDefinition> _expandStateDefinitions(
-      StateDefinition<VirtualRoot> virtualRoot, List<StateDefinition<State>> topStateDefinitions) {
+      StateDefinition<VirtualRoot> virtualRoot,
+      List<StateDefinition<State>> topStateDefinitions) {
     final definitions = <Type, StateDefinition>{};
 
     addStateDefinition(definitions, virtualRoot);
@@ -66,7 +69,8 @@ class Graph {
   }
 
   static void addStateDefinition(
-      Map<Type, StateDefinition<State>> stateDefinitions, StateDefinition<State> stateDefinition) {
+      Map<Type, StateDefinition<State>> stateDefinitions,
+      StateDefinition<State> stateDefinition) {
     if (stateDefinitions.containsKey(stateDefinition.stateType)) {
       throw DuplicateStateException(stateDefinition);
     }

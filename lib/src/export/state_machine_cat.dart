@@ -30,7 +30,7 @@ class StartMachineCatExporter {
   /// var terminalsOwnedByRegion = <Type, List<int>>{};
   StartMachineCatExporter(this.stateMachine);
 
-  void export(String path)  {
+  void export(String path) {
     // await stateMachine.traverseTree((stateDefinition, transitionDefinitions) async {
     //   for (var transitionDefinition in transitionDefinitions) {
     //     if (stateDefinition.isLeaf) {
