@@ -18,8 +18,8 @@ void main() {
       ..onEnter((s, e) async => log('Entering $s State'))
       ..onExit((s, e) async => log('Exiting $s State'))
       ..on<OnCondensed, Liquid>(sideEffect: () async => log('Condensed')))
-    ..onTransition((from, e, to) =>
-        log('Recieved Event $e in State ${from.stateType} transitioning to State ${to.stateType}')));
+    ..onTransition((from, e, to) => log(
+        'Recieved Event $e in State ${from.stateType} transitioning to State ${to.stateType}')));
 
   machine.analyse();
   machine.export('test/smcat/water.smcat');

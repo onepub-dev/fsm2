@@ -26,9 +26,11 @@ import 'virtual_root.dart';
 /// Returns [true] if all States are reachable.
 bool analyse(Graph graph) {
   var allGood = true;
-  final stateDefinitionMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
+  final stateDefinitionMap =
+      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
-  final remainingStateMap = Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
+  final remainingStateMap =
+      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
   /// always remove the virtual root as is never directly used.
   remainingStateMap.remove(VirtualRoot);
@@ -82,7 +84,8 @@ bool analyse(Graph graph) {
     if (seen.contains(stateDefinition.stateType)) {
       allGood = false;
       // ignore: avoid_print
-      print('Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
+      print(
+          'Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
     }
   }
 
@@ -92,7 +95,8 @@ bool analyse(Graph graph) {
   for (final stateDefinition in stateDefinitionMap.values) {
     if (stateDefinition.stateType == VirtualRoot) continue;
     // print('Found state: ${stateDefinition.stateType}');
-    for (final transitionDefinition in stateDefinition.getTransitions(includeInherited: false)) {
+    for (final transitionDefinition
+        in stateDefinition.getTransitions(includeInherited: false)) {
       final targetStates = transitionDefinition.targetStates;
       for (final targetState in targetStates) {
         // Ignore our special terminal state.
@@ -119,7 +123,8 @@ bool analyse(Graph graph) {
       if (stateDefinition.childStateDefinitions.isEmpty) {
         allGood = false;
         // ignore: avoid_print
-        print('Found coregion ${stateDefinition.stateType} which has no children.');
+        print(
+            'Found coregion ${stateDefinition.stateType} which has no children.');
       }
 
       if (stateDefinition.childStateDefinitions.length == 1) {

@@ -1,4 +1,3 @@
-
 import '../types.dart';
 
 class JoinDefinition<S extends State> {
