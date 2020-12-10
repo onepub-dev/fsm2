@@ -27,6 +27,10 @@ import 'virtual_root.dart';
 ///
 ///
 
+/// Internal event used to tranisition into an initial state
+/// when the state machin is first created.
+class _InitialEvent extends Event {}
+
 class _QueuedEvent {
   Event event;
   final _completer = CompleterEx<void>();
@@ -113,6 +117,7 @@ class StateMachine {
   }
 
   bool _loadStateOfMind(StateDefinition<State> initialState) {
+    initialState.onEnter(initialState.stateType, _InitialEvent());
     if (initialState.isLeaf) {
       _stateOfMind.addPath(StatePath.fromLeaf(_graph, initialState.stateType));
       return true;

@@ -68,8 +68,8 @@ class StateDefinition<S extends State> {
     return definitions;
   }
 
-  /// callback used when we enter this [State].
-  /// Provide provide a default no-op implementation.
+  /// callback used when we enter  [toState].
+  /// Provides a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
   OnEnter onEnter = (Type toState, Event event) {
     return null;

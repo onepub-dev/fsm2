@@ -109,6 +109,12 @@ initial => Solid : Solid;''';
     await machine.waitUntilQuiescent;
     verify(watcher.onExit(Liquid));
   });
+
+  test('onEntry for initial state', () async {
+    final machine = _createMachine<Solid>(watcher);
+    await machine.waitUntilQuiescent;
+    verify(watcher.onEnter(Solid));
+  });
 }
 
 StateMachine _createMachine<S extends State>(
