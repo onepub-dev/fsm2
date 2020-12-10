@@ -72,7 +72,8 @@ Future<void> main(List<String> args) async {
     showUsage(parser);
   }
 
-  await generateAll(parsed.rest, show: parsed.wasParsed('show'), watch: parsed.wasParsed('watch'));
+  await generateAll(parsed.rest,
+      show: parsed.wasParsed('show'), watch: parsed.wasParsed('watch'));
 }
 
 Future<void> generateAll(List<String> rest, {bool show, bool watch}) async {
@@ -92,19 +93,20 @@ Future<void> generateAll(List<String> rest, {bool show, bool watch}) async {
       }
 
       /// do a glob match as the filename didn't have an extension.
-      const count = 0;
+      var count = 0;
       final pattern = '$file.*.smcat';
       for (file in find(pattern, recursive: false).toList()) {
         generate(file, show: show);
+        count++;
         watchList.add(file);
       }
       if (count == 0) {
-        final one = '$file.smcat';
-        if (exists(one)) {
-          generate(one, show: show);
+        if (exists(file)) {
+          generate(file, show: show);
           watchList.add(file);
         } else {
-          printerr(orange('No files found that match the pattern: $pattern or $one'));
+          printerr(orange(
+              'No files found that match the pattern: ${truepath(pattern)}.'));
         }
       }
     }
@@ -142,8 +144,20 @@ void generate(String path, {@required bool show}) {
       nothrow: true);
 
   if (result.exitCode == 0) {
+    /// See if the filename contains a page no.
+    var pageNo = extension(basenameWithoutExtension(path));
+    if (pageNo.isNotEmpty) {
+      pageNo = pageNo.substring(1);
+
+      final page = int.tryParse(pageNo);
+      if (page != null) {
+        addPageNo(
+            '${join(dirname(path), basenameWithoutExtension(path))}.svg', page);
+      }
+    }
     if (show) {
-      'firefox $outputFile'.start(detached: true);
+      'firefox $outputFile'
+          .start(detached: true, workingDirectory: dirname(path));
     }
     // ignore: avoid_print
     print('Generation of $outputFile complete.');
@@ -153,13 +167,48 @@ void generate(String path, {@required bool show}) {
   }
 }
 
+/// Add a page no. at the top of the page.
+/// We add the svg elements at the very end of the file.
+void addPageNo(String svgPath, int page) {
+  addInkscapeNamespace(svgPath);
+
+  const xPos = 40;
+  const yPos = 40;
+  final svgPageNo = '''
+    <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:30px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.75"
+     x="$xPos"
+     y="$yPos"
+     id="text288"><tspan
+       sodipodi:role="line"
+       id="tspan286"
+       x="$xPos"
+       y="$yPos"
+       style="font-size:12px;stroke-width:0.75">Page: $page</tspan></text>
+</svg>
+''';
+
+  replace(svgPath, '</svg>', svgPageNo);
+}
+
+void addInkscapeNamespace(String svgPath) {
+  const existing = 'xmlns="http://www.w3.org/2000/svg"';
+
+  const replacement =
+      'xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"';
+
+  replace(svgPath, existing, replacement);
+}
+
 void showUsage(ArgParser parser) {
   // ignore: avoid_print
   print('Usage: ${Script.current.exeName} <base name of myfsm2>\n');
   // ignore: avoid_print
   print('Converts a set of smcat files into svg files.');
   // ignore: avoid_print
-  print('If your smcat file has multiple parts due to page breaks then each page will be processed.');
+  print(
+      'If your smcat file has multiple parts due to page breaks then each page will be processed.');
   // ignore: avoid_print
   print(parser.usage);
   exit(1);
@@ -192,13 +241,17 @@ Future<void> watchFiles(List<String> files) async {
 }
 
 void watchFile(String file) {
-  File(file).watch(events: FileSystemEvent.all).listen((event) => _controller.add(event));
+  File(file)
+      .watch(events: FileSystemEvent.all)
+      .listen((event) => _controller.add(event));
 }
 
 void watchDirectory(String projectRoot) {
   // ignore: avoid_print
   print('watching $projectRoot');
-  Directory(projectRoot).watch(events: FileSystemEvent.all).listen((event) => _controller.add(event));
+  Directory(projectRoot)
+      .watch(events: FileSystemEvent.all)
+      .listen((event) => _controller.add(event));
 }
 
 void onFileSystemEvent(FileSystemEvent event) {
@@ -234,7 +287,9 @@ void delayedGeneration() {
 
 void onCreateEvent(FileSystemCreateEvent event) {
   if (event.isDirectory) {
-    Directory(event.path).watch(events: FileSystemEvent.all).listen((event) => _controller.add(event));
+    Directory(event.path)
+        .watch(events: FileSystemEvent.all)
+        .listen((event) => _controller.add(event));
   } else {
     if (lastDeleted != null) {
       if (basename(event.path) == basename(lastDeleted)) {
