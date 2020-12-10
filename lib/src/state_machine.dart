@@ -40,7 +40,7 @@ class _QueuedEvent {
 
 class StateMachine {
   /// only one transition can be happening at at time.
-  final lock = Lock();
+  final _lock = Lock();
 
   /// If production mode is off then we track
   /// each transition to aid with debugging.
@@ -49,7 +49,7 @@ class StateMachine {
 
   /// To avoid deadlocks if an event is generated during
   /// a transition we queue transitions.
-  final eventQueue = Queue<_QueuedEvent>();
+  final _eventQueue = Queue<_QueuedEvent>();
 
   /// Returns [Stream] of States.
   final StreamController<StateOfMind> _controller =
@@ -211,7 +211,7 @@ class StateMachine {
   ///
   void applyEvent<E extends Event>(E event) {
     final qe = _QueuedEvent(event);
-    eventQueue.add(qe);
+    _eventQueue.add(qe);
 
     /// process the event on a microtask.
     Future.delayed(const Duration(), () => _dispatch());
@@ -219,8 +219,8 @@ class StateMachine {
 
   /// dequeue the next event and transition it.
   Future<void> _dispatch() async {
-    assert(eventQueue.isNotEmpty);
-    final event = eventQueue.first;
+    assert(_eventQueue.isNotEmpty);
+    final event = _eventQueue.first;
 
     try {
       await _actualApplyEvent(event.event);
@@ -237,24 +237,24 @@ class StateMachine {
       event._completer.completeError(e);
     } finally {
       /// now we have finished processing the event we can remove it from the queue.
-      eventQueue.removeFirst();
+      _eventQueue.removeFirst();
     }
   }
 
   /// Returns true if the event queue is empty
-  bool get _isQuiescent => eventQueue.isEmpty;
+  bool get _isQuiescent => _eventQueue.isEmpty;
 
   /// waits until all events have been processed.
   /// @visibleForTesting
   Future<void> get waitUntilQuiescent async {
     while (!_isQuiescent) {
-      await eventQueue.last._completer.future;
+      await _eventQueue.last._completer.future;
     }
   }
 
   Future<void> _actualApplyEvent<E extends Event>(E event) async {
     /// only one transition at a time.
-    return lock.synchronized(() async {
+    return _lock.synchronized(() async {
       var dispatched = false;
       for (final stateDefinition in _stateOfMind.activeLeafStates()) {
         final transitionDefinition = await stateDefinition

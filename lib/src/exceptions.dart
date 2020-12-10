@@ -3,15 +3,19 @@ import 'definitions/state_definition.dart';
 import 'state_of_mind.dart';
 import 'types.dart';
 
-class NullChoiceMustBeLastException implements Exception {
+/// When creating the statemachine a state has defined an Event without a condition and it is not
+/// the last event defined for the state.
+class NullConditionMustBeLastException implements Exception {
   Type eventType;
-  NullChoiceMustBeLastException(this.eventType);
+  NullConditionMustBeLastException(this.eventType);
 
   @override
   String toString() =>
-      "The Event $eventType already has a transition with a null 'choice'. Only one is allowed";
+      "The Event $eventType already has a transition with a null 'condition'. Only one is allowed";
 }
 
+/// You called stateMachine.applyEvent with an event that is not defined in a transition
+/// for the current state.
 class InvalidTransitionException implements Exception {
   Event event;
   StateOfMind stateOfMind;
@@ -22,6 +26,8 @@ class InvalidTransitionException implements Exception {
       'There is no transition for Event ${event.runtimeType} from the State $stateOfMind.';
 }
 
+/// You defined a transition 'on', 'fork', 'join' with a target state which is not know to the
+/// state engine.
 class UnknownStateException implements Exception {
   String message;
 
@@ -31,6 +37,7 @@ class UnknownStateException implements Exception {
   String toString() => message;
 }
 
+/// You have passed an State as an initialState that isn't either a top level state or a leaf state.
 class InvalidInitialStateException implements Exception {
   String message;
 
@@ -40,16 +47,7 @@ class InvalidInitialStateException implements Exception {
   String toString() => message;
 }
 
-// class InvalidNestedStateException implements Exception {
-//   String message;
-
-//   InvalidNestedStateException(StateDefinition<State> child, StateDefinition<State> parent)
-//       : message = 'The child state ${child.stateType} MUST NOT have the same type as a parent state';
-
-//   @override
-//   String toString() => message;
-// }
-
+/// YOu have tried to define the same state twice.
 class DuplicateStateException implements Exception {
   String message;
 

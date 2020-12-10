@@ -6,13 +6,22 @@ import 'builders/join_builder.dart';
 import 'builders/state_builder.dart';
 import 'definitions/state_definition.dart';
 
-abstract class State {}
-
-/// Class used to represent an implicit terminal [State].
+/// Base class for all States that you pass to the FSM.
 ///
-/// A [State] is considered terminal if it has no explicit transitions ([on], [onFork], [onJoin])
-/// events defined for it.
-// class TerminalState extends State {}
+/// All your [State] classes MUST extend this [State] class.
+///
+/// ```dart
+/// class Solid extends State
+/// {
+/// }
+///
+///  final machine = StateMachine.create((g) => g
+///       ..state<Solid>((b) => b
+///
+///       ...
+/// )
+/// ```
+abstract class State {}
 
 /// Special class used to represent the final/terminal state of the FSM.
 /// If you add an 'on' transition to [FinalState] then an transition arrow to a final state
@@ -23,15 +32,24 @@ class FinalState extends State {}
 /// that indicates how we got in the FSM initialState.
 class InitialEvent extends Event {}
 
-/// Class used to represent an implicit event to a terminal [State].
+/// Base class for all Events that you pass to the FSM.
 ///
-/// A [State] is considered terminal if it has no explicit transitions ([on], [onFork], [onJoin])
-/// events defined from it (e.g. there is no way to leave the state).
+/// All your [Event] class MUST extends the [Event] class
 ///
-/// If a [State] is a terminal state we emmit an implicit transition from the [State] to
-/// the [TerminalState] via a [TerminalEvent].
-// class TerminalEvent extends Event {}
-
+/// ```dart
+/// class Heat extends Event
+/// {
+///   int joules;
+///
+///   Heat({this.joules});
+/// }
+///
+/// stateMachine.applyEvent(Heat(joules: 2000));
+///
+/// ...
+///
+/// ..on<Heat, Liquid>(condition: (s,e) => applyHeatAndReturnTemp(e.joules) > 0)
+/// ```
 abstract class Event {}
 
 typedef GuardCondition<E extends Event> = bool Function(E event);
@@ -40,7 +58,10 @@ typedef BuildGraph = void Function(GraphBuilder);
 
 typedef SideEffect = Future<void> Function();
 
+/// The method signature for a [State]s [onEnter] method
 typedef OnEnter = Future<void> Function(Type fromState, Event event);
+
+/// The method signature for a [State]s [onExit] method
 typedef OnExit = Future<void> Function(Type toState, Event event);
 
 /// Callback when a transition occurs.

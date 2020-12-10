@@ -1,3 +1,6 @@
+# 0.13.0
+Fixed for #2. We now call onEnter for all initial states when the statemachine is first created.
+
 # 0.12.0
 Added test of expected output when exporting page break tests.
 improved unit tests for page breaks.

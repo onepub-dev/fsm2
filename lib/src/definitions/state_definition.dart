@@ -7,14 +7,18 @@ import '../transitions/transition_definition.dart';
 import '../types.dart';
 import '../virtual_root.dart';
 
+/// A [StateDefinition] represents a state defined in the statemachine builder.
 class StateDefinition<S extends State> {
-  String nEnterLabel;
+  /// Optional label used when visualising the FSM.
+  String onEnterLabel;
 
+  /// Optional label used when visualising the FSM.
   String onExitLabel;
 
+  /// The initial state if this is the parent of a nested set of states.
   Type initialState;
 
-  /// If true the this state and all child states
+  /// If true then this state and all child states
   /// will be printed on a separate page.
   bool pageBreak = false;
 
@@ -25,6 +29,7 @@ class StateDefinition<S extends State> {
   /// If this is not a nested state then parent will be null.
   StateDefinition _parent;
 
+  /// The parent of this state in the FSM tree.
   StateDefinition get parent => _parent;
 
   /// The Type of the [State] that this [StateDefinition] is for.
@@ -100,7 +105,7 @@ class StateDefinition<S extends State> {
       Type fromState, E event) async {
     TransitionDefinition transitionDefinition;
 
-    if (!hasTransition(fromState, event)) {
+    if (!_hasTransition(fromState, event)) {
       return null;
     }
 
@@ -130,7 +135,7 @@ class StateDefinition<S extends State> {
       return NoOpTransitionDefinition<S, E>(this, E);
     }
 
-    return evaluateConditions(transitionChoices, event);
+    return _evaluateConditions(transitionChoices, event);
   }
 
   /// Evaluates each guard condition for the given [event]  from [fromState]
@@ -140,7 +145,7 @@ class StateDefinition<S extends State> {
   /// If no condition allows the transition to fire then we return
   /// a [NoOpTransitionDefinition] which result in no state transition occuring.
   ///
-  Future<TransitionDefinition<E>> evaluateConditions<E extends Event>(
+  Future<TransitionDefinition<E>> _evaluateConditions<E extends Event>(
       List<TransitionDefinition<E>> transitionChoices, E event) async {
     assert(transitionChoices.isNotEmpty);
     for (final transitionDefinition in transitionChoices) {
@@ -208,7 +213,7 @@ class StateDefinition<S extends State> {
     transitionDefinitions ??= <TransitionDefinition<E>>[];
 
     if (transitionDefinition.condition == null) {
-      checkHasNoNullChoices(E);
+      _checkHasNoNullChoices(E);
     }
 
     transitionDefinitions.add(transitionDefinition);
@@ -264,7 +269,7 @@ class StateDefinition<S extends State> {
   /// We search up the tree of nested states starting at [fromState]
   /// as any transitions on parent states can also be applied
   ///
-  bool hasTransition<E extends Event>(Type fromState, E event) {
+  bool _hasTransition<E extends Event>(Type fromState, E event) {
     final transitions = getTransitions();
     // var transitions = _eventTranstionsMap[event.runtimeType];
 
@@ -277,13 +282,13 @@ class StateDefinition<S extends State> {
             found || transition.triggerEvents.contains(event.runtimeType));
   }
 
-  void checkHasNoNullChoices(Type eventType) {
+  void _checkHasNoNullChoices(Type eventType) {
     if (_eventTranstionsMap[eventType] == null) return;
     for (final transitionDefinition in _eventTranstionsMap[eventType]) {
       // darts generic typedefs are broken for inheritence
       final dynamic a = transitionDefinition;
       if ((a.condition as dynamic) == null) {
-        throw NullChoiceMustBeLastException(eventType);
+        throw NullConditionMustBeLastException(eventType);
       }
     }
   }

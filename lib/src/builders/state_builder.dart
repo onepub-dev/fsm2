@@ -54,7 +54,7 @@ class StateBuilder<S extends State> {
   /// transition added to the [S]. A transition with a null [condition] is considered the
   /// 'else' condition in that it fires if none of the transitions with a [condition] evaluate to true.
   ///
-  /// An [NullChoiceMustBeLastException] will be thrown if you try to register two
+  /// An [NullConditionMustBeLastException] will be thrown if you try to register two
   /// transitions for a given Event type with a null [condition] or you try to add a
   /// transition with a non-null [condition] after adding a transition with a null [condition].
   ///
@@ -112,7 +112,7 @@ class StateBuilder<S extends State> {
   /// Sets callback that will be called right after machine enters this State.
   void onEnter(OnEnter onEnter, {String label}) {
     _stateDefinition.onEnter = onEnter;
-    _stateDefinition.nEnterLabel = label;
+    _stateDefinition.onEnterLabel = label;
   }
 
   /// Sets callback that will be called right before machine exits this State.
