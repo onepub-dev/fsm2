@@ -35,7 +35,8 @@ class SMCState {
   List<SMCTransition> transitions = <SMCTransition>[];
   List<SMCState> children = <SMCState>[];
 
-  SMCState({@required this.name, @required this.type, @required this.pageBreak});
+  SMCState(
+      {@required this.name, @required this.type, @required this.pageBreak});
 
   /// We say that the state where the page break occurs 'straddles'
   /// two pages. We call this a 'straddle' state.
@@ -62,7 +63,8 @@ class SMCState {
   ///
   /// Build the SMSState tree
   ///
-  SMCState.build(StateMachine stateMachine, this.parent, this.sd, {@required int page}) {
+  SMCState.build(StateMachine stateMachine, this.parent, this.sd,
+      {@required int page}) {
     pageBreak = sd.pageBreak;
     pageNo = page;
     assert(pageNo != null);
@@ -77,27 +79,27 @@ class SMCState {
     } else {
       if (sd.isCoRegion) {
         name = '${sd.stateType.toString()}.parallel';
-        label = 'sd.stateType.toString()';
+        label = sd.stateType.toString();
         type = SMCStateType.coregion;
       } else {
-        name = 'sd.stateType.toString()';
+        name = sd.stateType.toString();
         label = name;
         type = SMCStateType.region;
         initialChildState = sd.initialState.toString();
       }
       for (final child in sd.childStateDefinitions) {
-        children.add(SMCState.build(stateMachine, this, child, page: childPageNo));
+        children
+            .add(SMCState.build(stateMachine, this, child, page: childPageNo));
       }
     }
   }
+
+  bool get isRoot => type == SMCStateType.root;
 
   void buildTransitions(StateMachine stateMachine) {
     for (final transition in sd.getTransitions(includeInherited: false)) {
       transitions.addAll(SMCTransition.build(stateMachine, this, transition));
     }
-
-    // remove duplicate psuedo states
-    transitions = transitions.toSet().toList();
   }
 
   void addChild(SMCState child) {
@@ -117,11 +119,11 @@ class SMCState {
 
     /// we don't write out the name of the VirtualRoot
     if (type != SMCStateType.root) {
-      /// version
-      if (name == label || label == null) {
-        exporter.write(name, indent: indent, page: bodyPage);
-      } else {
-        exporter.write('$name [label="$label"]', indent: indent, page: bodyPage);
+      _writeName(exporter, pageNo, indent, colored: isStraddleState);
+
+      /// straddle states appear on two pages.
+      if (isStraddleState) {
+        _writeName(exporter, bodyPage, indent, colored: false);
       }
     }
 
@@ -145,7 +147,8 @@ class SMCState {
 
     /// Write out the initial state if this isn't a leaf
     if (initialChildState != null) {
-      exporter.write('$initialChildState.initial => $initialChildState;', page: bodyPage, indent: indent + 1);
+      exporter.write('$initialChildState.initial => $initialChildState;',
+          page: bodyPage, indent: indent + 1);
     }
 
     /// write out child transitions
@@ -161,5 +164,31 @@ class SMCState {
     }
   }
 
-  bool hasBody() => (children.isNotEmpty || transitions.isNotEmpty) && type != SMCStateType.root;
+  bool hasBody() =>
+      (children.isNotEmpty || transitions.isNotEmpty) &&
+      type != SMCStateType.root;
+
+  void _writeName(Exporter exporter, int pageNo, int indent,
+      {@required bool colored}) {
+    final line = StringBuffer();
+    var closeBracket = false;
+    if (name == label || label == null) {
+      line.write(name);
+      if (colored) {
+        closeBracket = true;
+        line.write('[color="blue"');
+      }
+    } else {
+      closeBracket = true;
+      line.write('$name [label="$label"');
+      if (colored) {
+        line.write('color = "blue"');
+      }
+    }
+    if (closeBracket) {
+      line.write(']');
+    }
+
+    exporter.write(line.toString(), indent: indent, page: pageNo);
+  }
 }
