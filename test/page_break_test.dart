@@ -1,3 +1,4 @@
+import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -18,19 +19,19 @@ void main() {
     human = Human();
   });
 
-    test('Export', () async {
+  test('Export', () async {
     final machine = await _createMachine<Alive>(watcher, human);
     machine.analyse();
     // ignore: unused_local_variable
     final pages = machine.export('test/smcat/page_break_test.smcat');
 
-    // for (var page in pages.pages) {
-    //   var lines = read(page.path).toList().reduce((value, line) => value += '\n' + line);
-    //   expect(lines, equals(graph));
-    // }
+    var pageNo = 0;
+    for (final page in pages.pages) {
+      final lines =
+          read(page.path).toList().reduce((value, line) => value += '\n$line');
+      expect(lines, equals(_graphs[pageNo++]));
+    }
   });
-
-
 }
 
 Future<StateMachine> _createMachine<S extends State>(
@@ -121,7 +122,8 @@ class OnJudged implements Event {
 }
 
 // ignore: unused_element
-var _graph = '''
+var _graphs = <String>[
+  '''
 
 Alive {
 	Young,
@@ -131,26 +133,31 @@ Alive {
 	Alive => Young : OnBirthday;
 	Alive => MiddleAged : OnBirthday;
 	Alive => Old : OnBirthday;
-	Alive => Purgatory : OnDeath;
 },
+Dead[color="blue"];
+Alive => Dead : OnDeath;
+initial => Alive : Alive;''',
+  '''
+
 Dead {
-	Purgatory {
-		Purgatory => Buddhist : OnJudged;
-		Purgatory => Catholic : OnJudged;
-		Purgatory => SalvationArmy : OnJudged;
-	},
-	InHeaven {
-		Buddhist;
-		Buddhist.initial => Buddhist;
-	},
-	InHell {
-		Christian {
-			SalvationArmy,
-			Catholic;
-			SalvationArmy.initial => SalvationArmy;
-		};
-		Christian.initial => Christian;
+Purgatory {
+	Purgatory => Buddhist : OnJudged [good];
+	Purgatory => Catholic : OnJudged [bad];
+	Purgatory => SalvationArmy : OnJudged [ugly];
+},
+InHeaven {
+	Buddhist;
+	Buddhist.initial => Buddhist;
+},
+InHell {
+	Christian {
+		SalvationArmy,
+		Catholic;
+		SalvationArmy.initial => SalvationArmy;
 	};
-	Purgatory.initial => Purgatory;
+	Christian.initial => Christian;
 };
-initial => Alive : Alive;''';
+Purgatory.initial => Purgatory;
+]Purgatory.initial => Purgatory : OnDeath;
+};'''
+];
