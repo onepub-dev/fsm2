@@ -23,6 +23,23 @@
             "args": [
                 "-j1"
             ]
+     
+     
+        },
+
+        {
+            "name": "Page Break Generation",
+            "program": "bin/fsm2.dart",
+            "request": "launch",
+            "type": "dart",
+            "console": "terminal",
+            "args": [
+                "-w",
+                "-s",
+                "test/smcat/page_break_test"
+            ]
+            
         }
+
     ]
 }
