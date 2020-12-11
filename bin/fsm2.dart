@@ -128,7 +128,6 @@ void generate(String path, {@required bool show}) {
   final outputFile = '${basenameWithoutExtension(path)}.svg';
   print('Generating: $outputFile ');
   if (exists(outputFile)) {
-    print('Deleting $outputFile');
     delete(outputFile);
   }
 
@@ -144,7 +143,6 @@ void generate(String path, {@required bool show}) {
   if (result.exitCode == 0) {
     /// See if the filename contains a page no.
     var pageNo = extension(basenameWithoutExtension(path));
-    print('found pageNo $pageNo');
     if (pageNo.isNotEmpty) {
       pageNo = pageNo.substring(1);
 
@@ -152,7 +150,6 @@ void generate(String path, {@required bool show}) {
       if (page != null) {
         final svgPath =
             '${join(dirname(path), basenameWithoutExtension(path))}.svg';
-        print('Adding pageNo to $svgPath pageNo $pageNo');
         addPageNo(svgPath, page);
       }
     }
@@ -204,8 +201,6 @@ void updatePageHeight(String svgPath, Size pageSize, Size newPageSize) {
       '<svg width="${pageSize.width}pt" height="${pageSize.height}';
   final replacement =
       '<svg width="${newPageSize.width}pt" height="${newPageSize.height}';
-  print('searching for $existing');
-  print('replacement for $replacement');
   replace(svgPath, existing, replacement);
 
   /// update the viewbox
@@ -237,8 +232,6 @@ Size getPageSize(String svgPath) {
       .toList()
       .firstWhere((line) => line.startsWith('<svg width'));
 
-  print('line $svgLine');
-
   final attributes = svgLine.split(' ');
   assert(attributes.length == 3);
 
@@ -254,15 +247,12 @@ Size getPageSize(String svgPath) {
 }
 
 int getAttributeInt(String attribute) {
-  print('attributes=$attribute');
   final parts = attribute.split('=');
-  print(parts);
   assert(parts.length == 2);
   var pts = parts[1];
   pts = pts.replaceAll('pt', '');
   pts = pts.replaceAll('"', '');
 
-  print('pts$pts');
   return int.tryParse(pts);
 }
 
