@@ -191,4 +191,129 @@ class SMCState {
 
     exporter.write(line.toString(), indent: indent, page: pageNo);
   }
+
+  @override
+  bool operator ==(covariant SMCState other) {
+    return hashCode == other.hashCode;
+  }
+
+  @override
+  int get hashCode {
+    return name.hashCode + label.hashCode + type.hashCode;
+  }
+
+  /// Check if this state is a decendant of [other]
+  bool isDescendantOf(SMCState other) {
+    var current = this;
+
+    while (!current.isRoot && current != other) {
+      current = current.parent;
+    }
+
+    /// if we didn't get to the root then we found the other
+    /// so we must be a descendant.
+    return !current.isRoot;
+  }
+
+  /// Find the common ancestor of the two given states
+  /// and returns the two branches from that ancestor
+  /// that lead to those states.
+  Branches findBranchPoint(SMCState to) {
+    final otherPath = _SMCStatePath.fromState(to);
+
+    final ourPath = _SMCStatePath.fromState(this);
+
+    final ancestor = findCommonAncestor(ourPath, otherPath);
+
+    final branches = Branches();
+    for (final state in ourPath.path) {
+      if (state.parent == ancestor) {
+        branches.from = state;
+        break;
+      }
+    }
+
+    for (final state in otherPath.path) {
+      if (state.parent == ancestor) {
+        branches.to = state;
+        break;
+      }
+    }
+    assert(branches.to != null);
+    assert(branches.from != null);
+    return branches;
+  }
+
+  SMCState findCommonAncestor(_SMCStatePath ourPath, _SMCStatePath otherPath) {
+    for (final state in ourPath.path) {
+      if (otherPath.isInPath(state)) {
+        return state;
+      }
+    }
+
+    /// we should never get here as the root is a common ancestor.
+    assert(false);
+    return null;
+  }
+
+  int findCommonPage(SMCState other) {
+    final pages = <int>{};
+
+    pages.add(pageNo);
+    if (pages.contains(other.pageNo)) {
+      return pageNo;
+    }
+
+    pages.add(other.pageNo);
+
+    if (isStraddleState) {
+      if (pages.contains(straddleChildPage)) {
+        return straddleChildPage;
+      }
+      pages.add(straddleChildPage);
+    }
+
+    if (other.isStraddleState) {
+      if (pages.contains(other.straddleChildPage)) {
+        return other.straddleChildPage;
+      }
+    }
+
+    /// no common page.
+    return null;
+  }
+
+  bool isSiblingOf(SMCState other) {
+    return other.parent == parent;
+  }
+
+  bool isAncestorOf(SMCState other) {
+    var parent = other;
+    while (parent != this && !parent.isRoot) {
+      parent = parent.parent;
+    }
+    return parent == this;
+  }
+}
+
+/// describes the set of ancestors to a state.
+class _SMCStatePath {
+  /// list of states
+  List<SMCState> path = <SMCState>[];
+
+  _SMCStatePath.fromState(SMCState state) {
+    var parent = state;
+    while (!parent.isRoot) {
+      path.add(parent);
+      parent = parent.parent;
+    }
+
+    // add the virtual root.
+    path.add(parent);
+  }
+
+  /// true if the passed state is in the path.
+  bool isInPath(SMCState state) {
+    return path.contains(state);
+  }
 }
