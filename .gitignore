@@ -16,5 +16,6 @@ doc/api/
 *.g.dart
 .history
 test/gv/
-test/test.gv
+test/*.gv
 test/smcat/
+tool/*.smcat
