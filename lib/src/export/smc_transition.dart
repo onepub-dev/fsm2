@@ -11,6 +11,11 @@ import '../state_machine.dart';
 import '../types.dart';
 import 'exporter.dart';
 
+class Branches {
+  SMCState from;
+  SMCState to;
+}
+
 class SMCTransition {
   /// names are case sensitive.
   static const fork = 'fork';
@@ -171,94 +176,107 @@ class SMCTransition {
     // final from = stateMachine.findStateDefinitionFromString(smcTransition.from);
     // final to = stateMachine.findStateDefinitionFromString(smcTransition.to);
 
-    final scmFrom = findSMCState(owner, smcTransition.from);
-    final scmTo = findSMCState(owner, smcTransition.to);
+    final smcFrom = findSMCState(owner, smcTransition.from);
+    final smcTo = findSMCState(owner, smcTransition.to);
 
-    /// Is the transition to/from on the same page
-    if (scmFrom.pageNo == scmTo.pageNo) {
+    final commonPage = smcFrom.findCommonPage(smcTo);
+
+    if (smcFrom.isSiblingOf(smcTo)) {
+      /// siblings will always be on the same page.
       owner.transitions.add(smcTransition);
     }
 
-    /// Is the transition 'to' an ancestor state
-    else if (scmFrom.pageNo > scmTo.pageNo) {
+    /// from is an ancestor of to
+    else if (smcFrom.isAncestorOf(smcTo)) {
+      if (isOnSamePage(smcFrom, smcTo)) {
+        owner.transitions.add(smcTransition);
+      } else {
+        addEnterTransitions(owner, smcFrom, smcTo, smcTransition);
+      }
+    }
+
+    /// from is decendant of to
+    else if (smcFrom.isDescendantOf(smcTo)) {
+      if (commonPage != null) {
+        owner.transitions.add(smcTransition);
+      } else {
+        addExitTransitions(owner, smcFrom, smcTo, smcTransition);
+      }
+    }
+    // from and to must be on different branches of the tree.
+    else {
+      final branches = smcFrom.findBranchPoint(smcTo);
+
+      final commonPage = branches.from.findCommonPage(branches.to);
+      if (commonPage != null) {
+        addDirectTransition(
+            branches.from, branches.to, commonPage, smcTransition);
+      }
+
+      /// the branches will be sibligs so we start
+      /// by creating an bridging transition between the
+      /// siblines.
+      final bridgeTransition = SMCTransition();
+      bridgeTransition.from = branches.from.name;
+      bridgeTransition.to = branches.to.name;
+      owner.transitions.add(smcTransition);
+
+      addExitTransitions(owner, branches.from, smcFrom, smcTransition);
+      addEnterTransitions(owner, branches.to, smcTo, smcTransition);
+    }
+  }
+
+  /// Adds a direct link between to states which MUST be on the same page.
+  static void addDirectTransition(
+      SMCState from, SMCState to, int commonPage, SMCTransition orginal) {
+    final transition = SMCTransition();
+
+    /// generate an exit from the current state
+    transition.from = from.name;
+    transition.to = genFinalState(transition.from);
+    transition.label = orginal.label;
+
+    // WHO is the owner here as I think it controls what page these go on which is possible not the same as the commonPage.
+    // Same goes for each of the other tranitions.
+
+    findPageOwner(from, commonPage).transitions.add(transition);
+  }
+
+  static void addExitTransitions(SMCState owner, SMCState smcFrom,
+      SMCState smcTo, SMCTransition original) {
+    final transition = SMCTransition();
+
+    /// generate an exit from the current state
+    transition.from = smcFrom.name;
+    transition.to = genFinalState(transition.from);
+    transition.label = original.label;
+
+    owner.transitions.add(transition);
+
+    /// final state transition on each page up to the target ancestor
+    var parent = owner.parent;
+    while (parent != smcTo) {
       final transition = SMCTransition();
 
       /// generate an exit from the current state
-      transition.from = scmFrom.name;
+      transition.from = parent.name;
       transition.to = genFinalState(transition.from);
-      transition.label = smcTransition.label;
+      transition.label = original.label;
+      if (parent.parent == null) break;
+      assert(parent.parent != null);
+      parent = parent.parent;
 
-      owner.transitions.add(transition);
-
-      /// final state transition on each page up to the target ancestor
-      var parent = owner.parent;
-      while (parent != scmTo) {
-        final transition = SMCTransition();
-
-        /// generate an exit from the current state
-        transition.from = parent.name;
-        transition.to = genFinalState(transition.from);
-        transition.label = smcTransition.label;
-
-        parent.parent.transitions.add(transition);
-        parent = parent.parent;
-      }
-
-      /// add final transtiion to the actual 'to' state
-      final finalTransition = SMCTransition();
-
-      /// generate an exit from the current state
-      finalTransition.from = parent.name;
-      finalTransition.to = scmTo.name;
-      finalTransition.label = smcTransition.label;
-      scmTo.transitions.add(finalTransition);
-    }
-
-    /// The transition is 'to' a child state
-    else {
-      /// On the 'to' page we show a 'initial' transition.
-      ///
-      var transition = SMCTransition();
-
-      /// generate an init into the current state
-      transition.from = genInitialState(scmTo.name);
-      transition.to = scmTo.name;
-      transition.label = smcTransition.label;
-      scmTo.parent.transitions.add(transition);
-
-      /// Write a transition as we move to each new ancestor page
-      var parent = scmTo.parent;
-      var currentPageNo = scmTo.pageNo;
-      while (currentPageNo > scmFrom.pageNo) {
-        if (currentPageNo != parent.pageNo) {
-          // we are on a new page so show an init transition.
-          final transition = SMCTransition();
-
-          /// generate an init into the current state
-          if (!parent.parent.isRoot) {
-            transition.from = genInitialState(parent.name);
-            transition.to = parent.name;
-            transition.label = smcTransition.label;
-            parent.parent.transitions.add(transition);
-          }
-        }
-        parent = parent.parent;
-        currentPageNo = parent.pageNo;
-      }
-
-      /// We are back up ato the 'from' state so add a
-      /// transition from the 'from' state to the
-      /// straddle state on this page.
-      transition = SMCTransition();
-
-      /// generate an exit from the current state
-      transition.from = scmFrom.name;
-      transition.to = getStraddleStateForPage(scmTo, scmFrom.pageNo).name;
-      transition.label = smcTransition.label;
-
-      /// originally had parent.parent?
       parent.transitions.add(transition);
     }
+
+    /// add final transtiion to the actual 'to' state
+    final finalTransition = SMCTransition();
+
+    /// generate an exit from the current state
+    finalTransition.from = parent.name;
+    finalTransition.to = smcTo.name;
+    finalTransition.label = original.label;
+    smcTo.transitions.add(finalTransition);
   }
 
   /// Find the SMCState for the name.
@@ -306,5 +324,88 @@ class SMCTransition {
     assert(current.isStraddleState);
 
     return current;
+  }
+
+  static bool isOnSamePage(SMCState lhs, SMCState rhs) {
+    return
+        // !lhs.isStraddleState &&
+        //     !rhs.isStraddleState &&
+        lhs.pageNo == rhs.pageNo;
+  }
+
+  /// True if the [state] is on [page]. If the [state] is a
+  /// straddle state then it is considered on the same page if
+  /// either the parent or child page is equal to [page].
+  static bool isOnPage(SMCState state, int page) {
+    return state.pageNo == page ||
+        (state.isStraddleState && state.straddleChildPage == page);
+  }
+
+  static void addEnterTransitions(SMCState owner, SMCState smcFrom,
+      SMCState smcTo, SMCTransition smcTransition) {
+    /// On the 'to' page we show a 'initial' transition.
+    ///
+    var transition = SMCTransition();
+
+    /// generate an init into [smcTo] from its parent
+    transition.from = genInitialState(smcTo.name);
+    transition.to = smcTo.name;
+    transition.label = smcTransition.label;
+    smcTo.parent.transitions.add(transition);
+
+    /// Starting from the [smcTo] work our way back up to [smcFrom]
+    /// Write an enter transition as we move to each new ancestor page
+    var parent = smcTo.parent;
+    var currentPageNo = smcTo.pageNo;
+    while (currentPageNo > smcFrom.pageNo) {
+      if (currentPageNo != parent.pageNo) {
+        // we are on a new page so show an init transition.
+        final transition = SMCTransition();
+
+        /// generate an init into the current state
+        if (!parent.parent.isRoot) {
+          transition.from = genInitialState(parent.name);
+          transition.to = parent.name;
+          transition.label = smcTransition.label;
+          parent.parent.transitions.add(transition);
+        }
+      }
+      parent = parent.parent;
+      currentPageNo = parent.pageNo;
+    }
+
+    /// We are back up at the [scmFrom] state so add a
+    /// transition from the [scmFrom] state to the
+    /// straddle state on this page.
+    transition = SMCTransition();
+
+    /// generate an exit from the current state
+    transition.from = smcFrom.name;
+    transition.to = getStraddleStateForPage(smcTo, smcFrom.pageNo).name;
+    transition.label = smcTransition.label;
+
+    /// originally had parent.parent?
+    parent.transitions.add(transition);
+  }
+
+  /// Finds the first [SMCState] that appears in the page.
+  /// i.e. the state closes to the root.
+  ///
+  /// If there are multiple siblings at the same level we
+  /// retrn the first one.
+  ///
+  /// [start] must be either in the [page] or in a later page (one with a higher no.)
+  static SMCState findPageOwner(SMCState start, int page) {
+    var parent = start;
+
+    assert(parent.pageNo <= page || isOnPage(parent, page));
+
+    while (!isOnPage(parent, page)) {
+      parent = parent.parent;
+    }
+
+    if (!parent.isRoot) {}
+
+    return parent;
   }
 }
