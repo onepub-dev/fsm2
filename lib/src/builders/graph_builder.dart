@@ -39,9 +39,9 @@ class GraphBuilder {
 
   /// Adds [coregion]] definition.
   /// A [coregion] is where the statemachine can
-  /// have be in two states at the same time.
+  /// be in two states at the same time.
   /// The parent state (defined by the call to [coregion])
-  /// treats all child states as [coregion]].
+  /// treats all child states as [coregion]s.
   ///
   /// ```dart
   /// .coregion<MobileAndRegistrationType>((builder) =>
@@ -51,15 +51,15 @@ class GraphBuilder {
   ///
   /// In the above example the [StateMachine] is considered
   /// to be in both the 'AcquireMobile' state and the
-  /// 'RegistrationType' state. The [coregion] is also
-  /// a parent state and of the states and the [StateMachine]
-  /// is also considered to be in the parent [coregion] so in reality
-  /// the machine is in three states at once.
+  /// 'RegistrationType' state.
+  ///
+  /// The [coregion] 'MobileAndRegistrationType' is also a parent state
+  /// so the machine is said to be in three states at once.
+  ///
   void coregion<S extends State>(
     BuildState<S> buildState,
   ) {
-    final builder = StateBuilder<S>(
-        StateDefinition(VirtualRoot), CoRegionDefinition(VirtualRoot));
+    final builder = StateBuilder<S>(virtualRoot, CoRegionDefinition(S));
     buildState(builder);
     final definition = builder.build();
     _stateDefinitions.add(definition);
