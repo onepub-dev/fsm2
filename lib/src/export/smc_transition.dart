@@ -91,14 +91,13 @@ class SMCTransition {
 
         final smct = SMCTransition(
             from: owner,
-            // ignore: unnecessary_parenthesis
-            to: (target == TerminalState
+            to: target == TerminalState
                 ? genTerminalState(owner)
-                : findSMCState(owner, target)));
+                : findSMCState(owner, target));
         smct.label = transition.labelForTrigger(trigger);
 
-        /// The final transition is always placed outside the substate.
         if (target == TerminalState) {
+          /// The final transition is always placed outside the substate.
           expandPageBreaks(stateMachine, owner.parent, smct);
         } else {
           expandPageBreaks(stateMachine, owner, smct);
@@ -224,17 +223,18 @@ class SMCTransition {
     else {
       final branches = smcFrom.findBranchPoint(smcTo);
 
-      final commonPage = branches.from.findCommonPage(branches.to);
-      if (commonPage != null) {
-        addDirectTransition(
-            branches.from, branches.to, commonPage, smcTransition);
-      }
+      // final commonPage = branches.from.findCommonPage(branches.to);
+      // if (commonPage != null) {
+      //   addDirectTransition(
+      //       branches.from, branches.to, commonPage, smcTransition);
+      // }
 
       /// the branches will be sibligs so we start
-      /// by creating an bridging transition between the
+      /// by creating a bridging transition between the
       /// siblines.
       final bridgeTransition =
           SMCTransition(from: branches.from, to: branches.to);
+      bridgeTransition.label = smcTransition.label;
       owner.transitions.add(bridgeTransition);
 
       addExitTransitions(owner, branches.from, smcFrom, smcTransition);
@@ -242,22 +242,29 @@ class SMCTransition {
     }
   }
 
-  /// Adds a direct link between to states which MUST be on the same page.
+  // /// Adds a direct link between two states which MUST be on the same page.
   static void addDirectTransition(
       SMCState from, SMCState to, int commonPage, SMCTransition orginal) {
+    assert(from.pageNo == to.pageNo);
+
     /// generate an exit from the current state
-    final transition = SMCTransition(from: from, to: genTerminalState(from));
+    final transition = SMCTransition(from: from, to: to);
     transition.label = orginal.label;
 
-    // WHO is the owner here as I think it controls what page these go on which is possible not the same as the commonPage.
-    // Same goes for each of the other tranitions.
+    // WHO is the owner here as I think it controls what page these go on which is possibly not the same as the commonPage.
+    // Same goes for each of the other transitions.
+    final owner = findPageOwner(from, commonPage);
 
-    findPageOwner(from, commonPage).transitions.add(transition);
+    owner.transitions.add(transition);
   }
 
   static void addExitTransitions(SMCState owner, SMCState smcFrom,
       SMCState smcTo, SMCTransition original) {
     if (smcFrom == smcTo) return;
+
+    if (isOnSamePage(smcFrom, smcTo)) {
+      return;
+    }
 
     /// generate an exit from the current state
     final transition =

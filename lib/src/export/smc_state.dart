@@ -124,8 +124,6 @@ class SMCState {
     for (final transition in sd.getTransitions(includeInherited: false)) {
       transitions.addAll(SMCTransition.build(stateMachine, this, transition));
     }
-
-    
   }
 
   void addChild(SMCState child) {
@@ -202,13 +200,13 @@ class SMCState {
       line.write(name);
       if (colored) {
         closeBracket = true;
-        line.write('[color="blue"');
+        line.write(' [color="blue"');
       }
     } else {
       closeBracket = true;
       line.write('$name [label="$label"');
       if (colored) {
-        line.write('color = "blue"');
+        line.write(' color="blue"');
       }
     }
     if (closeBracket) {
@@ -285,6 +283,8 @@ class SMCState {
     return null;
   }
 
+  /// Check whether this and other reside on a common page.
+  /// We are checking both straddle pages if necessary.
   int findCommonPage(SMCState other) {
     final pages = <int>{};
 

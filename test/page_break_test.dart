@@ -1,3 +1,4 @@
+import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -24,12 +25,12 @@ void main() {
     // ignore: unused_local_variable
     final pages = machine.export('test/smcat/page_break_test.smcat');
 
-    // var pageNo = 0;
-    // for (final page in pages.pages) {
-    //   final lines =
-    //       read(page.path).toList().reduce((value, line) => value += '\n$line');
-    //   expect(lines, equals(_graphs[pageNo++]));
-    // }
+    var pageNo = 0;
+    for (final page in pages.pages) {
+      final lines =
+          read(page.path).toList().reduce((value, line) => value += '\n$line');
+      expect(lines, equals(_graphs[pageNo++]));
+    }
   });
 }
 
@@ -44,11 +45,14 @@ Future<StateMachine> _createMachine<S extends State>(
       ..onEnter((s, e) async => watcher.onEnter(s, e))
       ..onExit((s, e) async => watcher.onExit(s, e))
       ..on<OnBirthday, Young>(
-          condition: (e) => human.age < 18, sideEffect: (e) async => human.age++)
+          condition: (e) => human.age < 18,
+          sideEffect: (e) async => human.age++)
       ..on<OnBirthday, MiddleAged>(
-          condition: (e) => human.age < 50, sideEffect: (e) async => human.age++)
+          condition: (e) => human.age < 50,
+          sideEffect: (e) async => human.age++)
       ..on<OnBirthday, Old>(
-          condition: (e) => human.age < 80, sideEffect: (e) async => human.age++)
+          condition: (e) => human.age < 80,
+          sideEffect: (e) async => human.age++)
       ..on<OnDeath, Purgatory>()
       ..state<Young>((b) => b..onExit((s, e) async => watcher.onExit(s, e)))
       ..state<MiddleAged>(
@@ -123,6 +127,7 @@ class OnJudged implements Event {
 
 // ignore: unused_element
 var _graphs = <String>[
+  /// page 1
   '''
 
 Alive {
@@ -133,18 +138,16 @@ Alive {
 	Alive => Young : OnBirthday;
 	Alive => MiddleAged : OnBirthday;
 	Alive => Old : OnBirthday;
+	Alive => Dead : OnDeath;
 },
-Dead[color="blue"];
-Alive => Dead : OnDeath;
+Dead [color="blue"];
 initial => Alive : Alive;''',
+
+  /// page 2
   '''
 
 Dead {
-Purgatory {
-	Purgatory => Buddhist : OnJudged [good];
-	Purgatory => Catholic : OnJudged [bad];
-	Purgatory => SalvationArmy : OnJudged [ugly];
-},
+Purgatory [color="blue"],
 InHeaven {
 	Buddhist;
 	Buddhist.initial => Buddhist;
@@ -159,5 +162,14 @@ InHell {
 };
 Purgatory.initial => Purgatory;
 ]Purgatory.initial => Purgatory : OnDeath;
+};''',
+
+  /// page 3
+  '''
+
+Purgatory {
+Purgatory => Buddhist : OnJudged [good];
+Purgatory => Catholic : OnJudged [bad];
+Purgatory => SalvationArmy : OnJudged [ugly];
 };'''
 ];

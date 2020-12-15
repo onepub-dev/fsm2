@@ -53,7 +53,8 @@ StateMachine createMachine() {
         /// but there a few circumstance where we force the user to register.
         ..state<Registered>((builder) => builder
           ..on<OnForceRegistration, RegistrationRequired>(
-              sideEffect: (e) async => RegistrationWizard.restart))
+              sideEffect: (e) async => RegistrationWizard.restart)
+          ..pageBreak)
 
         ///RegistrationRequired
         ..coregion<RegistrationRequired>(
@@ -80,7 +81,7 @@ void registrationRequired(StateBuilder<RegistrationRequired> builder) {
     /// HasRegistrationType
     ..state<RegistrationTypeSelected>(
         (builder) => registrationTypeSelected(builder))
-    ..pageBreak
+    // ..pageBreak
     ..state<RegionPage>((builder) => regionPage(builder))
     ..state<NamePage>((builder) => namePage(builder))
     ..state<EmailPage>((b) => emailPage(b))
