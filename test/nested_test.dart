@@ -159,11 +159,11 @@ Future<StateMachine> _createMachine<S extends State>(
       ..onEnter((s, e) async => watcher.onEnter(s, e))
       ..onExit((s, e) async => watcher.onExit(s, e))
       ..on<OnBirthday, Young>(
-          condition: (e) => human.age < 18, sideEffect: () async => human.age++)
+          condition: (e) => human.age < 18, sideEffect: (e) async => human.age++)
       ..on<OnBirthday, MiddleAged>(
-          condition: (e) => human.age < 50, sideEffect: () async => human.age++)
+          condition: (e) => human.age < 50, sideEffect: (e) async => human.age++)
       ..on<OnBirthday, Old>(
-          condition: (e) => human.age < 80, sideEffect: () async => human.age++)
+          condition: (e) => human.age < 80, sideEffect: (e) async => human.age++)
       ..on<OnDeath, Purgatory>()
       ..state<Young>((b) => b..onExit((s, e) async => watcher.onExit(s, e)))
       ..state<MiddleAged>(

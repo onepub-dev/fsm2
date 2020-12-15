@@ -19,7 +19,7 @@ class StateOfMind {
     return false;
   }
 
-  void removePath(StatePath path) {
+  void _removePath(StatePath path) {
     StatePath toBeRemoved;
     for (final statePath in _leafPaths) {
       if (statePath == path) toBeRemoved = statePath;
@@ -29,7 +29,7 @@ class StateOfMind {
     _leafPaths.remove(toBeRemoved);
   }
 
-  void addPath(StatePath path) {
+  void _addPath(StatePath path) {
     _leafPaths.add(path);
   }
 
@@ -73,4 +73,15 @@ class StateOfMind {
     }
     return details.toString();
   }
+}
+
+/// Used to hide internal implementation details.
+///
+
+void removePath(StateOfMind som, StatePath path) {
+  som._removePath(path);
+}
+
+void addPath(StateOfMind som, StatePath path) {
+  som._addPath(path);
 }

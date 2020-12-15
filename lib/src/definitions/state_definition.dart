@@ -1,11 +1,14 @@
+import 'package:meta/meta.dart';
+
 import '../builders/co_region_builder.dart';
 import '../builders/state_builder.dart';
-import '../definitions/co_region_definition.dart';
+
 import '../exceptions.dart';
 import '../transitions/noop_transition.dart';
 import '../transitions/transition_definition.dart';
 import '../types.dart';
 import '../virtual_root.dart';
+import 'co_region_definition.dart';
 
 /// A [StateDefinition] represents a state defined in the statemachine builder.
 class StateDefinition<S extends State> {
@@ -50,6 +53,8 @@ class StateDefinition<S extends State> {
   /// The are in the same order as the builder declares them.
   final List<StateDefinition> childStateDefinitions = [];
 
+  bool get isVirtualRoot => stateType == VirtualRoot;
+
   // ignore: use_setters_to_change_properties
   void setParent<P extends State>(StateDefinition<P> parent) {
     // log('set parent = ${parent.stateType} on ${stateType} ${hashCode}');
@@ -73,6 +78,21 @@ class StateDefinition<S extends State> {
     return definitions;
   }
 
+  /// This method is not part of the public interface.
+  ///
+  /// DO NOT USE.
+  ///
+  /// This method is called when we enter this state to give the
+  /// [StateDefinition] a chance to do any internal intialisation.
+  /// If you must call [internalOnEnter] so that we can call the user
+  /// defined [onEnter] method.
+  // @mustCallSuper
+  Future<void> internalOnEnter(Type fromState, Event event) async {
+    if (onEnter != null) {
+      await onEnter(fromState, event);
+    }
+  }
+
   /// callback used when we enter  [toState].
   /// Provides a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
@@ -80,10 +100,21 @@ class StateDefinition<S extends State> {
     return null;
   };
 
+  /// This method is called when we exit this state to give the
+  /// [StateDefinition] a chance to do any internal cleanup.
+  /// If you must call [_onExit] so that we can call the user
+  /// defined [onExit] method.
+  @mustCallSuper
+  Future<void> _onExit(Type fromState, Event event) async {
+    if (onExit != null) {
+      await onExit(fromState, event);
+    }
+  }
+
   /// callback used when we exiting this [State].
   /// Provide provide a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
-  OnExit onExit = (Type fromState, Event event) {
+  OnExit onExit = (Type toState, Event event) {
     return null;
   };
 
@@ -109,7 +140,7 @@ class StateDefinition<S extends State> {
       return null;
     }
 
-    /// does the current state definition have a transition for the give event.
+    /// does the current state definition have a transition that will fire for the give event.
     transitionDefinition = await _evaluateTransitions(event);
 
     // If [fromState] doesn't have a transitionDefintion that can be triggered
@@ -138,7 +169,7 @@ class StateDefinition<S extends State> {
     return _evaluateConditions(transitionChoices, event);
   }
 
-  /// Evaluates each guard condition for the given [event]  from [fromState]
+  /// Evaluates each guard condition for the given [event] from [fromState]
   ///
   /// Conditions are applied to determine which transition occurs.
   ///
@@ -149,11 +180,13 @@ class StateDefinition<S extends State> {
       List<TransitionDefinition<E>> transitionChoices, E event) async {
     assert(transitionChoices.isNotEmpty);
     for (final transitionDefinition in transitionChoices) {
-      /// hack to get around typedef inheritance issues.
-      final dynamic a = transitionDefinition;
-      if ((a.condition as dynamic) == null || (a.condition(event) as bool)) {
-        /// static transition
-        return transitionDefinition;
+      if (transitionDefinition.condition == null ||
+          transitionDefinition.condition(event)) {
+        /// pseudo states such as onJoin may still not be able to trigger.
+        if (transitionDefinition.canTrigger(event)) {
+          /// static transition
+          return transitionDefinition;
+        }
       }
     }
     return NoOpTransitionDefinition<S, E>(this, E);
@@ -221,7 +254,7 @@ class StateDefinition<S extends State> {
   }
 
   /// Adds a child state to this state definition.
-  void addNestedState<C extends State>(
+  void _addNestedState<C extends State>(
     BuildState<C> buildState,
   ) {
     final builder = StateBuilder<C>(this, StateDefinition(C));
@@ -236,7 +269,7 @@ class StateDefinition<S extends State> {
   /// A state may have any number of [coregion]s.
   /// All [coregion]s simultaneously have a state
   /// This allows
-  void addCoRegion<CO extends State>(BuildCoRegion<CO> buildState) {
+  void _addCoRegion<CO extends State>(BuildCoRegion<CO> buildState) {
     final builder = CoRegionBuilder<CO>(this, CoRegionDefinition(CO));
     //  builder.parent = this;
     buildState(builder);
@@ -298,4 +331,30 @@ class StateDefinition<S extends State> {
         .map((sd) => sd.stateType)
         .contains(initialState);
   }
+
+  /// default implementation.
+  bool canTrigger(Type event) {
+    return true;
+  }
+}
+
+/// used to hide internal api
+Future<void> onEnter(StateDefinition sd, Type toState, Event event) async {
+  sd.internalOnEnter(toState, event);
+}
+
+Future<void> onExit(StateDefinition sd, Type fromState, Event event) async {
+  sd._onExit(fromState, event);
+}
+
+void addCoRegion<CO extends State>(
+    StateDefinition sd, BuildCoRegion<CO> buildState) {
+  sd._addCoRegion(buildState);
+}
+
+void addNestedState<C extends State>(
+  StateDefinition sd,
+  BuildState<C> buildState,
+) {
+  sd._addNestedState(buildState);
 }

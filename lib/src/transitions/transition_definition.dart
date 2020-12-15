@@ -95,7 +95,7 @@ abstract class TransitionDefinition< // S extends State,
     final fromStateDefinition = graph.stateDefinitions[fromState];
     await callOnExits(fromStateDefinition, event, exitPath);
 
-    if (sideEffect != null) await sideEffect();
+    if (sideEffect != null) await sideEffect(event);
 
     // when entering we must start from the root and work
     // towards the leaf.
@@ -104,19 +104,22 @@ abstract class TransitionDefinition< // S extends State,
     for (final statePath in exitPaths.toSet()) {
       /// check that a transition occured
       if (statePath.isNotEmpty) {
-        stateOfMind.removePath(statePath.fullPath(graph));
+        removePath(stateOfMind, statePath.fullPath(graph));
       }
     }
 
     for (final statePath in enterPaths.toSet()) {
       /// check that a transition occured
       if (statePath.isNotEmpty) {
-        stateOfMind.addPath(statePath.fullPath(graph));
+        addPath(stateOfMind, statePath.fullPath(graph));
       }
     }
 
     return stateOfMind;
   }
+
+  /// Used by onJoin and the likes to suppress a trigger if not all pre-conditions have been met.
+  bool canTrigger(E event) => true;
 
   PartialStatePath getExitPath(
       StatePath fromAncestors, StateDefinition commonAncestor) {
@@ -164,9 +167,7 @@ abstract class TransitionDefinition< // S extends State,
   Future<void> callOnExits(StateDefinition fromState, Event event,
       List<StateDefinition> states) async {
     for (final fromState in states) {
-      if (fromState.onExit != null) {
-        await fromState.onExit(fromState.stateType, event);
-      }
+      await onExit(fromState, fromState.stateType, event);
     }
   }
 
@@ -179,9 +180,7 @@ abstract class TransitionDefinition< // S extends State,
   /// Can you join a concurrent state
   Future<void> callOnEnters(List<StateDefinition> paths, Event event) async {
     for (final toStateDefinition in paths) {
-      if (toStateDefinition.onEnter != null) {
-        await toStateDefinition.onEnter(toStateDefinition.stateType, event);
-      }
+      await onEnter(toStateDefinition, toStateDefinition.stateType, event);
     }
   }
 

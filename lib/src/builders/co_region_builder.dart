@@ -1,4 +1,5 @@
-import '../definitions/co_region_definition.dart';
+import 'package:fsm2/src/definitions/co_region_definition.dart';
+
 import '../definitions/state_definition.dart';
 import '../types.dart';
 import 'state_builder.dart';

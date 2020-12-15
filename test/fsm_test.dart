@@ -125,19 +125,19 @@ StateMachine _createMachine<S extends State>(
           ..initialState<S>()
           ..state<Solid>((b) => b
             ..on<OnMelted, Liquid>(
-                sideEffect: () async => watcher.log(onMeltedMessage))
+                sideEffect: (e) async => watcher.log(onMeltedMessage))
             ..onEnter((s, e) async => watcher?.onEnter(s))
             ..onExit((s, e) async => watcher?.onExit(s)))
           ..state<Liquid>((b) => b
             ..onEnter((s, e) async => watcher?.onEnter(s))
             ..onExit((s, e) async => watcher?.onExit(s))
             ..on<OnFroze, Solid>(
-                sideEffect: () async => watcher.log(onFrozenMessage))
+                sideEffect: (e) async => watcher.log(onFrozenMessage))
             ..on<OnVaporized, Gas>(
-                sideEffect: () async => watcher.log(onVaporizedMessage)))
+                sideEffect: (e) async => watcher.log(onVaporizedMessage)))
           ..state<Gas>((b) => b
             ..on<OnCondensed, Liquid>(
-                sideEffect: () async => watcher.log(onCondensedMessage)))
+                sideEffect: (e) async => watcher.log(onCondensedMessage)))
           // ignore: avoid_print
           ..onTransition((from, event, to) => print('$from $event $to ')),
         production: true);

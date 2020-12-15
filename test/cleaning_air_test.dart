@@ -74,22 +74,22 @@ StateMachine createMachine() {
           ..onEnter((s, e) async => fanOn = true)
           ..onExit((s, e) async => fanOn = false)
           ..onJoin<OnFanRunning, MonitorAir>(condition: ((e) => e.speed > 5))
-          ..state<FanOff>((b) =>
-              b..on<OnTurnFanOn, FanOn>(sideEffect: () async => lightOn = true))
+          ..state<FanOff>((b) => b
+            ..on<OnTurnFanOn, FanOn>(sideEffect: (e) async => lightOn = true))
           ..state<FanOn>((b) => b
             ..onEnter((s, e) async => machine.applyEvent(OnFanRunning()))
             ..on<OnTurnFanOff, FanOff>(
-                sideEffect: () async => lightOn = false)))
+                sideEffect: (e) async => lightOn = false)))
         ..state<HandleLamp>((b) => b
           ..onEnter((s, e) async => lightOn = true)
           ..onExit((s, e) async => lightOn = false)
           ..onJoin<OnLampOn, MonitorAir>()
           ..state<LampOff>((b) => b
-            ..on<OnTurnLampOn, LampOn>(sideEffect: () async => lightOn = true))
+            ..on<OnTurnLampOn, LampOn>(sideEffect: (e) async => lightOn = true))
           ..state<LampOn>((b) => b
             ..onEnter((s, e) async => machine.applyEvent(OnLampOn()))
             ..on<OnTurnLampOff, LampOff>(
-                sideEffect: () async => lightOn = false)))
+                sideEffect: (e) async => lightOn = false)))
         ..state<WaitForGoodAir>((b) => b..onJoin<OnGoodAir, MonitorAir>())))
     ..onTransition((s, e, st) {}));
 

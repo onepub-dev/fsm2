@@ -86,6 +86,7 @@ class StateMachine {
     return machine;
   }
 
+  /// internal ctor
   StateMachine._(this._graph, {this.production}) {
     var initialState = _graph.initialState;
 
@@ -119,7 +120,7 @@ class StateMachine {
   bool _loadStateOfMind(StateDefinition<State> initialState) {
     initialState.onEnter(initialState.stateType, _InitialEvent());
     if (initialState.isLeaf) {
-      _stateOfMind.addPath(StatePath.fromLeaf(_graph, initialState.stateType));
+      addPath(_stateOfMind, StatePath.fromLeaf(_graph, initialState.stateType));
       return true;
     } else {
       /// search child for a leaf.

@@ -23,7 +23,7 @@ class StateBuilder<S extends State> {
     _stateDefinition.setParent(parent);
   }
 
-  /// Places a page break into the smcat file rendering all nested
+  /// Places a page break into the export file rendering all nested
   /// states on a new page.
   void get pageBreak => _stateDefinition.pageBreak = true;
 
@@ -77,13 +77,13 @@ class StateBuilder<S extends State> {
   void state<C extends State>(
     BuildState<C> buildState,
   ) {
-    _stateDefinition.addNestedState(buildState);
+    addNestedState(_stateDefinition, buildState);
   }
 
   /// Adds a [coregion] State definition as per the UML2
   /// specification for `orthogonal regions`.
   void coregion<CO extends State>(BuildCoRegion<CO> buildState) {
-    _stateDefinition.addCoRegion(buildState);
+    addCoRegion(_stateDefinition, buildState);
   }
 
   /// Used to enter a co-region by targeting the set of states within the
@@ -99,7 +99,7 @@ class StateBuilder<S extends State> {
     _stateDefinition.addTransition(choice);
   }
 
-  /// Adds an event to the set of events that must be triggered to leave the parent [coregion].
+  /// Adds an event to the set of events that must be triggered to leave the owner[coregion].
   /// Every onJoin in a coregion must target the same external state.
   void onJoin<E extends Event, TOSTATE extends State>(
       {GuardCondition<E> condition, SideEffect sideEffect}) {

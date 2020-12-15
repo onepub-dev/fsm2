@@ -70,10 +70,10 @@ class InvalidStateMachine implements Exception {
 }
 
 /// An onJoin statement was used incorrectly.
-class OnJoinException implements Exception {
+class JoinWithNoCoregionException implements Exception {
   String message;
 
-  OnJoinException(this.message);
+  JoinWithNoCoregionException(this.message);
 
   @override
   String toString() => message;

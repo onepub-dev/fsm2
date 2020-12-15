@@ -100,7 +100,7 @@ bool analyse(Graph graph) {
       final targetStates = transitionDefinition.targetStates;
       for (final targetState in targetStates) {
         // Ignore our special terminal state.
-        if (targetState == FinalState) continue;
+        if (targetState == TerminalState) continue;
         final toStateDefinition = graph.stateDefinitions[targetState];
         if (toStateDefinition == null) {
           allGood = false;
