@@ -180,8 +180,8 @@ class StateDefinition<S extends State> {
       List<TransitionDefinition<E>> transitionChoices, E event) async {
     assert(transitionChoices.isNotEmpty);
     for (final transitionDefinition in transitionChoices) {
-      if (transitionDefinition.condition == null ||
-          transitionDefinition.condition(event)) {
+      final dynamic a = transitionDefinition;
+      if ((a.condition as dynamic) == null || (a.condition(event) as bool)) {
         /// pseudo states such as onJoin may still not be able to trigger.
         if (transitionDefinition.canTrigger(event)) {
           /// static transition
