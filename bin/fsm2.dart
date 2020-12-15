@@ -90,23 +90,32 @@ Future<void> generateAll(List<String> rest, {bool show, bool watch}) async {
       if (extension(file).isNotEmpty) {
         printerr(red('File $file not found'));
         exit(1);
-      }
-
-      /// do a glob match as the filename didn't have an extension.
-      var count = 0;
-      final pattern = '$file.*.smcat';
-      for (file in find(pattern, recursive: false).toList()) {
-        generate(file, show: show);
-        count++;
-        watchList.add(file);
-      }
-      if (count == 0) {
-        if (exists(file)) {
-          generate(file, show: show);
-          watchList.add(file);
+      } else {
+        /// did they just leave the extension off.
+        final withExtension = '$file.smcat';
+        if (exists(withExtension)) {
+          watchList.add(withExtension);
+          generate(withExtension, show: show);
         } else {
-          printerr(orange(
-              'No files found that match the pattern: ${truepath(pattern)}.'));
+          /// do a glob match as the filename didn't have an extension.
+          var count = 0;
+          final pattern = '$file.*.smcat';
+          print('sorting');
+          for (file in find(pattern, recursive: false).toList()
+            ..sort((lhs, rhs) => compareFile(lhs, rhs))) {
+            generate(file, show: show);
+            count++;
+            watchList.add(file);
+          }
+          if (count == 0) {
+            if (exists(file)) {
+              generate(file, show: show);
+              watchList.add(file);
+            } else {
+              printerr(orange(
+                  'No files found that match the pattern: ${truepath(pattern)}.'));
+            }
+          }
         }
       }
     }
