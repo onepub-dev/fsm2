@@ -1,3 +1,21 @@
+# 0.14.0
+Breaking change:
+Now passing the Event to sideEffect.
+
+Improvements in exports.
+Create SMCStates for each pseudo states.
+Added missing logic to stop a join triggering until all events received. 
+Cleaned up the public api a little, hiding some internal methods.
+Added logic in the exporter to handle transitions from states in two different branches on different pages.
+Create _SCMStatePath to describe states as a path.
+Fixed a bug where a coregion at the top level created its on virtualRoot rather than reusing the existing one.
+increased the page height and move the page no to the bottom.
+
+# 0.14.0
+Breaking Changes
+
+the 'sideEffect' lambda is now passed the event that caused the transition.
+
 # 0.13.0
 Fixed for #2. We now call onEnter for all initial states when the statemachine is first created.
 
