@@ -1,3 +1,4 @@
+@Timeout(Duration(minutes: 30))
 import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:fsm2/src/types.dart';

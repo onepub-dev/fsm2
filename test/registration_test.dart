@@ -58,6 +58,7 @@ StateMachine createMachine() {
         ///RegistrationRequired
         ..coregion<RegistrationRequired>(
             (builder) => registrationRequired(builder))
+        ..state<AskCAForInvite>((b) {})
         ..onTransition(log),
       production: true);
 

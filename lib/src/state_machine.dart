@@ -117,6 +117,8 @@ class StateMachine {
     }
   }
 
+  StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
+
   bool _loadStateOfMind(StateDefinition<State> initialState) {
     initialState.onEnter(initialState.stateType, _InitialEvent());
     if (initialState.isLeaf) {

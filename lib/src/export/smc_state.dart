@@ -6,7 +6,16 @@ import '../state_machine.dart';
 import 'exporter.dart';
 import 'smc_transition.dart';
 
-enum SMCStateType { root, coregion, region, fork, join, simple }
+enum SMCStateType {
+  root,
+  initial,
+  coregion,
+  region,
+  fork,
+  join,
+  simple,
+  terminal
+}
 
 class SMCState {
   SMCState parent;
@@ -96,10 +105,27 @@ class SMCState {
 
   bool get isRoot => type == SMCStateType.root;
 
+  /// If the state is a co-region then this method returns
+  /// the original state name.
+  ///
+  /// e.g. Dead.parallel returns Dead.
+  String get baseName {
+    var baseName = name;
+    // if (name.startsWith(']')) {
+    if (sd.isCoRegion) {
+      /// psudo names are of the form ']state.type]
+      /// and we just want the state name.
+      baseName = name.split('.')[0];
+    }
+    return baseName;
+  }
+
   void buildTransitions(StateMachine stateMachine) {
     for (final transition in sd.getTransitions(includeInherited: false)) {
       transitions.addAll(SMCTransition.build(stateMachine, this, transition));
     }
+
+    
   }
 
   void addChild(SMCState child) {
@@ -201,6 +227,9 @@ class SMCState {
   int get hashCode {
     return name.hashCode + label.hashCode + type.hashCode;
   }
+
+  @override
+  String toString() => name;
 
   /// Check if this state is a decendant of [other]
   bool isDescendantOf(SMCState other) {
