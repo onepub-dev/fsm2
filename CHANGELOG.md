@@ -1,3 +1,13 @@
+# 0.15.0
+Breaking changes:
+The onEnter and onExit handlers now expect both a state and the original event.
+
+Unit tests and fixes for onJoin. 
+Also provide a better mapping mechanism when a transition definition generates multiple or zero transitions.
+
+The  --watch option form fsm2 app now supports filenames with no extension when there is only a single page. 
+This way you can launch fsm2 without having to consider wether the smcat is a single page or multiple pages.
+
 # 0.14.0
 Breaking change:
 Now passing the Event to sideEffect.

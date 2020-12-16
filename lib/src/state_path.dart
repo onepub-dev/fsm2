@@ -42,7 +42,7 @@ class PartialStatePath {
     if (_path.isEmpty && other._path.isEmpty) return true;
     if (_path.length != other._path.length) return false;
 
-    return leaf.stateType == other.leaf.stateType; 
+    return leaf.stateType == other.leaf.stateType;
   }
 
   int _hashCode;
@@ -81,6 +81,4 @@ class StatePath extends PartialStatePath {
 
     _path.addAll(ancestors._path);
   }
-
- 
 }

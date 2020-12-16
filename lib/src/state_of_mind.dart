@@ -25,7 +25,7 @@ class StateOfMind {
       if (statePath == path) toBeRemoved = statePath;
     }
 
-   // assert(toBeRemoved != null);
+    // assert(toBeRemoved != null);
     _leafPaths.remove(toBeRemoved);
 
     dedup();
