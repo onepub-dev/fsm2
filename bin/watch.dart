@@ -6,7 +6,6 @@ import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
 import 'package:synchronized/synchronized.dart';
 
-import 'fsm2.dart';
 
 var _controller = StreamController<FileSystemEvent>();
 
@@ -75,7 +74,7 @@ void delayedGeneration() {
     final files = _toGenerate.toSet().toList();
     files.sort((lhs, rhs) => compareFile(lhs, rhs));
     for (final file in files) {
-      generate(file, show: true);
+      convert(file, show: true);
     }
     _toGenerate.clear();
   });
@@ -88,8 +87,8 @@ int compareFile(String lhs, String rhs) {
   return lhsPageNo - rhsPageNo;
 }
 
-int extractPageNo(String pageNo) {
-  final no = extension(basenameWithoutExtension(pageNo));
+int extractPageNo(String filename) {
+  final no = extension(basenameWithoutExtension(filename));
   var nPageNo = 0;
   if (no != null && no.startsWith('.')) {
     nPageNo = int.tryParse(no.substring(1)) ?? 0;
