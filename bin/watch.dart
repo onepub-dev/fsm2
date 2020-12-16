@@ -82,7 +82,6 @@ void delayedGeneration() {
 }
 
 int compareFile(String lhs, String rhs) {
-  print('file $lhs $rhs');
   final lhsPageNo = extractPageNo(lhs);
   final rhsPageNo = extractPageNo(rhs);
 
@@ -90,14 +89,13 @@ int compareFile(String lhs, String rhs) {
 }
 
 int extractPageNo(String pageNo) {
-  final lhsNo = extension(basenameWithoutExtension(pageNo));
-  print('no: $lhsNo');
-  var lhsPageNo = 0;
-  if (lhsNo != null) {
-    lhsPageNo = int.tryParse(lhsNo) ?? 0;
+  final no = extension(basenameWithoutExtension(pageNo));
+  var nPageNo = 0;
+  if (no != null && no.startsWith('.')) {
+    nPageNo = int.tryParse(no.substring(1)) ?? 0;
   }
 
-  return lhsPageNo;
+  return nPageNo;
 }
 
 void onCreateEvent(FileSystemCreateEvent event) {

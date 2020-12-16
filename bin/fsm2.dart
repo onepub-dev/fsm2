@@ -100,9 +100,9 @@ Future<void> generateAll(List<String> rest, {bool show, bool watch}) async {
           /// do a glob match as the filename didn't have an extension.
           var count = 0;
           final pattern = '$file.*.smcat';
-          print('sorting');
-          for (file in find(pattern, recursive: false).toList()
-            ..sort((lhs, rhs) => compareFile(lhs, rhs))) {
+          final sorted = find(pattern, recursive: false).toList()
+            ..sort((lhs, rhs) => compareFile(lhs, rhs));
+          for (file in sorted) {
             generate(file, show: show);
             count++;
             watchList.add(file);
