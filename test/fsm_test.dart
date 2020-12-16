@@ -1,7 +1,10 @@
 import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
+import 'package:fsm2/src/types.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
+
+import 'mock_watcher.dart';
 
 class Solid implements State {}
 
@@ -17,19 +20,11 @@ class OnVaporized implements Event {}
 
 class OnCondensed implements Event {}
 
-class Watcher extends Mock {
-  void onEnter(Type t);
-
-  void onExit(Type t);
-
-  void log(String message);
-}
-
 void main() {
-  Watcher watcher;
+  MockWatcher watcher;
 
   setUp(() {
-    watcher = Watcher();
+    watcher = MockWatcher();
   });
 
   test('export', () async {
@@ -92,33 +87,37 @@ initial => Solid : Solid;''';
   });
 
   test('calls onEnter, but not onExit', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
+    final onMelted = OnMelted();
     final machine = _createMachine<Solid>(watcher);
-    machine.applyEvent(OnMelted());
+    machine.applyEvent(onMelted);
     await machine.waitUntilQuiescent;
     expect(machine.isInState<Liquid>(), equals(true));
-    verify(watcher.onEnter(Liquid));
-    verifyNever(watcher.onExit(Liquid));
+    verify(watcher.onEnter(Liquid, onMelted));
+    verifyNever(watcher.onExit(Liquid, onMelted));
   });
 
   test('calls onExit', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
+    final onMelted = OnMelted();
+    final onVaporized = OnVaporized();
+
     final machine = _createMachine<Solid>(watcher);
-    machine.applyEvent(OnMelted());
-    machine.applyEvent(OnVaporized());
+    machine.applyEvent(onMelted);
+    machine.applyEvent(onVaporized);
     await machine.waitUntilQuiescent;
-    verify(watcher.onExit(Liquid));
+    verify(watcher.onExit(Liquid, onVaporized));
   });
 
   test('onEntry for initial state', () async {
     final machine = _createMachine<Solid>(watcher);
     await machine.waitUntilQuiescent;
-    verify(watcher.onEnter(Solid));
+    verify(watcher.onEnter(Solid, machine.initialEvent));
   });
 }
 
 StateMachine _createMachine<S extends State>(
-  Watcher watcher,
+  MockWatcher watcher,
 ) =>
     StateMachine.create(
         (g) => g
@@ -126,11 +125,11 @@ StateMachine _createMachine<S extends State>(
           ..state<Solid>((b) => b
             ..on<OnMelted, Liquid>(
                 sideEffect: (e) async => watcher.log(onMeltedMessage))
-            ..onEnter((s, e) async => watcher?.onEnter(s))
-            ..onExit((s, e) async => watcher?.onExit(s)))
+            ..onEnter((s, e) async => watcher?.onEnter(s, e))
+            ..onExit((s, e) async => watcher?.onExit(s, e)))
           ..state<Liquid>((b) => b
-            ..onEnter((s, e) async => watcher?.onEnter(s))
-            ..onExit((s, e) async => watcher?.onExit(s))
+            ..onEnter((s, e) async => watcher?.onEnter(s, e))
+            ..onExit((s, e) async => watcher?.onExit(s, e))
             ..on<OnFroze, Solid>(
                 sideEffect: (e) async => watcher.log(onFrozenMessage))
             ..on<OnVaporized, Gas>(

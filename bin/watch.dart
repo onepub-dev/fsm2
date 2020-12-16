@@ -30,10 +30,8 @@ Future<void> watchFiles(List<String> files) async {
 
   final forever = Completer<void>();
 
-  forever.future.whenComplete(() => subscriber.cancel());
-
-  // wait until someone does ctrl-c.
-  await forever.future;
+// wait until someone does ctrl-c.
+  await forever.future.whenComplete(() => subscriber.cancel());
 }
 
 void watchFile(String file) {
@@ -74,11 +72,32 @@ void onModifyEvent(FileSystemModifyEvent event) {
 
 void delayedGeneration() {
   lock.synchronized(() {
-    for (final file in _toGenerate.toSet()) {
+    final files = _toGenerate.toSet().toList();
+    files.sort((lhs, rhs) => compareFile(lhs, rhs));
+    for (final file in files) {
       generate(file, show: true);
     }
     _toGenerate.clear();
   });
+}
+
+int compareFile(String lhs, String rhs) {
+  print('file $lhs $rhs');
+  final lhsPageNo = extractPageNo(lhs);
+  final rhsPageNo = extractPageNo(rhs);
+
+  return lhsPageNo - rhsPageNo;
+}
+
+int extractPageNo(String pageNo) {
+  final lhsNo = extension(basenameWithoutExtension(pageNo));
+  print('no: $lhsNo');
+  var lhsPageNo = 0;
+  if (lhsNo != null) {
+    lhsPageNo = int.tryParse(lhsNo) ?? 0;
+  }
+
+  return lhsPageNo;
 }
 
 void onCreateEvent(FileSystemCreateEvent event) {
@@ -91,10 +110,10 @@ void onCreateEvent(FileSystemCreateEvent event) {
       if (basename(event.path) == basename(lastDeleted)) {
         // ignore: avoid_print
         print(red('Move from: $lastDeleted to: ${event.path}'));
-        generate(event.path, show: true);
+        _toGenerate.add(event.path);
         lastDeleted = null;
       } else {
-        generate(event.path, show: true);
+        _toGenerate.add(event.path);
       }
     }
   }

@@ -1,7 +1,9 @@
 import '../definitions/state_definition.dart';
 
+import '../graph.dart';
 import '../types.dart';
 import 'transition_definition.dart';
+import 'transition_notification.dart';
 
 /// An [OnTransitionDefinition] is used to store details
 /// of an transition defined by [State.on]
@@ -29,4 +31,18 @@ class OnTransitionDefinition<S extends State, E extends Event,
   @override
   // TODO: implement triggerEvents
   List<Type> get triggerEvents => [E];
+
+  /// list of transitions that this definition will cause when triggered.
+  /// Each transition may need to overload this if anything other than
+  /// a single transition occurs.
+  @override
+  List<TransitionNotification> transitions(
+      Graph graph, StateDefinition from, Event event) {
+    final transitions = <TransitionNotification>[];
+    for (final targetState in targetStates) {
+      final targetDefinition = graph.findStateDefinition(targetState);
+      transitions.add(TransitionNotification(from, event, targetDefinition));
+    }
+    return transitions;
+  }
 }

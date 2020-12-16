@@ -78,16 +78,7 @@ class StateDefinition<S extends State> {
     return definitions;
   }
 
-  /// This method is not part of the public interface.
-  ///
-  /// DO NOT USE.
-  ///
-  /// This method is called when we enter this state to give the
-  /// [StateDefinition] a chance to do any internal intialisation.
-  /// If you must call [internalOnEnter] so that we can call the user
-  /// defined [onEnter] method.
-  // @mustCallSuper
-  Future<void> internalOnEnter(Type fromState, Event event) async {
+  Future<void> _onEnter(Type fromState, Event event) async {
     if (onEnter != null) {
       await onEnter(fromState, event);
     }
@@ -340,11 +331,11 @@ class StateDefinition<S extends State> {
 
 /// used to hide internal api
 Future<void> onEnter(StateDefinition sd, Type toState, Event event) async {
-  sd.internalOnEnter(toState, event);
+  await sd._onEnter(toState, event);
 }
 
 Future<void> onExit(StateDefinition sd, Type fromState, Event event) async {
-  sd._onExit(fromState, event);
+  await sd._onExit(fromState, event);
 }
 
 void addCoRegion<CO extends State>(

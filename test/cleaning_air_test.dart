@@ -3,13 +3,24 @@ import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:fsm2/src/types.dart';
 import 'package:fsm2/src/virtual_root.dart';
+import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
+
+import 'mock_watcher.dart';
+
+final onBadAir = OnBadAir();
+
+final onGoodAir = OnGoodAir();
+
+final onFanRunning = OnFanRunning();
+final onLampOn = OnLampOn();
 
 void main() {
   test('fork', () async {
-    final machine = createMachine();
+    final watcher = MockWatcher();
+    final machine = createMachine(watcher);
     expect(machine.isInState<MonitorAir>(), equals(true));
-    machine.applyEvent(OnBadAir());
+    machine.applyEvent(onBadAir);
     await machine.waitUntilQuiescent;
     expect(machine.isInState<HandleFan>(), equals(true));
     expect(machine.isInState<HandleLamp>(), equals(true));
@@ -40,8 +51,69 @@ void main() {
     print('done2');
   }, skip: false);
 
+  test('join', () async {
+    final watcher = MockWatcher();
+    final machine = createMachine(watcher);
+    expect(machine.isInState<MonitorAir>(), equals(true));
+    verify(watcher.onEnter(MonitorAir, machine.initialEvent));
+
+    /// trigger the fork
+    machine.applyEvent(onBadAir);
+    await machine.waitUntilQuiescent;
+    expect(machine.isInState<HandleFan>(), equals(true));
+    expect(machine.isInState<HandleLamp>(), equals(true));
+    expect(machine.isInState<CleanAir>(), equals(true));
+    expect(machine.isInState<MaintainAir>(), equals(true));
+
+    verify(watcher.onExit(MonitorAir, onBadAir));
+    verify(watcher.onEnter(HandleFan, onBadAir));
+    verify(watcher.onEnter(HandleLamp, onBadAir));
+    verify(watcher.onEnter(WaitForGoodAir, onBadAir));
+
+    /// trigger the join
+    machine.applyEvent(onFanRunning);
+    await machine.waitUntilQuiescent;
+    expect(machine.isInState<HandleFan>(), equals(true));
+    expect(machine.isInState<HandleLamp>(), equals(true));
+    expect(machine.isInState<CleanAir>(), equals(true));
+    expect(machine.isInState<MaintainAir>(), equals(true));
+
+    machine.applyEvent(onLampOn);
+    await machine.waitUntilQuiescent;
+    expect(machine.isInState<HandleFan>(), equals(true));
+    expect(machine.isInState<HandleLamp>(), equals(true));
+    expect(machine.isInState<CleanAir>(), equals(true));
+    expect(machine.isInState<MaintainAir>(), equals(true));
+
+    machine.applyEvent(onGoodAir);
+    await machine.waitUntilQuiescent;
+    expect(machine.isInState<MonitorAir>(), equals(true));
+
+    verify(watcher.onExit(HandleFan, onFanRunning));
+    verify(watcher.onExit(HandleLamp, onLampOn));
+    verify(watcher.onExit(WaitForGoodAir, onGoodAir));
+    verify(watcher.onEnter(MonitorAir, onGoodAir));
+
+    /// check that no extraneous actions were performed.
+    verifyNoMoreInteractions(watcher);
+
+    final som = machine.stateOfMind;
+    final paths = som.activeLeafStates();
+    expect(paths.length, equals(1));
+    final types = som
+        .pathForLeafState(MonitorAir)
+        .path
+        .map((sd) => sd.stateType)
+        .toList();
+
+    expect(types, equals([MonitorAir, MaintainAir, VirtualRoot]));
+
+    print(som.toString());
+  }, skip: false);
+
   test('export', () async {
-    final machine = createMachine();
+    final watcher = MockWatcher();
+    final machine = createMachine(watcher);
     machine.export('test/smcat/cleaning_air_test.smcat');
     final lines = read('test/smcat/cleaning_air_test.smcat')
         .toList()
@@ -51,7 +123,7 @@ void main() {
   }, skip: false);
 }
 
-StateMachine createMachine() {
+StateMachine createMachine(MockWatcher watcher) {
   StateMachine machine;
 
   // ignore: unused_local_variable
@@ -64,6 +136,8 @@ StateMachine createMachine() {
     ..initialState<MaintainAir>()
     ..state<MaintainAir>((b) => b
       ..state<MonitorAir>((b) => b
+        ..onEnter((s, e) => watcher.onEnter(s, e))
+        ..onExit((s, e) => watcher.onExit(s, e))
         ..onFork<OnBadAir>(
             (b) => b
               ..target<HandleFan>()
@@ -72,8 +146,14 @@ StateMachine createMachine() {
             condition: (s, e) => e.quality < 10))
       ..coregion<CleanAir>((b) => b
         ..state<HandleFan>((b) => b
-          ..onEnter((s, e) async => fanOn = true)
-          ..onExit((s, e) async => fanOn = false)
+          ..onEnter((s, e) async {
+            fanOn = true;
+            await watcher.onEnter(s, e);
+          })
+          ..onExit((s, e) async {
+            fanOn = false;
+            await watcher.onExit(s, e);
+          })
           ..onJoin<OnFanRunning, MonitorAir>(condition: ((e) => e.speed > 5))
           ..state<FanOff>((b) => b
             ..on<OnTurnFanOn, FanOn>(sideEffect: (e) async => lightOn = true))
@@ -82,8 +162,14 @@ StateMachine createMachine() {
             ..on<OnTurnFanOff, FanOff>(
                 sideEffect: (e) async => lightOn = false)))
         ..state<HandleLamp>((b) => b
-          ..onEnter((s, e) async => lightOn = true)
-          ..onExit((s, e) async => lightOn = false)
+          ..onEnter((s, e) async {
+            lightOn = true;
+            await watcher.onEnter(s, e);
+          })
+          ..onExit((s, e) async {
+            lightOn = false;
+            await watcher.onExit(s, e);
+          })
           ..onJoin<OnLampOn, MonitorAir>()
           ..state<LampOff>((b) => b
             ..on<OnTurnLampOn, LampOn>(sideEffect: (e) async => lightOn = true))
@@ -91,7 +177,10 @@ StateMachine createMachine() {
             ..onEnter((s, e) async => machine.applyEvent(OnLampOn()))
             ..on<OnTurnLampOff, LampOff>(
                 sideEffect: (e) async => lightOn = false)))
-        ..state<WaitForGoodAir>((b) => b..onJoin<OnGoodAir, MonitorAir>())))
+        ..state<WaitForGoodAir>((b) => b
+          ..onEnter((s, e) async => watcher.onEnter(s, e))
+          ..onExit((s, e) async => watcher.onExit(s, e))
+          ..onJoin<OnGoodAir, MonitorAir>())))
     ..onTransition((s, e, st) {}));
 
   return machine;

@@ -25,12 +25,16 @@ class StateOfMind {
       if (statePath == path) toBeRemoved = statePath;
     }
 
-    assert(toBeRemoved != null);
+   // assert(toBeRemoved != null);
     _leafPaths.remove(toBeRemoved);
+
+    dedup();
   }
 
   void _addPath(StatePath path) {
     _leafPaths.add(path);
+
+    dedup();
   }
 
   StatePath pathForLeafState(Type leafState) {
@@ -59,7 +63,7 @@ class StateOfMind {
     var firststate = true;
     for (final statePath in _leafPaths) {
       if (!firststate) {
-        details.write('\n  or ');
+        details.write('\n  and ');
       }
       firststate = false;
       var firstpart = true;
@@ -72,6 +76,16 @@ class StateOfMind {
       }
     }
     return details.toString();
+  }
+
+  /// With co-regions we can have multiple states that collapse into a single state.
+  /// This can result in duplicate paths so we need to reduce the duplicates to a single state.
+  void dedup() {
+    final deduped = _leafPaths.toSet().toList();
+    if (deduped.length != _leafPaths.length) {
+      _leafPaths.clear();
+      _leafPaths.addAll(deduped);
+    }
   }
 }
 

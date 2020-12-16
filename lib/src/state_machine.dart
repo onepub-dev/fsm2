@@ -4,6 +4,7 @@ import 'dart:developer';
 
 import 'package:completer_ex/completer_ex.dart';
 import 'package:fsm2/src/state_of_mind.dart';
+import 'package:fsm2/src/transitions/transition_notification.dart';
 import 'package:fsm2/src/types.dart';
 import 'package:meta/meta.dart';
 import 'package:synchronized/synchronized.dart';
@@ -26,21 +27,12 @@ import 'virtual_root.dart';
 /// are triggered by Events of type [Event].
 ///
 ///
-
-/// Internal event used to tranisition into an initial state
-/// when the state machin is first created.
-class _InitialEvent extends Event {}
-
-class _QueuedEvent {
-  Event event;
-  final _completer = CompleterEx<void>();
-
-  _QueuedEvent(this.event);
-}
-
 class StateMachine {
   /// only one transition can be happening at at time.
   final _lock = Lock();
+
+  @visibleForTesting
+  final initialEvent = InitialEvent();
 
   /// If production mode is off then we track
   /// each transition to aid with debugging.
@@ -100,7 +92,7 @@ class StateMachine {
     assert(initialState != null);
 
     if (!production) {
-      history.add(Tracker(_stateOfMind, InitialEvent()));
+      history.add(Tracker(_stateOfMind, initialEvent));
     }
 
     if (!_graph.isTopLevelState(initialState)) {
@@ -120,7 +112,11 @@ class StateMachine {
   StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
 
   bool _loadStateOfMind(StateDefinition<State> initialState) {
-    initialState.onEnter(initialState.stateType, _InitialEvent());
+    initialState.onEnter(initialState.stateType, initialEvent);
+
+    final transition =
+        TransitionNotification(virtualRoot, initialEvent, initialState);
+    _notifyListeners(transition);
     if (initialState.isLeaf) {
       addPath(_stateOfMind, StatePath.fromLeaf(_graph, initialState.stateType));
       return true;
@@ -264,22 +260,8 @@ class StateMachine {
             .findTriggerableTransition(stateDefinition.stateType, event);
         if (transitionDefinition == null) continue;
 
+        await applyTransitions(stateDefinition, transitionDefinition, event);
         dispatched = true;
-
-        for (final onTransition in _graph.onTransitionListeners) {
-          // Some transitions (fork) have multiple targets so we need to
-          // report a transition to each of them.
-          for (final targetState in transitionDefinition.targetStates) {
-            final targetStateType = _graph.findStateDefinition(targetState);
-            if (!production) {
-              log('transition: from: ${stateDefinition.stateType} event: ${event.runtimeType} to: ${targetStateType.stateType}');
-            }
-            onTransition(stateDefinition, event, targetStateType);
-          }
-        }
-
-        _stateOfMind = await transitionDefinition.trigger(
-            _graph, _stateOfMind, stateDefinition.stateType, event);
       }
 
       if (!dispatched) {
@@ -367,4 +349,33 @@ class StateMachine {
 
     return ancestor.stateType;
   }
+
+  Future<void> applyTransitions(StateDefinition<State> from,
+      TransitionDefinition<Event> transitionDefinition, Event event) async {
+    final transitions = transitionDefinition.transitions(_graph, from, event);
+
+    for (final transition in transitions) {
+      _stateOfMind =
+          await transitionDefinition.trigger(_graph, _stateOfMind, transition);
+      _notifyListeners(transition);
+    }
+  }
+
+  /// Notifiy each transition listener of each transition that has occured.
+  void _notifyListeners(TransitionNotification transition) {
+    for (final onTransition in _graph.onTransitionListeners) {
+      if (!production) {
+        log('transition: from: ${transition.from.stateType} event: ${transition.event.runtimeType} to: ${transition.to.stateType}');
+      }
+
+      onTransition(transition.from, transition.event, transition.to);
+    }
+  }
+}
+
+class _QueuedEvent {
+  Event event;
+  final _completer = CompleterEx<void>();
+
+  _QueuedEvent(this.event);
 }

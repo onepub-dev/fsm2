@@ -13,6 +13,7 @@ linter:
     always_declare_return_types: true
     
     await_only_futures: true
+    unawaited_futures: true
   
 
 analyzer:

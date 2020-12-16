@@ -3,8 +3,10 @@ import 'package:fsm2/src/exceptions.dart';
 
 import '../definitions/join_definition.dart';
 import '../definitions/state_definition.dart';
+import '../graph.dart';
 import '../types.dart';
 import 'transition_definition.dart';
+import 'transition_notification.dart';
 
 /// A Join
 /// [E] the event that triggers this transition
@@ -17,7 +19,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   // bool _hasTriggered = false;
 
   /// The ancestor coregion this join is associated with.
-  StateDefinition coRegion;
+  CoRegionDefinition coregion;
 
   /// For a Join transition the [toStateDefinition] is the parent [coregion].
   JoinTransitionDefinition(
@@ -37,6 +39,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
 
     /// we need to register the join with the owning co-region
     if (parent is CoRegionDefinition) {
+      coregion = parent;
       parent.registerJoin(this);
     } else {
       throw JoinWithNoCoregionException(
@@ -44,37 +47,14 @@ class JoinTransitionDefinition<S extends State, E extends Event,
     }
   }
 
+  /// used to trigger the last event that triggered this transition.
+  E _triggeredBy;
+
   @override
   bool canTrigger(E event) {
-    return coRegion.canTrigger(E);
+    _triggeredBy = event;
+    return coregion.canTrigger(E);
   }
-
-  // /// Applies [event] to the  current statemachine and returns the resulting
-  // /// [StateOfMind].
-  // ///
-  // /// As the statemachine can be in multiple states the [state] argument indicates what
-  // /// [State] the [event] is to be processed against.
-  // Future<StateOfMind> trigger(
-  //     Graph graph, StateOfMind stateOfMind, Type fromState, Event event) async {
-  //   /// we need to reset the set of activated triggers if we leave the parent state.
-  //   /// Where do we store the set of 'triggered' events.
-  //   /// StateOfMind or simply in this class.
-  //   /// This join def is unique in the statemachine so probably no reason we can't store it
-  //   /// here. Having said that the 'stateOfMind' is sort of the holder of the current 'memory'
-  //   /// of the statemachin so it might make a better spot.
-  //   /// If we do how do we register this transition with the state of mind.
-  //   ///
-  //   /// Also how do we get this reset. It needs to be reset either
-  //   /// each time we enter the co-region or when we exit it.
-  //   ///
-  //   /// The onEnter/onExit methods are used for this but they are public.
-  //   /// Should we have a private set.
-  //   /// We could also listen to transition events.
-  //   /// Or the co-region could simply send us a reset when it sees an onExit.
-
-  //   bool fullyJoined = false;
-  //   _triggeredEvents.add(event);
-  // }
 
   @override
   List<Type> get targetStates => [definition.toState];
@@ -82,13 +62,29 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   @override
   List<Type> get triggerEvents => definition.events;
 
-  /// The set of events that have been triggered for this join.
-  /// The join will not trigger until all of its events have been triggered.
-  final _triggeredEvents = <Type>{};
+  /// When a join is triggered we need to reflect that multiple transitions will
+  /// now occur. One for each 'onJoin' statement each of which can belong to a different
+  /// state.
+  ///
+  /// returns the list of transitions that this definition causes when triggered.
+  @override
+  List<TransitionNotification> transitions(
+      Graph graph, StateDefinition from, Event event) {
+    final transitions = <TransitionNotification>[];
+    // join only ever has one target state.
+    final targetState = targetStates[0];
+    final targetStateDefinition = graph.findStateDefinition(targetState);
 
-  /// Called whenver the parent co-region is entered so that we can reset
-  /// the set of triggered events.
-  void reset() {
-    _triggeredEvents.clear();
+    // however we have multiple sources
+    for (final join in coregion.joinTransitions) {
+      final notification = TransitionNotification(
+          join.fromStateDefinition, join._triggeredBy, targetStateDefinition);
+      if (notification.event != event) {
+        notification.skipEnter = true;
+      }
+      transitions.add(notification);
+    }
+
+    return transitions;
   }
 }

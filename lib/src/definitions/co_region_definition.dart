@@ -12,20 +12,6 @@ import 'state_definition.dart';
 class CoRegionDefinition<S extends State> extends StateDefinition<S> {
   CoRegionDefinition(Type stateType) : super(stateType);
 
-  @override
-  Future<void> internalOnEnter(Type toState, Event event) async {
-    super.internalOnEnter(toState, event);
-
-    //  onJoin cause problems as we actualy need to search child states as OnJoin
-    //  can be declared in a child.
-
-    for (final transition in getTransitions(includeInherited: false)) {
-      if (transition is JoinTransitionDefinition) {
-        transition.reset();
-      }
-    }
-  }
-
   /// List of Events that must be recieved for the join to trigger.
   /// As we recieve each one we set the value to true.
   final expectedJoinEvents = <Type, bool>{};
@@ -45,7 +31,24 @@ class CoRegionDefinition<S extends State> extends StateDefinition<S> {
     return _onRecieved(event);
   }
 
+  /// There can only be one join target state.
+  Type _joinTargetState;
+
+  List<JoinTransitionDefinition<State, Event, State>> joinTransitions =
+      <JoinTransitionDefinition>[];
+
+  /// The onJoin transitions need to register with the owning coregion
+  /// as they can be nested in a substate and we need to know about all of then.
   void registerJoin(JoinTransitionDefinition joinTransitionDefinition) {
+    _joinTargetState ??= joinTransitionDefinition.targetStates[0];
+
+    /// All joins for a coregion must target the same state.
+    /// TODO: we could allow multiple targets by creating a map of target states
+    /// and the set of events required to trigger them. But that is for later.
+    assert(_joinTargetState == joinTransitionDefinition.targetStates[0]);
+
+    joinTransitions.add(joinTransitionDefinition);
+
     expectedJoinEvents[joinTransitionDefinition.triggerEvents[0]] = false;
   }
 }

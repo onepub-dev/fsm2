@@ -94,7 +94,7 @@ class SMCTransition {
             to: target == TerminalState
                 ? genTerminalState(owner)
                 : findSMCState(owner, target));
-        smct.label = transition.labelForTrigger(trigger);
+        smct.label = transition.labelForEvent(trigger);
 
         if (target == TerminalState) {
           /// The final transition is always placed outside the substate.
