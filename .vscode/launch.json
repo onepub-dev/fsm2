@@ -5,9 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "fsm2",
+            "name": "watch and show",
+            "program": "bin/fsm2.dart",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "args": [
+                "-w",
+                "-s",
+                "-v",
+                "test/smcat/registration"
+            ],
+            "console": "terminal",
         },
         {
             "name": "example",

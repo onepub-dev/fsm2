@@ -3,7 +3,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:args/args.dart';
+import 'package:dcli/dcli.dart';
+import 'package:fsm2/src/util/file_util.dart';
 import 'package:fsm2/src/visualise/smcat_folder.dart';
+import 'package:fsm2/src/visualise/svg_file.dart';
 import 'package:path/path.dart';
 
 /// dcli create show.dart
@@ -58,7 +61,7 @@ Future<void> main(List<String> args) async {
   }
 
   if (parsed.wasParsed('verbose')) {
-    /// Settings().setVerbose(enabled: true);
+    Settings().setVerbose(enabled: true);
   }
 
   if (parsed.wasParsed('install')) {
@@ -77,12 +80,20 @@ Future<void> main(List<String> args) async {
 
   await folder.generateAll();
 
+  final show = parsed.wasParsed('show');
+
   if (parsed.wasParsed('watch')) {
     folder.watch();
-  }
 
-  if (parsed.wasParsed('show')) {
-    folder.watch();
+    if (show) {
+      print(folder.listSvgs);
+      await SvgFile.showList(folder.listSvgs, progress: (line) => print(line));
+      await for (final svgFile in folder.stream) {
+        await svgFile.show(progress: (line) => print(line));
+      }
+    }
+  } else if (show) {
+    await folder.show(progress: (line) => print(line));
   }
 }
 
@@ -101,12 +112,4 @@ void showUsage(ArgParser parser) {
       'If your smcat file has multiple parts due to page breaks then each page will be processed.');
   print(parser.usage);
   exit(1);
-}
-
-String getBasename(String pathTo) {
-  var basename = basenameWithoutExtension(pathTo);
-  if (basename.contains('.')) {
-    basename = basenameWithoutExtension(pathTo);
-  }
-  return basename;
 }

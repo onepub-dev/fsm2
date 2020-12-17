@@ -52,9 +52,10 @@ StateMachine createMachine() {
         /// Registered is normally the final state we are looking for
         /// but there a few circumstance where we force the user to register.
         ..state<Registered>((builder) => builder
-          ..on<OnForceRegistration, RegistrationRequired>(
-              sideEffect: (e) async => RegistrationWizard.restart)
-          ..pageBreak)
+              ..on<OnForceRegistration, RegistrationRequired>(
+                  sideEffect: (e) async => RegistrationWizard.restart)
+            // ..pageBreak
+            )
 
         ///RegistrationRequired
         ..coregion<RegistrationRequired>(

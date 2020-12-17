@@ -108,6 +108,7 @@ void main() {
 
     expect(types, equals([MonitorAir, MaintainAir, VirtualRoot]));
 
+    // ignore: avoid_print
     print(som.toString());
   }, skip: false);
 

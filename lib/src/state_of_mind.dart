@@ -8,7 +8,7 @@ class StateOfMind {
   ///
   /// For a simple nested state the list will just have
   /// a single leafPath.
-  /// If we have any active [coregion]s then we will have a list
+  /// If we have any active coregions then we will have a list
   /// of leafPaths.
   final _leafPaths = <StatePath>[];
 

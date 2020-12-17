@@ -137,8 +137,11 @@ class StateMachine {
 
   /// Returns true if the [StateMachine] is in the given state.
   ///
-  /// For a nested [State] the machine is said to be in current
+  /// For a nested [State] the machine is said to be in the current
   /// leaf [State] plus any parent state.
+  /// 
+  /// When using a coregion then you can be in multiple leaf states
+  /// concurrently.
   ///
   /// ```dart
   ///
@@ -153,15 +156,15 @@ class StateMachine {
   /// If a [StateMachine] has 'n' levels of nested state
   /// then it can be in  upto 'n' States at any given time.
   ///
-  /// For a [coregion] the machine is said to be in each
-  /// [coregion] simultaneously.  Coregions can combine with nested
+  /// For a [StateMachine.coregion()] the machine is said to be in each
+  /// coregion simultaneously.  Coregions can combine with nested
   /// states so that a [StateMachine] can be in all of the nested
-  /// states for multiple [coregion]s. So if a machine has two [coregion]s
-  /// and each [coregion] has 'n' nested states then a [StateMachine]
+  /// states for multiple coregions. So if a machine has two coregions
+  /// and each coregion has 'n' nested states then a [StateMachine]
   /// could be in 2 * 'n' states plus any parents of each of the
-  /// [coregion]s.
+  /// coregions.
   ///
-  /// If [state] is not a known [State] then an [UnknownStateException]
+  /// If [S] is not a known [State] then an [UnknownStateException]
   /// is thrown.
   @visibleForTesting
   bool isInState<S extends State>() {
@@ -198,7 +201,7 @@ class StateMachine {
   ///
   /// Events MUST be handled asynchronously.
   /// If you need to take an action once an event completes you need to use
-  /// a [sideEffect] or [onEnter].
+  /// a [SideEffect] or [onEnter].
   ///
   /// Throws a [UnknownStateException] if the [event] results in a
   /// transition to a [State] that hasn't been registered.

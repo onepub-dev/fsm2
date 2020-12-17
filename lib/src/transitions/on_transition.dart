@@ -1,19 +1,15 @@
+import '../builders/state_builder.dart';
 import '../definitions/state_definition.dart';
-
 import '../graph.dart';
 import '../types.dart';
 import 'transition_definition.dart';
 import 'transition_notification.dart';
 
 /// An [OnTransitionDefinition] is used to store details
-/// of an transition defined by [State.on]
+/// of an transition defined by [StateBuilder.on]
 class OnTransitionDefinition<S extends State, E extends Event,
     TOSTATE extends State> extends TransitionDefinition<E> {
-  /// If this [OnTransitionDefinition] is trigger this will be the new [State]
-  /// the FSM. If [toState] is null then there MUST be an [eventHandler]
-  /// which will be called to determine the new [State].
-  /// Either an [eventHandler] or a [toState] must be passed but not both.
-  /// [toState] is set by calling the [on] method against a [State]
+  /// If this [OnTransitionDefinition] is trigger [toState] will be the new [State]
   Type toState;
 
   OnTransitionDefinition(StateDefinition stateDefinition,

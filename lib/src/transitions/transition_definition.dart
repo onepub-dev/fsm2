@@ -29,7 +29,7 @@ abstract class TransitionDefinition< // S extends State,
   /// selected as the transition.
   final SideEffect sideEffect;
 
-  /// An optional label used only on the exported diagrams to given the [consideEffectdition]
+  /// An optional label used only on the exported diagrams to given the [sideEffect]
   /// a descriptive label.  @See [label]
   final String sideEffectLabel;
 
@@ -38,7 +38,7 @@ abstract class TransitionDefinition< // S extends State,
 
   /// The list of events that this transition will trigger on.
   /// Whether the events are and/or'ed together is an
-  /// implementation detail of the [Transition] implementation.
+  /// implementation detail of the [TransitionDefinition] implementation.
   List<Type> get triggerEvents;
 
   TransitionDefinition(this.fromStateDefinition,
@@ -80,11 +80,11 @@ abstract class TransitionDefinition< // S extends State,
   }
 
   ///
-  /// Applies [event] to the  current statemachine and returns the resulting
+  /// Applies [transition] to the  current statemachine and returns the resulting
   /// [StateOfMind].
   ///
-  /// As the statemachine can be in multiple states the [state] argument indicates what
-  /// [State] the [event] is to be processed againts.
+  /// As the statemachine can be in multiple states the [stateOfMind] argument indicates what
+  /// [stateOfMind] the [transition] is to be processed againts.
   /// /
   Future<StateOfMind> trigger(Graph graph, StateOfMind stateOfMind,
       TransitionNotification transition) async {
@@ -168,7 +168,7 @@ abstract class TransitionDefinition< // S extends State,
   }
 
   /// Walks up the tree looking for an ancestor that is common
-  /// to the [fromState] and [targetStates]
+  /// to the [fromAncestors] and [toAncestors] paths.
   ///
   /// If no common ancestor is found then null is returned;
   StateDefinition findCommonAncestor(

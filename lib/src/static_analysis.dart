@@ -23,7 +23,7 @@ import 'virtual_root.dart';
 ///
 /// The [analyse] method prints any problems it finds.
 ///
-/// Returns [true] if all States are reachable.
+/// Returns true if all States are reachable.
 bool analyse(Graph graph) {
   var allGood = true;
   final stateDefinitionMap =

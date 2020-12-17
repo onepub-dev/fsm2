@@ -14,7 +14,7 @@ class Graph {
   Type initialState;
   String initialStateLabel;
 
-  /// a full set of stateDefinitions including nested and [coregion].
+  /// a full set of stateDefinitions including nested and coregions.
   final Map<Type, StateDefinition> stateDefinitions;
 
   /// a subset of [stateDefinitions] that only includes the top level states.

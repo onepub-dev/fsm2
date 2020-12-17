@@ -21,7 +21,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   /// The ancestor coregion this join is associated with.
   CoRegionDefinition coregion;
 
-  /// For a Join transition the [toStateDefinition] is the parent [coregion].
+  /// For a Join transition the 'to' State is the parent [coregion].
   JoinTransitionDefinition(
     StateDefinition<State> parentStateDefinition,
     GuardCondition<E> condition,

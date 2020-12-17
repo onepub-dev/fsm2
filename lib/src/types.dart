@@ -1,9 +1,10 @@
 import 'builders/co_region_builder.dart';
-
 import 'builders/fork_builder.dart';
 import 'builders/graph_builder.dart';
 import 'builders/state_builder.dart';
+import 'definitions/co_region_definition.dart';
 import 'definitions/state_definition.dart';
+import 'state_machine.dart';
 
 /// Base class for all States that you pass to the FSM.
 ///
@@ -73,7 +74,7 @@ typedef TransitionListener = void Function(
 /// The builder for a state.
 typedef BuildState<S extends State> = void Function(StateBuilder<S>);
 
-/// Builder for [coregion]
+/// Builder for [CoRegionDefinition]
 typedef BuildCoRegion<S extends State> = void Function(CoRegionBuilder<S>);
 
 /// Builder for onFork

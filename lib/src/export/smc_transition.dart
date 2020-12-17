@@ -108,7 +108,7 @@ class SMCTransition {
   }
 
   /// Generates a psuedo terminal state designed to be
-  /// terminal state transition from  [fromStateType]
+  /// terminal state transition from  [fromState]
   static SMCTerminalState genTerminalState(SMCState fromState) {
     if (fromState.sd != null) {
       return SMCTerminalState(fromState, fromState.sd.stateType);

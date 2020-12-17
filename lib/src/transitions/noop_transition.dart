@@ -1,19 +1,21 @@
 import '../definitions/state_definition.dart';
 import '../graph.dart';
+import '../state_machine.dart';
 import '../state_of_mind.dart';
 import '../types.dart';
 import 'transition_definition.dart';
 import 'transition_notification.dart';
 
-/// Valid transition called by [event] but no [condition] method
+/// When a valid event is passed to [StateMachine.applyEvent] but no [condition] method
 /// evaluated to true so no transition will occur.
 /// Also used by Join transitions when not all of the join prerequisite events have been met.
-/// Machine stays in [state].
+/// 
+/// The StateMachine will stay in [S] state.
 class NoOpTransitionDefinition<S extends State, E extends Event>
     extends TransitionDefinition<E> {
   final Type eventType;
 
-  /// no transition so [fromState] == [targetStates].
+  /// no transition so [fromStateDefinition] == [targetStates].
   NoOpTransitionDefinition(StateDefinition fromStateDefinition, this.eventType)
       : super(fromStateDefinition);
   @override

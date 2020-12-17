@@ -5,6 +5,7 @@ description: FSM2 provides an implementation of the core design aspects of the U
 environment: 
   sdk: '>=2.10.0 <3.0.0'
 dependencies: 
+  args: ^1.6.0
   completer_ex: ^1.0.0
   dcli: ^0.34.0
   meta: ^1.2.0

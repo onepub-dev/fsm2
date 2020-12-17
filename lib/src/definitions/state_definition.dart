@@ -40,9 +40,9 @@ class StateDefinition<S extends State> {
 
   /// The maps the set of [TransitionDefinition]s for a given [Event]
   /// for this [State].
-  /// [TransitionDefinition] are defined via calls to [on], [onFork] or [onJoin]
+  /// [TransitionDefinition] are defined via calls to [StateBuilder.on], [StateBuilder.onFork] or [StateBuilder.onJoin]
   /// methods. There can be multiple transitions for each
-  /// event due to the [condition] argument (which is a guard condition).
+  /// event due to the condition argument (which is a guard condition).
   ///
   /// There can also be multiple events that need to be mapped to a single
   /// [TransitionDefinition] in which case the [TransitionDefinition] will
@@ -84,7 +84,7 @@ class StateDefinition<S extends State> {
     }
   }
 
-  /// callback used when we enter  [toState].
+  /// callback used when we enter toState.
   /// Provides a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
   OnEnter onEnter = (Type toState, Event event) {
@@ -115,7 +115,7 @@ class StateDefinition<S extends State> {
   /// When considering each event we must evaulate the guard condition to determine if the
   /// transition is valid.
   ///
-  /// If no triggerable [event] can be found for the [fromState] then a [NoOpTranstionDefinition] is returned
+  /// If no triggerable [event] can be found for the [fromState] then a [NoOpTransitionDefinition] is returned
   /// indicating that no transition will occur under the current conditions.
   ///
   /// If no matching [event] can be found for the [fromState] then an [InvalidTransitionException] is thrown.
@@ -160,7 +160,7 @@ class StateDefinition<S extends State> {
     return _evaluateConditions(transitionChoices, event);
   }
 
-  /// Evaluates each guard condition for the given [event] from [fromState]
+  /// Evaluates each guard condition for the given [event]
   ///
   /// Conditions are applied to determine which transition occurs.
   ///
@@ -256,9 +256,9 @@ class StateDefinition<S extends State> {
     childStateDefinitions.add(definition);
   }
 
-  /// Adds a child [coregion] to this state defintion.
-  /// A state may have any number of [coregion]s.
-  /// All [coregion]s simultaneously have a state
+  /// Adds a child [CoRegionDefinition] to this state defintion.
+  /// A state may have any number of coregions.
+  /// All coregions simultaneously have a state
   /// This allows
   void _addCoRegion<CO extends State>(BuildCoRegion<CO> buildState) {
     final builder = CoRegionBuilder<CO>(this, CoRegionDefinition(CO));
@@ -269,7 +269,7 @@ class StateDefinition<S extends State> {
     childStateDefinitions.add(definition);
   }
 
-  /// recursively searches through the list of nested [StateDefinitions]
+  /// recursively searches through the list of nested [StateDefinition]s
   /// for a [StateDefinition] of type [stateDefinitionType];
   StateDefinition<State> findStateDefintion(Type stateDefinitionType,
       {bool includeChildren = true}) {
