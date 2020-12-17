@@ -139,7 +139,7 @@ class StateMachine {
   ///
   /// For a nested [State] the machine is said to be in the current
   /// leaf [State] plus any parent state.
-  /// 
+  ///
   /// When using a coregion then you can be in multiple leaf states
   /// concurrently.
   ///

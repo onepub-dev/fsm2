@@ -9,7 +9,7 @@ import 'transition_notification.dart';
 /// When a valid event is passed to [StateMachine.applyEvent] but no [condition] method
 /// evaluated to true so no transition will occur.
 /// Also used by Join transitions when not all of the join prerequisite events have been met.
-/// 
+///
 /// The StateMachine will stay in [S] state.
 class NoOpTransitionDefinition<S extends State, E extends Event>
     extends TransitionDefinition<E> {

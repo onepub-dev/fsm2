@@ -1,3 +1,6 @@
+# 0.16.0
+refactored code so that the ability to generate and watch for changes are now part of the public api so that fms2_viewer can use them.
+
 # 0.15.0
 Breaking changes:
 The onEnter and onExit handlers now expect both a state and the original event.
