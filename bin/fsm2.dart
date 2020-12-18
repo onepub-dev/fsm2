@@ -78,7 +78,9 @@ Future<void> main(List<String> args) async {
   final folder =
       SMCatFolder(folderPath: dirname(pathTo), basename: getBasename(pathTo));
 
-  await folder.generateAll();
+  await folder.generateAll(progress: (line) {
+    print(line);
+  });
 
   final show = parsed.wasParsed('show');
 

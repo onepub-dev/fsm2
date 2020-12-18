@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:fsm2/src/util/file_util.dart' as u;
@@ -81,7 +82,7 @@ class SMCatFolder {
       final files = _toGenerate.toSet().toList();
       files.sort((lhs, rhs) => lhs.compareTo(rhs));
       for (final file in files) {
-        final svgFile = await file.convert();
+        final svgFile = await file.convert(progress: (line) => log(line));
         _generatedController.add(svgFile);
       }
       _toGenerate.clear();
@@ -108,13 +109,13 @@ class SMCatFolder {
   ///
   /// Throws [SMCatException] if the file does not exist.
   Future<void> generateAll({Progress progress}) async {
-    progress ??= noOp;
+    // progress ??= noOp;
     final files = await Directory(folderPath).list().toList();
 
     for (final entity in files) {
       final file = entity.path;
       if (getBasename(file) == basename && p.extension(file) == '.smcat') {
-        await SMCatFile(file).convert();
+        await SMCatFile(file).convert(progress: progress);
       }
     }
   }

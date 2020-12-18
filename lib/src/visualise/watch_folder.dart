@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'dart:io';
 
@@ -35,7 +36,7 @@ class WatchFolder {
   /// in .[extension]
   void watch() {
     // ignore: avoid_print
-    print('watching $pathTo');
+    log('watching $pathTo');
     Directory(pathTo).watch(events: FileSystemEvent.all).listen((event) {
       _controller.add(event);
     });
@@ -134,7 +135,7 @@ class WatchFolder {
   }
 
   void _onChanged(String path, FolderChangeAction type) {
-    if (p.extension(path) == extension) {
+    if (p.extension(path) == '.$extension') {
       onChanged(path, type);
     }
   }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:fsm2/src/util/file_util.dart';
@@ -10,22 +11,27 @@ class SMCatFile {
   String pathTo;
   int pageNo;
 
-  String _svgPath;
+  SvgFile _svgFile;
   SMCatFile(this.pathTo) {
     pageNo = extractPageNo(pathTo);
   }
 
   String get svgPath {
-    if (_svgPath == null) {
-      final basename = getBasename(pathTo);
-      if (pageNo == 0) {
-        _svgPath = '${p.join(p.dirname(pathTo), basename)}.svg';
-      } else {
-        _svgPath = '${p.join(p.dirname(pathTo), basename)}.$pageNo.svg';
-      }
+    final basename = getBasename(pathTo);
+    if (pageNo == 0) {
+      return '${p.join(p.dirname(pathTo), basename)}.svg';
+    } else {
+      return '${p.join(p.dirname(pathTo), basename)}.$pageNo.svg';
     }
-    return _svgPath;
   }
+
+  SvgFile get svgFile {
+    return _svgFile ?? SvgFile(svgPath);
+  }
+
+  int get height => svgFile.height;
+
+  int get width => svgFile.width;
 
   /// creates an Svg image from the smcat file.
   ///
@@ -37,12 +43,11 @@ class SMCatFile {
     /// default no op progress
     progress ??= noOp;
 
-    final basename = getBasename(pathTo);
+    if (!isConversionRequired()) return svgFile;
 
-    final outputFile = '$basename.svg';
-    progress('Generating: $outputFile ');
-    if (File(outputFile).existsSync()) {
-      File(outputFile).deleteSync();
+    progress('Generating: $svgPath ');
+    if (File(svgPath).existsSync()) {
+      File(svgPath).deleteSync();
     }
 
     final Process process = await Process.start('smcat', [p.basename(pathTo)],
@@ -61,13 +66,14 @@ class SMCatFile {
     if (exitCode == 0) {
       /// See if the filename contains a page no.
       progress('Generation of $svgPath complete.');
-      final svgFile = SvgFile(svgPath);
-      await svgFile.addPageNo();
-      return svgFile;
+      _svgFile = SvgFile(svgPath);
+      await _svgFile.addPageNo();
+      return _svgFile;
     } else {
-      progress('Generation of $outputFile failed.');
-      throw SMCatException(
-          'Generation of $outputFile failed. exitCode: $exitCode');
+      progress('Generation of $svgPath failed.');
+      return null;
+      // throw SMCatException(
+      //     'Generation of $svgPath failed. exitCode: $exitCode');
     }
   }
 
@@ -77,6 +83,16 @@ class SMCatFile {
 
   @override
   String toString() => pathTo;
+
+  bool isConversionRequired() {
+    final smc = FileStat.statSync(pathTo).modified;
+
+    if (exists(svgPath)) {
+      final svg = FileStat.statSync(svgPath).modified;
+      return smc.isAfter(svg);
+    }
+    return true;
+  }
 }
 
 class SMCatException implements Exception {
