@@ -10,10 +10,7 @@ import 'package:test/test.dart';
 // }
 
 // /// registration wizard events
-// enum RWEvents
-// {
-//   OnForceRegistration
-// }
+
 void main() {
   test('analyse', () async {
     final fsm = createMachine();
@@ -67,6 +64,8 @@ StateMachine createMachine() {
   return stateMachine;
 }
 
+class OnForceRegistration implements Event {}
+
 void registrationRequired(StateBuilder<RegistrationRequired> builder) {
   builder
     ..on<OnRegistrationType, AcceptInvitation>(
@@ -103,7 +102,7 @@ void registrationRequired(StateBuilder<RegistrationRequired> builder) {
 StateBuilder<RegistrationTypeSelected> registrationTypeSelected(
     StateBuilder<RegistrationTypeSelected> builder) {
   return builder
-    ..pageBreak
+    // ..pageBreak
     ..state<NewOrganisation>((builder) => builder
       ..onEnter((s, e) async =>
           RegistrationWizard.setType(RegistrationType.acceptInvite)))
@@ -143,7 +142,7 @@ CoRegionBuilder<MobileAndRegistrationTypeAcquired>
 
       /// HasMobileNo
       ..state<MobileNoAcquired>((builder) => builder
-        ..pageBreak
+        //..pageBreak
         ..onEnter((s, e) async => fetchUserDetails())
         ..on<OnMobileValidated, AcquireUser>()
 
@@ -173,7 +172,7 @@ CoRegionBuilder<MobileAndRegistrationTypeAcquired>
 StateBuilder<EmailPage> emailPage(StateBuilder<EmailPage> b) {
   return b
     ..initialState<EmailRequired>()
-    ..pageBreak
+    //..pageBreak
     ..on<OnEmailInvalid, EmailRequired>()
     ..on<OnEmailValidated, EmailAcquired>()
     ..on<OnEmailNotRequired, EmailNotRequired>()
@@ -184,7 +183,7 @@ StateBuilder<EmailPage> emailPage(StateBuilder<EmailPage> b) {
 StateBuilder<NamePage> namePage(StateBuilder<NamePage> builder) {
   return builder
     ..initialState<NameRequired>()
-    ..pageBreak
+    //..pageBreak
     ..on<OnNameInvalid, NameRequired>()
     ..on<OnNameValidated, NameAcquired>()
     ..on<OnNameNotRequired, NameNotRequired>()
@@ -197,7 +196,7 @@ StateBuilder<TrialPhonePage> trialPhonePage(
     StateBuilder<TrialPhonePage> builder) {
   return builder
     ..initialState<TrialRequired>()
-    ..pageBreak
+    //..pageBreak
     ..on<OnTrailInvalid, TrialRequired>()
     ..on<OnTrailValidated, TrailAcquired>()
     ..on<OnTrialNotRequired, TrialNotRequired>();
@@ -206,7 +205,7 @@ StateBuilder<TrialPhonePage> trialPhonePage(
 StateBuilder<RegionPage> regionPage(StateBuilder<RegionPage> builder) {
   return builder
     ..initialState<RegionRequired>()
-    ..pageBreak
+    //..pageBreak
     ..on<OnRegionInvalid, RegionRequired>()
     ..on<OnRegionValidated, RegionAcquired>()
     ..on<OnRegionNotRequired, RegionNotRequired>()
@@ -343,8 +342,6 @@ class OnUserDisabled implements Event {}
 class OnUserEnabled implements Event {}
 
 class OnUserAcquisitionFailed implements Event {}
-
-class OnForceRegistration implements Event {}
 
 class OnMissingApiKey implements Event {}
 
