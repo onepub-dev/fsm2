@@ -1,3 +1,13 @@
+# 0.17.2
+un ignored version.g.dart
+releasd 0.17.1
+Improvements to the documentation.
+released 0.17
+removed unused code.
+Made sideEffects typesafe.
+Added state colours for the export.
+Exposed co_region_builder and state_builder as part of the api.
+
 # 0.17.1
 released 0.17
 removed unused code.
