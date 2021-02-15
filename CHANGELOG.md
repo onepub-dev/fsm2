@@ -1,3 +1,14 @@
+# 0.17.0
+Changes to help fsm2_viewer implementation.
+
+smcatfile now wraps an svg file. Provided default empty content for svg file if it doesn't exist.
+added image to readme
+
+# 0.16.1
+Fixes
+smcatfile now wraps and svg file. Provided default empty content for svg file if it doesn't exist.
+added image to readme.
+
 # 0.16.0
 refactored code so that the ability to generate and watch for changes are now part of the public api so that fms2_viewer can use them.
 
