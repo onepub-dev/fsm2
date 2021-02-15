@@ -27,7 +27,7 @@ abstract class TransitionDefinition< // S extends State,
 
   /// The [SideEffect] function to call when this choice is
   /// selected as the transition.
-  final SideEffect sideEffect;
+  final SideEffect<E> sideEffect;
 
   /// An optional label used only on the exported diagrams to given the [sideEffect]
   /// a descriptive label.  @See [label]
@@ -87,7 +87,7 @@ abstract class TransitionDefinition< // S extends State,
   /// [stateOfMind] the [transition] is to be processed againts.
   /// /
   Future<StateOfMind> trigger(Graph graph, StateOfMind stateOfMind,
-      TransitionNotification transition) async {
+      TransitionNotification<E> transition) async {
     final exitPaths = <PartialStatePath>[];
     final enterPaths = <PartialStatePath>[];
 

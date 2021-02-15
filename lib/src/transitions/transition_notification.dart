@@ -2,9 +2,9 @@ import '../definitions/state_definition.dart';
 
 import '../types.dart';
 
-class TransitionNotification {
+class TransitionNotification<E extends Event> {
   StateDefinition from;
-  Event event;
+  E event;
   StateDefinition to;
   TransitionNotification(this.from, this.event, this.to);
 

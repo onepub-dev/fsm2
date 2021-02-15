@@ -62,7 +62,7 @@ class StateBuilder<S extends State> {
   /// to annotate the transition on the diagram.
   void on<E extends Event, TOSTATE extends State>(
       {GuardCondition<E> condition,
-      SideEffect sideEffect,
+      SideEffect<E> sideEffect,
       String conditionLabel,
       String sideEffectLabel}) {
     final onTransition = OnTransitionDefinition<S, E, TOSTATE>(

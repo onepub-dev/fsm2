@@ -13,7 +13,7 @@ class OnTransitionDefinition<S extends State, E extends Event,
   Type toState;
 
   OnTransitionDefinition(StateDefinition stateDefinition,
-      GuardCondition<E> condition, this.toState, SideEffect sideEffect,
+      GuardCondition<E> condition, this.toState, SideEffect<E> sideEffect,
       {String conditionLabel, String sideEffectLabel})
       : super(stateDefinition,
             condition: condition,
