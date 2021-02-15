@@ -1,3 +1,10 @@
+# 0.17.1
+released 0.17
+removed unused code.
+Made sideEffects typesafe.
+Added state colours for the export.
+Exposed co_region_builder and state_builder as part of the api.
+
 # 0.17.0
 Changes to help fsm2_viewer implementation.
 
