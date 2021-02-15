@@ -144,7 +144,8 @@ class SMCState {
 
     /// we don't write out the name of the VirtualRoot
     if (type != SMCStateType.root) {
-      _writeName(exporter, pageNo, indent, color: isStraddleState ? Color.blue : Color.none);
+      _writeName(exporter, pageNo, indent,
+          color: isStraddleState ? Color.blue : Color.none);
 
       /// straddle states appear on two pages.
       if (isStraddleState) {

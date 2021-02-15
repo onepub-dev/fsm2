@@ -82,6 +82,26 @@ class StateBuilder<S extends State> {
 
   /// Adds a [coregion] State definition as per the UML2
   /// specification for `orthogonal regions`.
+  ///
+  /// A [coregion] is where the statemachine can
+  /// be in multiple states at the same time.
+  /// 
+  /// The parent state (defined by the call to [coregion])
+  /// treats all child states as [coregion]s.
+  ///
+  /// ```dart
+  /// .coregion<MobileAndRegistrationType>((builder) =>
+  ///   .state<AcquireMobile> ...
+  ///   .state<RegistrationType> ...
+  /// ```
+  ///
+  /// In the above example the [StateMachine] is considered
+  /// to be in both the 'AcquireMobile' state and the
+  /// 'RegistrationType' state.
+  ///
+  /// The [coregion] 'MobileAndRegistrationType' is also a parent state
+  /// so the machine is said to be in three states at once.
+  ///
   void coregion<CO extends State>(BuildCoRegion<CO> buildState) {
     addCoRegion(_stateDefinition, buildState);
   }

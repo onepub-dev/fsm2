@@ -19,9 +19,9 @@ void main(List<String> args) {
 }
 
 void showUsage(ArgParser parser) {
-  // ingore: avoid_print
+  // ignore: avoid_print
   print('Usage: gen_smcat.dart -v -prompt <a questions>');
-  // ingore: avoid_print
+  // ignore: avoid_print
   print(parser.usage);
   exit(1);
 }

@@ -39,7 +39,7 @@ class GraphBuilder {
 
   /// Adds [coregion]] definition.
   /// A [coregion] is where the statemachine can
-  /// be in two states at the same time.
+  /// be in multiple states at the same time.
   /// The parent state (defined by the call to [coregion])
   /// treats all child states as [coregion]s.
   ///
