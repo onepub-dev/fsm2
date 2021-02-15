@@ -1,3 +1,5 @@
+export 'src/builders/co_region_builder.dart';
+export 'src/builders/state_builder.dart';
 export 'src/definitions/state_definition.dart'
     hide onEnter, onExit, addCoRegion;
 export 'src/exceptions.dart';
