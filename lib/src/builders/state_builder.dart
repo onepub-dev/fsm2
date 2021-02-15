@@ -85,7 +85,7 @@ class StateBuilder<S extends State> {
   ///
   /// A [coregion] is where the statemachine can
   /// be in multiple states at the same time.
-  /// 
+  ///
   /// The parent state (defined by the call to [coregion])
   /// treats all child states as [coregion]s.
   ///
