@@ -6,6 +6,7 @@ import '../state_machine.dart';
 import 'exporter.dart';
 import 'smc_transition.dart';
 
+enum Color { none, blue, orange }
 enum SMCStateType {
   root,
   initial,
@@ -143,11 +144,11 @@ class SMCState {
 
     /// we don't write out the name of the VirtualRoot
     if (type != SMCStateType.root) {
-      _writeName(exporter, pageNo, indent, colored: isStraddleState);
+      _writeName(exporter, pageNo, indent, color: isStraddleState ? Color.blue : Color.none);
 
       /// straddle states appear on two pages.
       if (isStraddleState) {
-        _writeName(exporter, bodyPage, indent, colored: false);
+        _writeName(exporter, bodyPage, indent, color: Color.none);
       }
     }
 
@@ -193,20 +194,20 @@ class SMCState {
       type != SMCStateType.root;
 
   void _writeName(Exporter exporter, int pageNo, int indent,
-      {@required bool colored}) {
+      {@required Color color}) {
     final line = StringBuffer();
     var closeBracket = false;
     if (name == label || label == null) {
       line.write(name);
-      if (colored) {
+      if (color != Color.none) {
         closeBracket = true;
-        line.write(' [color="blue"');
+        line.write(' [color="${color.toString()}"');
       }
     } else {
       closeBracket = true;
       line.write('$name [label="$label"');
-      if (colored) {
-        line.write(' color="blue"');
+      if (color != Color.none) {
+        line.write(' color="${color.toString()}"');
       }
     }
     if (closeBracket) {
