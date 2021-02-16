@@ -7,13 +7,14 @@ environment:
 dependencies: 
   args: ^1.6.0
   completer_ex: ^1.0.0
+  dcli: ^0.41.0
   meta: ^1.2.0
   path: ^1.7.0
   stacktrace_impl: ^1.0.0
   synchronized: ^2.2.0+2
   tree_iterator: ^1.0.1
 dev_dependencies: 
-  dcli: ^0.41.0
+  
   lint: ^1.0.0
   mockito: ^4.1.1
   test: 1.16.0-nullsafety.7
