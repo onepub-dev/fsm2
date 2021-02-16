@@ -1,3 +1,6 @@
+# 0.17.3
+moved dcli to the dev dependencies.
+
 # 0.17.2
 un ignored version.g.dart
 releasd 0.17.1
