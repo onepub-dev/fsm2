@@ -1,3 +1,6 @@
+# 0.17.4
+Upgraded to latest version of dcli.
+
 # 0.17.3
 moved dcli to the dev dependencies.
 
