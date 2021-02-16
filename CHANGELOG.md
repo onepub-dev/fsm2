@@ -1,3 +1,6 @@
+# 1.0.0
+First stable release of fsm2.
+
 # 0.17.4
 Upgraded to latest version of dcli.
 
