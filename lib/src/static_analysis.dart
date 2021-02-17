@@ -58,10 +58,10 @@ bool analyse(Graph graph) {
         remainingStateMap.remove(targetDefinition.initialState);
 
         // if the stateDefinition can be reached so can all its parents.
-        var parent = targetDefinition.parent;
+        var parent = targetDefinition.parent!;
         while (parent.stateType != VirtualRoot) {
           remainingStateMap.remove(parent.stateType);
-          parent = parent.parent;
+          parent = parent.parent!;
         }
       }
     }

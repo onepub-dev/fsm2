@@ -19,13 +19,13 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   // bool _hasTriggered = false;
 
   /// The ancestor coregion this join is associated with.
-  CoRegionDefinition coregion;
+  late CoRegionDefinition coregion;
 
   /// For a Join transition the 'to' State is the parent [coregion].
   JoinTransitionDefinition(
     StateDefinition<State> parentStateDefinition,
-    GuardCondition<E> condition,
-    SideEffect sideEffect,
+    GuardCondition<E>? condition,
+    SideEffect? sideEffect,
   )   : definition = JoinDefinition(TOSTATE),
         super(parentStateDefinition,
             sideEffect: sideEffect, condition: condition) {
@@ -34,7 +34,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
     var parent = parentStateDefinition;
 
     while (!parent.isCoRegion && !parent.isVirtualRoot) {
-      parent = parent.parent;
+      parent = parent.parent!;
     }
 
     /// we need to register the join with the owning co-region
@@ -48,7 +48,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   }
 
   /// used to trigger the last event that triggered this transition.
-  E _triggeredBy;
+  E? _triggeredBy;
 
   @override
   bool canTrigger(E event) {
@@ -69,8 +69,8 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   /// returns the list of transitions that this definition causes when triggered.
   @override
   List<TransitionNotification> transitions(
-      Graph graph, StateDefinition from, Event event) {
-    final transitions = <TransitionNotification>[];
+      Graph graph, StateDefinition? from, Event event) {
+    final List<TransitionNotification<Event?>> transitions = <TransitionNotification>[];
     // join only ever has one target state.
     final targetState = targetStates[0];
     final targetStateDefinition = graph.findStateDefinition(targetState);

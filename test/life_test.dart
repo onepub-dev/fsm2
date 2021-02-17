@@ -2,7 +2,7 @@ import 'package:fsm2/fsm2.dart';
 import 'package:test/test.dart';
 import 'package:dcli/dcli.dart' hide equals;
 
-StateMachine machine;
+late StateMachine machine;
 void main() {
   test('export', () async {
     _createMachine();

@@ -11,7 +11,7 @@ import 'transition_notification.dart';
 /// Also used by Join transitions when not all of the join prerequisite events have been met.
 ///
 /// The StateMachine will stay in [S] state.
-class NoOpTransitionDefinition<S extends State, E extends Event>
+class NoOpTransitionDefinition<S extends State, E extends Event?>
     extends TransitionDefinition<E> {
   final Type eventType;
 
@@ -32,7 +32,7 @@ class NoOpTransitionDefinition<S extends State, E extends Event>
 
   @override
   List<TransitionNotification> transitions(
-      Graph graph, StateDefinition from, Event event) {
+      Graph graph, StateDefinition? from, Event event) {
     return <TransitionNotification>[];
   }
 }

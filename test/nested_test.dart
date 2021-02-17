@@ -5,15 +5,15 @@ import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 class Watcher extends Mock {
-  Future<void> onEnter(Type fromState, Event event);
-  Future<void> onExit(Type toState, Event event);
+  Future<void> onEnter(Type fromState, Event? event);
+  Future<void> onExit(Type toState, Event? event);
 
   void log(String message);
 }
 
 void main() {
-  Watcher watcher;
-  Human human;
+  late Watcher watcher;
+  late Human human;
 
   setUp(() {
     watcher = Watcher();

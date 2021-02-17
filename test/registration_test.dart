@@ -348,10 +348,10 @@ class OnMissingApiKey implements Event {}
 class OnHasApiKey implements Event {}
 
 class OnRegistrationType implements Event {
-  RegistrationType type;
+  RegistrationType? type;
 }
 
-void log(StateDefinition from, Event event, StateDefinition to) {}
+void log(StateDefinition? from, Event? event, StateDefinition? to) {}
 
 // ignore: unused_element
 var _graph = '''

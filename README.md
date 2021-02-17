@@ -69,7 +69,7 @@ void main() {
     ..state<Gas>((b) => b
       ..on<OnCondensed, Liquid>(sideEffect: (e) => print('Condensed'))))
     ..onTransition((t) => print(
-        'Recieved Event ${t.event.runtimeType} in State ${t.fromState.runtimeType} transitioning to State ${t.toState.runtimeType}')));
+        'Received Event ${t.event.runtimeType} in State ${t.fromState.runtimeType} transitioning to State ${t.toState.runtimeType}')));
 
   print(machine.currentState is Solid); // TRUE
 

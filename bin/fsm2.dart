@@ -91,7 +91,7 @@ Future<void> main(List<String> args) async {
       print(folder.listSvgs);
       await SvgFile.showList(folder.listSvgs, progress: (line) => print(line));
       await for (final svgFile in folder.stream) {
-        await svgFile.show(progress: (line) => print(line));
+        await svgFile!.show(progress: (line) => print(line));
       }
     }
   } else if (show) {

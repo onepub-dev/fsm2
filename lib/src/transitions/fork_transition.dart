@@ -23,7 +23,7 @@ class ForkTransitionDefinition<S extends State, E extends Event>
 
   @override
   List<TransitionNotification> transitions(
-      Graph graph, StateDefinition from, Event event) {
+      Graph graph, StateDefinition? from, Event event) {
     final transitions = <TransitionNotification>[];
     for (final targetState in targetStates) {
       final targetDefinition = graph.findStateDefinition(targetState);

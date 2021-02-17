@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:fsm2/src/transitions/transition_definition.dart';
-import 'package:meta/meta.dart';
 
 import 'package:fsm2/src/state_machine.dart';
 
@@ -48,20 +47,20 @@ class DotExporter {
       TransitionDefinition transitionDefinition) async {
     var appended = false;
 
-    String cluster;
+    String? cluster;
 
     final targetStates = transitionDefinition.targetStates;
 
     for (final targetState in targetStates) {
       final toDef = stateMachine.findStateDefinition(targetState);
 
-      if (toDef != null && toDef.parent.stateType != VirtualRoot) {
-        cluster = toDef.parent.stateType.toString();
+      if (toDef != null && toDef.parent!.stateType != VirtualRoot) {
+        cluster = toDef.parent!.stateType.toString();
       }
 
       for (final event in transitionDefinition.triggerEvents) {
         final node = _Edge(stateDefinition, event, toDef,
-            region: cluster, terminal: toDef.isTerminal);
+            region: cluster, terminal: toDef!.isTerminal);
 
         /// see if we have an existing path that ends with [fromState]
         for (final path in _edgePaths) {
@@ -105,20 +104,20 @@ class DotExporter {
   /// to a terminal state.
   void writeTransitions(RandomAccessFile raf) {
     for (final edgePath in _edgePaths) {
-      var edge = edgePath.first;
+      _Edge? edge = edgePath.first;
 
       while (edge != null) {
         raf.writeStringSync(
-            '\t${edge.fromDefinition.stateType} -> ${edge.toDefinition.stateType} [label="${edge.event}"];\n');
+            '\t${edge.fromDefinition.stateType} -> ${edge.toDefinition!.stateType} [label="${edge.event}"];\n');
 
         // if the toState is a terminal state we need to write an extra
         // entry to show a transition to the virtual terminal state.
         if (edge.isDestinationTerminal) {
-          addTerminalToSubGraph(edge.toDefinition, _terminalStateOrdinal);
+          addTerminalToSubGraph(edge.toDefinition!, _terminalStateOrdinal);
 
           /// we don't label terminal events and we make them a small dot.
           raf.writeStringSync(
-              '\t${edge.toDefinition.stateType} -> TerminalState${_terminalStateOrdinal++};\n');
+              '\t${edge.toDefinition!.stateType} -> TerminalState${_terminalStateOrdinal++};\n');
         }
 
         edge = edge.next;
@@ -217,14 +216,14 @@ ${'\t' * level}subgraph cluster_$regionName {
     /// parents subgraph.
     if (terminalStateDefinition.nestedStateDefinitions.isEmpty &&
         terminalStateDefinition.parent.runtimeType != VirtualRoot) {
-      terminalState = terminalStateDefinition.parent.stateType;
+      terminalState = terminalStateDefinition.parent!.stateType;
     }
 
     final terminals = _terminalsOwnedByRegion[terminalState] ?? <int>[];
     terminals.add(terminalStateOrdinal);
 
     /// the state is owned by its parent.
-    _terminalsOwnedByRegion[terminalStateDefinition.parent.stateType] =
+    _terminalsOwnedByRegion[terminalStateDefinition.parent!.stateType] =
         terminals;
   }
 }
@@ -248,19 +247,19 @@ class _EdgePath {
 class _Edge {
   StateDefinition fromDefinition;
   Type event;
-  StateDefinition toDefinition;
-  String guard;
-  String region;
+  StateDefinition? toDefinition;
+  String? guard;
+  String? region;
 
   /// If the toState is a terminal state (no events leave the state)
   bool terminal;
 
-  _Edge next;
-  _Edge prev;
+  _Edge? next;
+  _Edge? prev;
 
   _Edge(this.fromDefinition, this.event, this.toDefinition,
-      {@required this.terminal, this.region}) {
-    log('edge ${fromDefinition.stateType}:$event -> ${toDefinition.stateType}');
+      {required this.terminal, this.region}) {
+    log('edge ${fromDefinition.stateType}:$event -> ${toDefinition!.stateType}');
   }
 
   /// true if the toState is a terminal state.

@@ -13,8 +13,8 @@ class OnTransitionDefinition<S extends State, E extends Event,
   Type toState;
 
   OnTransitionDefinition(StateDefinition stateDefinition,
-      GuardCondition<E> condition, this.toState, SideEffect<E> sideEffect,
-      {String conditionLabel, String sideEffectLabel})
+      GuardCondition<E>? condition, this.toState, SideEffect<E>? sideEffect,
+      {String? conditionLabel, String? sideEffectLabel})
       : super(stateDefinition,
             condition: condition,
             sideEffect: sideEffect,
@@ -33,7 +33,7 @@ class OnTransitionDefinition<S extends State, E extends Event,
   /// a single transition occurs.
   @override
   List<TransitionNotification> transitions(
-      Graph graph, StateDefinition from, Event event) {
+      Graph graph, StateDefinition? from, Event event) {
     final transitions = <TransitionNotification>[];
     for (final targetState in targetStates) {
       final targetDefinition = graph.findStateDefinition(targetState);
