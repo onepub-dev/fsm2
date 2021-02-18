@@ -6,6 +6,11 @@ import 'exporter.dart';
 import 'smc_transition.dart';
 
 enum Color { none, blue, orange }
+
+extension ColorExt on Color {
+  String get name => toString().split('.')[1].replaceAll('_', ' ');
+}
+
 enum SMCStateType {
   root,
   initial,
@@ -199,13 +204,13 @@ class SMCState {
       line.write(name);
       if (color != Color.none) {
         closeBracket = true;
-        line.write(' [color="${color.toString()}"');
+        line.write(' [color="${color.name}"');
       }
     } else {
       closeBracket = true;
       line.write('$name [label="$label"');
       if (color != Color.none) {
-        line.write(' color="${color.toString()}"');
+        line.write(' color="${color.name}"');
       }
     }
     if (closeBracket) {

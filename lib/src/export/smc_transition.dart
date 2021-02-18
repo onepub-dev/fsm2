@@ -5,8 +5,8 @@ import 'package:fsm2/src/transitions/join_transition.dart';
 import 'package:fsm2/src/transitions/on_transition.dart';
 import 'package:fsm2/src/transitions/transition_definition.dart';
 import 'package:fsm2/src/virtual_root.dart';
+import 'package:fsm2/src/visualise/smcat_file.dart';
 import 'package:tree_iterator/tree_iterator.dart';
-
 
 import '../state_machine.dart';
 import '../types.dart';
@@ -301,15 +301,15 @@ class SMCTransition {
     /// until we find the matching sd.
     final root = getRoot(owner);
 
-    // var matcher = name;
-    // if (name.startsWith(']')) {
-    //   /// psudo names are of the form ']state.type]
-    //   /// and we just want the state name.
-    //   matcher = name.split('.')[0].substring(1);
-    // }
-
-    return findInTree<SMCState>(root, (node) => node.children,
+    final state = findInTree<SMCState>(root, (node) => node.children,
         (child) => child.baseName == stateType.toString());
+
+    if (state == null) {
+      throw SMCatException(
+          'FSM is in an inconsistent state. Unable to find state $stateType for ${owner.type}');
+    }
+
+    return state;
   }
 
   /// Find the root of the SMCState tree.

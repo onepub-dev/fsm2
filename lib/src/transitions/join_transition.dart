@@ -47,9 +47,13 @@ class JoinTransitionDefinition<S extends State, E extends Event,
     }
   }
 
-  /// used to trigger the last event that triggered this transition.
-  E? _triggeredBy;
+  /// used to track the event that triggered this join.
+  /// We need to cache this value as a join may not result in an
+  /// immediate transition as we have to wait for all joins in the coregion to trigger.
+  late E _triggeredBy;
 
+  /// A join can trigger when its parent coregion has received the required
+  /// event for each onJoin assocated with the coregion.
   @override
   bool canTrigger(E event) {
     _triggeredBy = event;
@@ -70,15 +74,14 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   @override
   List<TransitionNotification> transitions(
       Graph graph, StateDefinition? from, Event event) {
-    final List<TransitionNotification<Event?>> transitions = <TransitionNotification>[];
-    // join only ever has one target state.
-    final targetState = targetStates[0];
-    final targetStateDefinition = graph.findStateDefinition(targetState);
+    final List<TransitionNotification> transitions = <TransitionNotification>[];
 
-    // however we have multiple sources
+    // Gather all of the other transition in the coregion defined by onJoins
+    // TODO: what about states that don't have an onjoin do we need
+    // create transitions for each of those?
     for (final join in coregion.joinTransitions) {
-      final notification = TransitionNotification(
-          join.fromStateDefinition, join._triggeredBy, targetStateDefinition);
+      final notification = join.buildTransitionNotification(graph);
+
       if (notification.event != event) {
         notification.skipEnter = true;
       }
@@ -86,5 +89,14 @@ class JoinTransitionDefinition<S extends State, E extends Event,
     }
 
     return transitions;
+  }
+
+  TransitionNotification<E> buildTransitionNotification(Graph graph) {
+    // join only ever has one target state.
+    final targetState = targetStates[0];
+    final targetStateDefinition = graph.findStateDefinition(targetState);
+
+    return TransitionNotification<E>(
+        this, fromStateDefinition, _triggeredBy, targetStateDefinition);
   }
 }

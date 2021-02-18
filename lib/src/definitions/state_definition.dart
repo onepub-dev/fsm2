@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:meta/meta.dart';
 
 import '../builders/co_region_builder.dart';
@@ -78,32 +80,28 @@ class StateDefinition<S extends State> {
     return definitions;
   }
 
-  Future<void> _onEnter(Type fromState, Event? event) async {
+  Future<void> _onEnter(Type fromState, Event event) async {
     await onEnter(fromState, event);
   }
 
   /// callback used when we enter toState.
   /// Provides a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
-  OnEnter onEnter = (Type toState, Event? event) {
-    return null;
-  };
+  OnEnter onEnter = (Type toState, Event event) {};
 
   /// This method is called when we exit this state to give the
   /// [StateDefinition] a chance to do any internal cleanup.
   /// If you must call [_onExit] so that we can call the user
   /// defined [onExit] method.
   @mustCallSuper
-  Future<void> _onExit(Type fromState, Event? event) async {
+  Future<void> _onExit(Type fromState, Event event) async {
     await onExit(fromState, event);
   }
 
   /// callback used when we exiting this [State].
   /// Provide provide a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
-  OnExit onExit = (Type toState, Event? event) {
-    return null;
-  };
+  OnExit onExit = (Type toState, Event? event) {};
 
   /// Returns the first transition that can be triggered for the given [event] from the
   /// given [fromState].
@@ -135,8 +133,8 @@ class StateDefinition<S extends State> {
     var parent = this.parent;
     while (transitionDefinition is NoOpTransitionDefinition &&
         parent!.stateType != VirtualRoot) {
-      transitionDefinition = await (parent._evaluateTransitions(event)
-          as FutureOr<NoOpTransitionDefinition<State, Event>>);
+      transitionDefinition = await parent._evaluateTransitions(event)
+          ;
       parent = parent.parent;
     }
 
@@ -151,7 +149,7 @@ class StateDefinition<S extends State> {
         as List<TransitionDefinition<E>>?;
 
     if (transitionChoices == null) {
-      return NoOpTransitionDefinition<S, E?>(this, E);
+      return NoOpTransitionDefinition< E>(this, E);
     }
 
     return _evaluateConditions(transitionChoices, event);
@@ -164,7 +162,7 @@ class StateDefinition<S extends State> {
   /// If no condition allows the transition to fire then we return
   /// a [NoOpTransitionDefinition] which result in no state transition occuring.
   ///
-  Future<TransitionDefinition<E>> _evaluateConditions<E extends Event?>(
+  Future<TransitionDefinition<E>> _evaluateConditions<E extends Event>(
       List<TransitionDefinition<E>> transitionChoices, E event) async {
     assert(transitionChoices.isNotEmpty);
     for (final transitionDefinition in transitionChoices) {
@@ -177,7 +175,7 @@ class StateDefinition<S extends State> {
         }
       }
     }
-    return NoOpTransitionDefinition<S, E>(this, E);
+    return NoOpTransitionDefinition< E>(this, E);
   }
 
   /// A state is a terminal state if it has no transitions and
@@ -327,11 +325,11 @@ class StateDefinition<S extends State> {
 }
 
 /// used to hide internal api
-Future<void> onEnter(StateDefinition sd, Type toState, Event? event) async {
+Future<void> onEnter(StateDefinition sd, Type toState, Event event) async {
   await sd._onEnter(toState, event);
 }
 
-Future<void> onExit(StateDefinition sd, Type fromState, Event? event) async {
+Future<void> onExit(StateDefinition sd, Type fromState, Event event) async {
   await sd._onExit(fromState, event);
 }
 

@@ -18,6 +18,7 @@ import 'graph.dart';
 import 'state_path.dart';
 import 'static_analysis.dart' as analysis;
 import 'tracker.dart';
+import 'transitions/on_transition.dart';
 import 'transitions/transition_definition.dart';
 import 'virtual_root.dart';
 
@@ -110,12 +111,14 @@ class StateMachine {
   }
 
   StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
+  TransitionDefinition<InitialEvent> get initialTransition =>
+      OnTransitionDefinition(virtualRoot, null, VirtualRoot, null);
 
   bool _loadStateOfMind(StateDefinition<State> initialState) {
     initialState.onEnter(initialState.stateType, initialEvent);
 
-    final transition =
-        TransitionNotification(virtualRoot, initialEvent, initialState);
+    final transition = TransitionNotification(
+        initialTransition, virtualRoot, initialEvent, initialState);
     _notifyListeners(transition);
     if (initialState.isLeaf) {
       addPath(_stateOfMind, StatePath.fromLeaf(_graph, initialState.stateType));
@@ -227,16 +230,16 @@ class StateMachine {
     try {
       await _actualApplyEvent(event.event);
       event._completer.complete();
-    } on InvalidTransitionException catch (e) {
+    } on InvalidTransitionException catch (e, st) {
       if (production!) {
         log('InvalidTransitionException suppressed: $e');
 
         event._completer.complete();
       } else {
-        event._completer.completeError(e);
+        event._completer.completeError(e, st);
       }
-    } catch (e) {
-      event._completer.completeError(e);
+    } catch (e, st) {
+      event._completer.completeError(e, st);
     } finally {
       /// now we have finished processing the event we can remove it from the queue.
       _eventQueue.removeFirst();
@@ -353,13 +356,20 @@ class StateMachine {
     return ancestor.stateType;
   }
 
-  Future<void> applyTransitions(StateDefinition<State>? from,
-      TransitionDefinition<Event?> transitionDefinition, Event event) async {
+  // TransitionNotification<T>? cast<T extends Event>(T def, dynamic x) {
+  //   final t = x is TransitionNotification<T> ? x : null;
+  //   return t;
+  // }
+
+  Future<void> applyTransitions<E extends Event>(StateDefinition<State> from,
+      TransitionDefinition<E> transitionDefinition, Event event) async {
+    /// When an event occurs on a join we need to trigger
     final transitions = transitionDefinition.transitions(_graph, from, event);
 
     for (final transition in transitions) {
+      // final _transition = cast(transition.event, transition)!;
       _stateOfMind =
-          await transitionDefinition.trigger(_graph, _stateOfMind, transition);
+          await transition.definition.trigger(_graph, _stateOfMind, transition);
       _notifyListeners(transition);
     }
   }
@@ -368,7 +378,7 @@ class StateMachine {
   void _notifyListeners(TransitionNotification transition) {
     for (final onTransition in _graph.onTransitionListeners) {
       if (!production!) {
-        log('transition: from: ${transition.from!.stateType} event: ${transition.event.runtimeType} to: ${transition.to!.stateType}');
+        log('transition: from: ${transition.from.stateType} event: ${transition.event.runtimeType} to: ${transition.to!.stateType}');
       }
 
       onTransition(transition.from, transition.event, transition.to);

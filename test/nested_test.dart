@@ -1,22 +1,20 @@
 @Timeout(Duration(minutes: 10))
 import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-class Watcher extends Mock {
-  Future<void> onEnter(Type fromState, Event? event);
-  Future<void> onExit(Type toState, Event? event);
+import 'mock_watcher.dart';
+import 'watcher.dart';
 
-  void log(String message);
-}
-
+@GenerateMocks([Watcher])
 void main() {
-  late Watcher watcher;
+  late MockWatcher watcher;
   late Human human;
 
   setUp(() {
-    watcher = Watcher();
+    watcher = MockWatcher();
     human = Human();
   });
 
@@ -74,7 +72,7 @@ void main() {
   });
 
   test('Invalid transition', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
     final machine = await _createMachine<Dead>(watcher, human);
     try {
       machine.applyEvent(OnBirthday());
@@ -96,7 +94,7 @@ void main() {
   });
 
   test('Transition in nested state.', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
     final machine = await _createMachine<Dead>(watcher, human);
 
     machine.applyEvent(OnJudged(Judgement.good));
@@ -108,7 +106,7 @@ void main() {
   });
 
   test('calls onExit/onEnter', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
     final machine = await _createMachine<Alive>(watcher, human);
 
     /// age this boy until they are middle aged.
@@ -122,7 +120,7 @@ void main() {
   });
 
   test('Test onExit/onEnter for nested state change', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
     final machine = await _createMachine<Alive>(watcher, human);
 
     /// age this boy until they are middle aged.
@@ -149,7 +147,7 @@ void main() {
 }
 
 Future<StateMachine> _createMachine<S extends State>(
-  Watcher watcher,
+  MockWatcher watcher,
   Human human,
 ) async {
   final machine = StateMachine.create((g) => g

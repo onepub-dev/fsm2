@@ -1,21 +1,20 @@
 import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
-import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
 import 'package:test/test.dart';
 
-class Watcher extends Mock {
-  Future<void> onEnter(Type fromState, Event? event);
-  Future<void> onExit(Type toState, Event? event);
+import 'mock_watcher.dart';
+import 'watcher.dart';
 
-  void log(String message);
-}
+@GenerateMocks([Watcher])
+
 
 void main() {
-  late Watcher watcher;
+  late MockWatcher watcher;
   late Human human;
 
   setUp(() {
-    watcher = Watcher();
+    watcher = MockWatcher();
     human = Human();
   });
 
@@ -35,7 +34,7 @@ void main() {
 }
 
 Future<StateMachine> _createMachine<S extends State>(
-  Watcher watcher,
+  MockWatcher watcher,
   Human human,
 ) async {
   final machine = StateMachine.create((g) => g

@@ -10,7 +10,7 @@ import 'transition_notification.dart';
 
 /// Defines FSM transition: the change from one state to another.
 abstract class TransitionDefinition< // S extends State,
-    E extends Event?> {
+    E extends Event> {
   /// The state this transition is attached to.
   final StateDefinition<State> fromStateDefinition;
 
@@ -91,8 +91,7 @@ abstract class TransitionDefinition< // S extends State,
     final exitPaths = <PartialStatePath>[];
     final enterPaths = <PartialStatePath>[];
 
-    //for (final targetState in targetStates) {
-    final fromPath = StatePath.fromLeaf(graph, transition.from!.stateType);
+    final fromPath = StatePath.fromLeaf(graph, transition.from.stateType);
     final toPath = StatePath.fromLeaf(graph, transition.to!.stateType);
 
     final commonAncestor = findCommonAncestor(graph, fromPath, toPath);
@@ -108,7 +107,8 @@ abstract class TransitionDefinition< // S extends State,
     final exitStates = dedupPaths(exitPaths);
     final enterStates = dedupPaths(enterPaths);
 
-    final fromStateDefinition = graph.stateDefinitions[transition.from as Type];
+    final fromStateDefinition =
+        graph.stateDefinitions[transition.from.runtimeType];
     await callOnExits(fromStateDefinition, transition.event, exitStates);
 
     if (sideEffect != null) await sideEffect!(transition.event);
@@ -188,7 +188,7 @@ abstract class TransitionDefinition< // S extends State,
   /// for each ancestor up to but not including the common
   /// ancestor of the state we are entering.
   ///
-  Future<void> callOnExits(StateDefinition? fromState, Event? event,
+  Future<void> callOnExits(StateDefinition? fromState, Event event,
       List<StateDefinition> states) async {
     for (final fromState in states) {
       await onExit(fromState, fromState.stateType, event);
@@ -204,7 +204,7 @@ abstract class TransitionDefinition< // S extends State,
   ///
   /// Can you join a concurrent state
   ///
-  Future<void> callOnEnters(List<StateDefinition> paths, Event? event) async {
+  Future<void> callOnEnters(List<StateDefinition> paths, Event event) async {
     for (final toStateDefinition in paths) {
       await onEnter(toStateDefinition, toStateDefinition.stateType, event);
     }
@@ -241,5 +241,5 @@ abstract class TransitionDefinition< // S extends State,
   /// list of transitions that this definition will cause when triggered.
   ///
   List<TransitionNotification> transitions(
-      Graph graph, StateDefinition? from, Event event);
+      Graph graph, StateDefinition from, Event event);
 }
