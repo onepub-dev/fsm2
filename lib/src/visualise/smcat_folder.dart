@@ -6,7 +6,6 @@ import 'package:fsm2/src/util/file_util.dart' as u;
 import 'package:fsm2/src/visualise/progress.dart';
 import 'package:fsm2/src/visualise/svg_file.dart';
 import 'package:fsm2/src/visualise/watch_folder.dart';
-import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 import 'package:synchronized/synchronized.dart';
 
@@ -19,12 +18,12 @@ class SMCatFolder {
   String basename;
 
   /// [folderPath] is the name of the folder holding the smcat files.
-  SMCatFolder({@required this.folderPath, @required this.basename});
+  SMCatFolder({required this.folderPath, required this.basename});
 
   final lock = Lock();
 
   /// We add an event each time an SvgFile is generated.
-  final _generatedController = StreamController<SvgFile>();
+  final _generatedController = StreamController<SvgFile?>();
 
   /// when we see a mod we want to delay the generation as we often
   /// see multiple modifications when a file is being updated.
@@ -75,7 +74,7 @@ class SMCatFolder {
   /// stream each time it is generated.  A single SvgFile
   /// will be generated each time you change the smcat file
   /// or call [queueGeneration]
-  Stream<SvgFile> get stream => _generatedController.stream;
+  Stream<SvgFile?> get stream => _generatedController.stream;
 
   void delayedGeneration() {
     lock.synchronized(() async {
@@ -108,7 +107,7 @@ class SMCatFolder {
   /// Generate the svg files for all smcat files in [folderPath] with a matching [basename]
   ///
   /// Throws [SMCatException] if the file does not exist.
-  Future<void> generateAll({Progress progress}) async {
+  Future<void> generateAll({Progress? progress}) async {
     // progress ??= noOp;
     final files = await Directory(folderPath).list().toList();
 
@@ -122,13 +121,13 @@ class SMCatFolder {
 
   static String getBasename(String file) => u.getBasename(file);
 
-  Future<void> show({Progress progress}) async {
+  Future<void> show({Progress? progress}) async {
     final files = await Directory(folderPath).list().toList();
 
     for (final entity in files) {
       final file = entity.path;
       if (p.extension(file) == 'svg') {
-        await SvgFile(file).show(progress: (line) => progress(line));
+        await SvgFile(file).show(progress: (line) => progress!(line));
       }
     }
   }

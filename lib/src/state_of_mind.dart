@@ -20,7 +20,7 @@ class StateOfMind {
   }
 
   void _removePath(StatePath path) {
-    StatePath toBeRemoved;
+    StatePath? toBeRemoved;
     for (final statePath in _leafPaths) {
       if (statePath == path) toBeRemoved = statePath;
     }
@@ -37,9 +37,9 @@ class StateOfMind {
     dedup();
   }
 
-  StatePath pathForLeafState(Type leafState) {
+  StatePath? pathForLeafState(Type leafState) {
     for (final path in _leafPaths) {
-      if (path.leaf.stateType == leafState) {
+      if (path.leaf!.stateType == leafState) {
         return path;
       }
     }
@@ -47,8 +47,8 @@ class StateOfMind {
   }
 
   /// returns a StateDefinition for all active states
-  List<StateDefinition> activeLeafStates() {
-    final defs = <StateDefinition>[];
+  List<StateDefinition?> activeLeafStates() {
+    final defs = <StateDefinition?>[];
 
     for (final active in _leafPaths) {
       defs.add(active.leaf);

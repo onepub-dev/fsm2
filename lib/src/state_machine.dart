@@ -18,6 +18,7 @@ import 'graph.dart';
 import 'state_path.dart';
 import 'static_analysis.dart' as analysis;
 import 'tracker.dart';
+import 'transitions/on_transition.dart';
 import 'transitions/transition_definition.dart';
 import 'virtual_root.dart';
 
@@ -51,7 +52,7 @@ class StateMachine {
 
   var _stateOfMind = StateOfMind();
 
-  final bool production;
+  final bool? production;
 
   /// Creates a statemachine using a builder pattern.
   ///
@@ -91,7 +92,7 @@ class StateMachine {
 
     assert(initialState != null);
 
-    if (!production) {
+    if (!production!) {
       history.add(Tracker(_stateOfMind, initialEvent));
     }
 
@@ -100,7 +101,7 @@ class StateMachine {
           'The initialState $initialState MUST be a top level state.');
     }
 
-    final initialSd = _graph.findStateDefinition(initialState);
+    final initialSd = _graph.findStateDefinition(initialState)!;
 
     /// Find the initial state by chaining down through the initialStates looking for a leaf.
     if (!_loadStateOfMind(initialSd)) {
@@ -110,12 +111,14 @@ class StateMachine {
   }
 
   StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
+  TransitionDefinition<InitialEvent> get initialTransition =>
+      OnTransitionDefinition(virtualRoot, null, VirtualRoot, null);
 
   bool _loadStateOfMind(StateDefinition<State> initialState) {
     initialState.onEnter(initialState.stateType, initialEvent);
 
-    final transition =
-        TransitionNotification(virtualRoot, initialEvent, initialState);
+    final transition = TransitionNotification(
+        initialTransition, virtualRoot, initialEvent, initialState);
     _notifyListeners(transition);
     if (initialState.isLeaf) {
       addPath(_stateOfMind, StatePath.fromLeaf(_graph, initialState.stateType));
@@ -123,7 +126,7 @@ class StateMachine {
     } else {
       /// search child for a leaf.
       final child = initialState.findStateDefintion(initialState.initialState,
-          includeChildren: false);
+          includeChildren: false)!;
       return _loadStateOfMind(child);
     }
   }
@@ -131,9 +134,9 @@ class StateMachine {
   List<StateDefinition<State>> get topStateDefinitions =>
       _graph.topStateDefinitions;
 
-  String get initialStateLabel => _graph.initialStateLabel;
+  String? get initialStateLabel => _graph.initialStateLabel;
 
-  Type get initialState => _graph.initialState;
+  Type? get initialState => _graph.initialState;
 
   /// Returns true if the [StateMachine] is in the given state.
   ///
@@ -176,11 +179,11 @@ class StateMachine {
     if (def == null) {
       throw UnknownStateException('The state $S has not been registered');
     }
-    var parent = def.parent;
+    var parent = def.parent!;
     while (parent.stateType != VirtualRoot) {
       if (parent.stateType == S) return true;
 
-      parent = parent.parent;
+      parent = parent.parent!;
     }
     return false;
   }
@@ -227,16 +230,16 @@ class StateMachine {
     try {
       await _actualApplyEvent(event.event);
       event._completer.complete();
-    } on InvalidTransitionException catch (e) {
-      if (production) {
+    } on InvalidTransitionException catch (e, st) {
+      if (production!) {
         log('InvalidTransitionException suppressed: $e');
 
         event._completer.complete();
       } else {
-        event._completer.completeError(e);
+        event._completer.completeError(e, st);
       }
-    } catch (e) {
-      event._completer.completeError(e);
+    } catch (e, st) {
+      event._completer.completeError(e, st);
     } finally {
       /// now we have finished processing the event we can remove it from the queue.
       _eventQueue.removeFirst();
@@ -259,7 +262,7 @@ class StateMachine {
     return _lock.synchronized(() async {
       var dispatched = false;
       for (final stateDefinition in _stateOfMind.activeLeafStates()) {
-        final transitionDefinition = await stateDefinition
+        final transitionDefinition = await stateDefinition!
             .findTriggerableTransition(stateDefinition.stateType, event);
         if (transitionDefinition == null) continue;
 
@@ -327,11 +330,11 @@ class StateMachine {
     }
   }
 
-  StateDefinition<State> findStateDefinition(Type stateType) {
+  StateDefinition<State>? findStateDefinition(Type? stateType) {
     return _graph.findStateDefinition(stateType);
   }
 
-  StateDefinition<State> findStateDefinitionFromString(String stateTypeName) {
+  StateDefinition<State>? findStateDefinitionFromString(String stateTypeName) {
     return _graph.findStateDefinitionFromString(stateTypeName);
   }
 
@@ -339,27 +342,34 @@ class StateMachine {
   /// If the state has no ancestors then we return the state.
   /// The VirtualRoot is not considered an ancestor and will
   /// never be returned.
-  Type oldestAncestor(Type state) {
-    final sd = findStateDefinition(state);
+  Type oldestAncestor(Type? state) {
+    final sd = findStateDefinition(state)!;
 
     var ancestor = sd;
 
-    var parent = sd.parent;
+    var parent = sd.parent!;
     while (parent.stateType != VirtualRoot) {
       ancestor = parent;
-      parent = parent.parent;
+      parent = parent.parent!;
     }
 
     return ancestor.stateType;
   }
 
-  Future<void> applyTransitions(StateDefinition<State> from,
-      TransitionDefinition<Event> transitionDefinition, Event event) async {
+  // TransitionNotification<T>? cast<T extends Event>(T def, dynamic x) {
+  //   final t = x is TransitionNotification<T> ? x : null;
+  //   return t;
+  // }
+
+  Future<void> applyTransitions<E extends Event>(StateDefinition<State> from,
+      TransitionDefinition<E> transitionDefinition, Event event) async {
+    /// When an event occurs on a join we need to trigger
     final transitions = transitionDefinition.transitions(_graph, from, event);
 
     for (final transition in transitions) {
+      // final _transition = cast(transition.event, transition)!;
       _stateOfMind =
-          await transitionDefinition.trigger(_graph, _stateOfMind, transition);
+          await transition.definition.trigger(_graph, _stateOfMind, transition);
       _notifyListeners(transition);
     }
   }
@@ -367,8 +377,8 @@ class StateMachine {
   /// Notifiy each transition listener of each transition that has occured.
   void _notifyListeners(TransitionNotification transition) {
     for (final onTransition in _graph.onTransitionListeners) {
-      if (!production) {
-        log('transition: from: ${transition.from.stateType} event: ${transition.event.runtimeType} to: ${transition.to.stateType}');
+      if (!production!) {
+        log('transition: from: ${transition.from.stateType} event: ${transition.event.runtimeType} to: ${transition.to!.stateType}');
       }
 
       onTransition(transition.from, transition.event, transition.to);

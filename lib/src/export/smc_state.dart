@@ -1,5 +1,4 @@
 import 'package:fsm2/src/types.dart';
-import 'package:meta/meta.dart';
 
 import '../definitions/state_definition.dart';
 import '../state_machine.dart';
@@ -7,6 +6,11 @@ import 'exporter.dart';
 import 'smc_transition.dart';
 
 enum Color { none, blue, orange }
+
+extension ColorExt on Color {
+  String get name => toString().split('.')[1].replaceAll('_', ' ');
+}
+
 enum SMCStateType {
   root,
   initial,
@@ -19,11 +23,11 @@ enum SMCStateType {
 }
 
 class SMCState {
-  SMCState parent;
-  StateDefinition<State> sd;
-  String name;
-  String label;
-  SMCStateType type;
+  SMCState? parent;
+  StateDefinition<State>? sd;
+  String? name;
+  String? label;
+  SMCStateType? type;
 
   /// If true then this state and all child states will
   /// be written to new page file.
@@ -38,15 +42,14 @@ class SMCState {
   /// It will appear on the page of its parent and it will
   /// also be the 'top level' state on the new page.
   /// This [pageNo] refers to the page that its parent is on.
-  int pageNo;
+  int pageNo = 0;
 
   /// for a region one of its child are the initial state.
-  String initialChildState;
+  String? initialChildState;
   List<SMCTransition> transitions = <SMCTransition>[];
   List<SMCState> children = <SMCState>[];
 
-  SMCState(
-      {@required this.name, @required this.type, @required this.pageBreak});
+  SMCState({required this.name, required this.type, required this.pageBreak});
 
   /// We say that the state where the page break occurs 'straddles'
   /// two pages. We call this a 'straddle' state.
@@ -74,30 +77,29 @@ class SMCState {
   /// Build the SMSState tree
   ///
   SMCState.build(StateMachine stateMachine, this.parent, this.sd,
-      {@required int page}) {
-    pageBreak = sd.pageBreak;
+      {required int page}) {
+    pageBreak = sd!.pageBreak;
     pageNo = page;
-    assert(pageNo != null);
 
     var childPageNo = pageNo;
     if (pageBreak) childPageNo++;
 
-    if (sd.isLeaf) {
-      name = sd.stateType.toString();
+    if (sd!.isLeaf) {
+      name = sd!.stateType.toString();
       label = name;
       type = SMCStateType.simple;
     } else {
-      if (sd.isCoRegion) {
-        name = '${sd.stateType.toString()}.parallel';
-        label = sd.stateType.toString();
+      if (sd!.isCoRegion) {
+        name = '${sd!.stateType.toString()}.parallel';
+        label = sd!.stateType.toString();
         type = SMCStateType.coregion;
       } else {
-        name = sd.stateType.toString();
+        name = sd!.stateType.toString();
         label = name;
         type = SMCStateType.region;
-        initialChildState = sd.initialState.toString();
+        initialChildState = sd!.initialState.toString();
       }
-      for (final child in sd.childStateDefinitions) {
+      for (final child in sd!.childStateDefinitions) {
         children
             .add(SMCState.build(stateMachine, this, child, page: childPageNo));
       }
@@ -110,19 +112,19 @@ class SMCState {
   /// the original state name.
   ///
   /// e.g. Dead.parallel returns Dead.
-  String get baseName {
+  String? get baseName {
     var baseName = name;
     // if (name.startsWith(']')) {
-    if (sd.isCoRegion) {
+    if (sd!.isCoRegion) {
       /// psudo names are of the form ']state.type]
       /// and we just want the state name.
-      baseName = name.split('.')[0];
+      baseName = name!.split('.')[0];
     }
     return baseName;
   }
 
   void buildTransitions(StateMachine stateMachine) {
-    for (final transition in sd.getTransitions(includeInherited: false)) {
+    for (final transition in sd!.getTransitions(includeInherited: false)) {
       transitions.addAll(SMCTransition.build(stateMachine, this, transition));
     }
   }
@@ -134,7 +136,7 @@ class SMCState {
   ///
   /// write the state to the file.
   ///
-  void write(Exporter exporter, {@required int indent}) {
+  void write(Exporter exporter, {required int indent}) {
     var transitionPage = pageNo;
     var bodyPage = pageNo;
     if (isStraddleState) {
@@ -195,20 +197,20 @@ class SMCState {
       type != SMCStateType.root;
 
   void _writeName(Exporter exporter, int pageNo, int indent,
-      {@required Color color}) {
+      {required Color color}) {
     final line = StringBuffer();
     var closeBracket = false;
     if (name == label || label == null) {
       line.write(name);
       if (color != Color.none) {
         closeBracket = true;
-        line.write(' [color="${color.toString()}"');
+        line.write(' [color="${color.name}"');
       }
     } else {
       closeBracket = true;
       line.write('$name [label="$label"');
       if (color != Color.none) {
-        line.write(' color="${color.toString()}"');
+        line.write(' color="${color.name}"');
       }
     }
     if (closeBracket) {
@@ -229,14 +231,14 @@ class SMCState {
   }
 
   @override
-  String toString() => name;
+  String toString() => name!;
 
   /// Check if this state is a decendant of [other]
   bool isDescendantOf(SMCState other) {
-    var current = this;
+    SMCState current = this;
 
     while (!current.isRoot && current != other) {
-      current = current.parent;
+      current = current.parent!;
     }
 
     /// if we didn't get to the root then we found the other
@@ -273,7 +275,7 @@ class SMCState {
     return branches;
   }
 
-  SMCState findCommonAncestor(_SMCStatePath ourPath, _SMCStatePath otherPath) {
+  SMCState? findCommonAncestor(_SMCStatePath ourPath, _SMCStatePath otherPath) {
     for (final state in ourPath.path) {
       if (otherPath.isInPath(state)) {
         return state;
@@ -287,8 +289,8 @@ class SMCState {
 
   /// Check whether this and other reside on a common page.
   /// We are checking both straddle pages if necessary.
-  int findCommonPage(SMCState other) {
-    final pages = <int>{};
+  int? findCommonPage(SMCState other) {
+    final pages = <int?>{};
 
     pages.add(pageNo);
     if (pages.contains(other.pageNo)) {
@@ -319,8 +321,8 @@ class SMCState {
   }
 
   bool isAncestorOf(SMCState other) {
-    var parent = other;
-    while (parent != this && !parent.isRoot) {
+    SMCState? parent = other;
+    while (parent != this && !parent!.isRoot) {
       parent = parent.parent;
     }
     return parent == this;
@@ -336,7 +338,7 @@ class _SMCStatePath {
     var parent = state;
     while (!parent.isRoot) {
       path.add(parent);
-      parent = parent.parent;
+      parent = parent.parent!;
     }
 
     // add the virtual root.

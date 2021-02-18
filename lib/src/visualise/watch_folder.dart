@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'dart:io';
 
-import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
 enum FolderChangeAction { create, modify, move, delete }
@@ -24,20 +23,17 @@ class WatchFolder {
   /// The file [extension] to filter what we are interested in.
   /// The [extension] should NOT start with a period.
   WatchFolder(
-      {@required this.pathTo,
-      @required this.extension,
+      {required this.pathTo,
+      required this.extension,
       this.recursive = false,
-      @required this.onChanged})
-      : assert(pathTo != null),
-        assert(extension != null),
-        assert(onChanged != null);
+      required this.onChanged});
 
   /// Watches the folder for any changes which involve a file ending
   /// in .[extension]
   void watch() {
     // ignore: avoid_print
     log('watching $pathTo');
-    Directory(pathTo).watch(events: FileSystemEvent.all).listen((event) {
+    Directory(pathTo).watch().listen((event) {
       _controller.add(event);
     });
 
@@ -45,7 +41,7 @@ class WatchFolder {
   }
 
   final _controller = StreamController<FileSystemEvent>();
-  StreamSubscription<FileSystemEvent> subscriber;
+  late StreamSubscription<FileSystemEvent> subscriber;
 
   Future<void> _startDispatcher() async {
     subscriber = _controller.stream.listen((event) async {
@@ -77,9 +73,7 @@ class WatchFolder {
 
   void onCreateEvent(FileSystemCreateEvent event) {
     if (recursive && event.isDirectory) {
-      Directory(event.path)
-          .watch(events: FileSystemEvent.all)
-          .listen((event) => _controller.add(event));
+      Directory(event.path).watch().listen((event) => _controller.add(event));
     } else {
       // if (lastDeleted != null) {
       //   if (basename(event.path) == basename(lastDeleted)) {

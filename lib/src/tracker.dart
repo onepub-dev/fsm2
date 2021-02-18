@@ -4,7 +4,7 @@ import 'state_of_mind.dart';
 import 'types.dart';
 
 class Tracker {
-  StackTraceImpl stackTrace;
+  StackTraceImpl? stackTrace;
 
   StateOfMind stateOfMind;
   Event transitionedBy;

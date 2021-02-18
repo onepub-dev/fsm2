@@ -1,10 +1,8 @@
-import 'package:meta/meta.dart';
-
 import 'smc_state.dart';
 
 class SMCPseudoState extends SMCState {
-  SMCPseudoState(SMCState owner,
-      {@required String name, @required SMCStateType type})
+  SMCPseudoState(SMCState? owner,
+      {required String name, required SMCStateType type})
       : super(name: name, type: type, pageBreak: false) {
     super.parent = owner;
   }
@@ -12,7 +10,7 @@ class SMCPseudoState extends SMCState {
 
 class SMCInitialState extends SMCPseudoState {
   static const initial = 'initial';
-  SMCInitialState(SMCState owner, Type stateType)
+  SMCInitialState(SMCState? owner, Type stateType)
       : super(owner, name: stateType.toString(), type: SMCStateType.initial);
 
   @override
@@ -42,7 +40,7 @@ class SMCJoinState extends SMCPseudoState {
 class SMCTerminalState extends SMCPseudoState {
   static const finalState = 'final';
 
-  SMCTerminalState(SMCState owner, Type type)
+  SMCTerminalState(SMCState? owner, Type type)
       : super(owner, name: type.toString(), type: SMCStateType.terminal);
 
   @override

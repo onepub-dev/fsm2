@@ -17,7 +17,7 @@ class StateBuilder<S extends State> {
 
   /// The initial state for the substate
   /// If there are no child states then this is just 'this'.
-  Type _initialState;
+  Type? _initialState;
 
   StateBuilder(StateDefinition parent, this._stateDefinition) {
     _stateDefinition.setParent(parent);
@@ -61,10 +61,10 @@ class StateBuilder<S extends State> {
   /// The [conditionLabel] is optional and is only used when exporting. The [conditionLabel] is used
   /// to annotate the transition on the diagram.
   void on<E extends Event, TOSTATE extends State>(
-      {GuardCondition<E> condition,
-      SideEffect<E> sideEffect,
-      String conditionLabel,
-      String sideEffectLabel}) {
+      {GuardCondition<E>? condition,
+      SideEffect<E>? sideEffect,
+      String? conditionLabel,
+      String? sideEffectLabel}) {
     final onTransition = OnTransitionDefinition<S, E, TOSTATE>(
         _stateDefinition, condition, TOSTATE, sideEffect,
         conditionLabel: conditionLabel, sideEffectLabel: sideEffectLabel);
@@ -109,7 +109,7 @@ class StateBuilder<S extends State> {
   /// Used to enter a co-region by targeting the set of states within the
   /// coregion to transition to.
   void onFork<E extends Event>(BuildFork<E> buildFork,
-      {Function(State, E) condition}) {
+      {Function(State, E)? condition}) {
     final builder = ForkBuilder<E>();
     buildFork(builder);
     final definition = builder.build();
@@ -122,7 +122,7 @@ class StateBuilder<S extends State> {
   /// Adds an event to the set of events that must be triggered to leave the owner[coregion].
   /// Every onJoin in a coregion must target the same external state.
   void onJoin<E extends Event, TOSTATE extends State>(
-      {GuardCondition<E> condition, SideEffect sideEffect}) {
+      {GuardCondition<E>? condition, SideEffect? sideEffect}) {
     final onTransition = JoinTransitionDefinition<S, E, TOSTATE>(
         _stateDefinition, condition, sideEffect);
 
@@ -130,13 +130,13 @@ class StateBuilder<S extends State> {
   }
 
   /// Sets callback that will be called right after machine enters this State.
-  void onEnter(OnEnter onEnter, {String label}) {
+  void onEnter(OnEnter onEnter, {String? label}) {
     _stateDefinition.onEnter = onEnter;
     _stateDefinition.onEnterLabel = label;
   }
 
   /// Sets callback that will be called right before machine exits this State.
-  void onExit(OnExit onExit, {String label}) {
+  void onExit(OnExit onExit, {String? label}) {
     _stateDefinition.onExit = onExit;
     _stateDefinition.onExitLabel = label;
   }

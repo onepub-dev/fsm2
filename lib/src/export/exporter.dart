@@ -1,15 +1,13 @@
 import 'dart:io';
 
-import 'package:meta/meta.dart';
-
 abstract class Exporter {
   /// writes to a new line by writting a leading \n
   /// and the writing [indent]  tabs.
   void write(String string,
-      {@required int indent, @required int page, bool endOfLine = false});
+      {required int indent, required int? page, bool endOfLine = false});
 
   /// append to an existing line
-  void append(String string, {@required int page, bool endOfLine = false});
+  void append(String string, {required int? page, bool endOfLine = false});
 }
 
 class ExportedPages {
@@ -27,7 +25,7 @@ class ExportedPages {
 
 class ExportedPage {
   final String path;
-  RandomAccessFile raf;
+  late RandomAccessFile raf;
 
   ExportedPage(this.path) {
     final file = File(path);

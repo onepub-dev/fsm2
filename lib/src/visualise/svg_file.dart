@@ -9,11 +9,11 @@ import 'size.dart';
 class SvgFile {
   String pathTo;
 
-  int pageNo;
+  late int pageNo;
 
-  Size _size;
+  Size? _size;
 
-  DateTime _lastModified;
+  DateTime? _lastModified;
 
   SvgFile(this.pathTo) {
     pageNo = extractPageNo(pathTo);
@@ -24,31 +24,31 @@ class SvgFile {
     return _lastModified != lastModified;
   }
 
-  int get width => size.width;
+  int? get width => size.width;
 
-  int get height => size.height;
+  int? get height => size.height;
 
   void reload() {}
 
-  Future<void> show({Progress progress}) async {
+  Future<void> show({Progress? progress}) async {
     progress ??= noOp;
 
     final filename = basename(pathTo);
     final workingDir = dirname(pathTo);
 
     final Process process = await Process.start('firefox', [filename],
-        workingDirectory: workingDir, mode: ProcessStartMode.normal);
+        workingDirectory: workingDir);
 
     process.stdout.transform(utf8.decoder).listen((data) {
-      progress(data);
+      progress!(data);
     });
 
     process.stderr.transform(utf8.decoder).listen((data) {
-      progress(data);
+      progress!(data);
     });
   }
 
-  DateTime get lastModified {
+  DateTime? get lastModified {
     if (_lastModified == null) {
       if (exists(pathTo)) {
         _lastModified = File(pathTo).lastModifiedSync();
@@ -66,7 +66,7 @@ class SvgFile {
     await _addInkscapeNamespace(pathTo);
 
     const xPos = 40;
-    final yPos = size.height + 20;
+    final yPos = size.height! + 20;
     final svgPageNo = '''
     <text
      xml:space="preserve"
@@ -160,7 +160,7 @@ class SvgFile {
     return lines;
   }
 
-  int getAttributeInt(String attribute) {
+  int? getAttributeInt(String attribute) {
     final parts = attribute.split('=');
     assert(parts.length == 2);
 
@@ -189,7 +189,7 @@ class SvgFile {
 
       final backupPath = '$svgPath.bak';
       final backupFile = File(backupPath);
-      final backup = backupFile.openWrite(mode: FileMode.write);
+      final backup = backupFile.openWrite();
 
       for (final line in lines) {
         backup.writeln(line.replaceAll(existing, replacement));
@@ -210,20 +210,20 @@ class SvgFile {
   @override
   String toString() => pathTo;
 
-  static Future<void> showList(List<SvgFile> files, {Progress progress}) async {
+  static Future<void> showList(List<SvgFile> files,
+      {Progress? progress}) async {
     progress ??= noOp;
 
     final paths = files.map((file) => file.pathTo).toList();
 
-    final Process process =
-        await Process.start('firefox', paths, mode: ProcessStartMode.normal);
+    final Process process = await Process.start('firefox', paths);
 
     process.stdout.transform(utf8.decoder).listen((data) {
-      progress(data);
+      progress!(data);
     });
 
     process.stderr.transform(utf8.decoder).listen((data) {
-      progress(data);
+      progress!(data);
     });
   }
 }

@@ -8,9 +8,9 @@ import 'package:path/path.dart' as p;
 
 class SMCatFile {
   String pathTo;
-  int pageNo;
+  int? pageNo;
 
-  SvgFile _svgFile;
+  SvgFile? _svgFile;
   SMCatFile(this.pathTo) {
     pageNo = extractPageNo(pathTo);
   }
@@ -28,9 +28,9 @@ class SMCatFile {
     return _svgFile ?? SvgFile(svgPath);
   }
 
-  int get height => svgFile.height;
+  int? get height => svgFile.height;
 
-  int get width => svgFile.width;
+  int? get width => svgFile.width;
 
   /// creates an Svg image from the smcat file.
   ///
@@ -38,7 +38,7 @@ class SMCatFile {
   ///
   /// Throws [SMCatException if the conversion fails]
   ///
-  Future<SvgFile> convert({Progress progress}) async {
+  Future<SvgFile?> convert({Progress? progress}) async {
     /// default no op progress
     progress ??= noOp;
 
@@ -53,11 +53,11 @@ class SMCatFile {
         workingDirectory: p.dirname(pathTo));
 
     process.stdout.transform(utf8.decoder).listen((data) {
-      progress(data);
+      progress!(data);
     });
 
     process.stderr.transform(utf8.decoder).listen((data) {
-      if (!data.contains('viz.js:33')) progress(data);
+      if (!data.contains('viz.js:33')) progress!(data);
     });
 
     final int exitCode = await process.exitCode;
@@ -66,7 +66,7 @@ class SMCatFile {
       /// See if the filename contains a page no.
       progress('Generation of $svgPath complete.');
       _svgFile = SvgFile(svgPath);
-      await _svgFile.addPageNo();
+      await _svgFile!.addPageNo();
       return _svgFile;
     } else {
       progress('Generation of $svgPath failed.');
@@ -77,7 +77,7 @@ class SMCatFile {
   }
 
   int compareTo(SMCatFile other) {
-    return pageNo - other.pageNo;
+    return pageNo! - other.pageNo!;
   }
 
   @override

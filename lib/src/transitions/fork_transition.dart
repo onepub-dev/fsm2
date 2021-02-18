@@ -22,14 +22,16 @@ class ForkTransitionDefinition<S extends State, E extends Event>
   List<Type> get triggerEvents => [E];
 
   @override
-  List<TransitionNotification> transitions(
+  List<TransitionNotification<E>> transitions(
       Graph graph, StateDefinition from, Event event) {
-    final transitions = <TransitionNotification>[];
+    final transitions = <TransitionNotification<E>>[];
     for (final targetState in targetStates) {
       final targetDefinition = graph.findStateDefinition(targetState);
 
+      final E _event = event as E;
+
       final notification =
-          TransitionNotification(from, event, targetDefinition);
+          TransitionNotification<E>(this, from, _event, targetDefinition);
       if (notification.event != event) {
         notification.skipExit = true;
       }

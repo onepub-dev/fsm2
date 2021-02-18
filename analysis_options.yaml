@@ -15,6 +15,10 @@ linter:
     await_only_futures: true
     unawaited_futures: true
     comment_references: true
+
+    prefer_void_to_null: true
+
+    void_checks: true
   
 
 analyzer:

@@ -19,19 +19,19 @@ abstract class TransitionDefinition< // S extends State,
   /// event will be triggered. Null conditions are always the last [condition]
   /// to be evaulated against an event, so any other [condition] that returns true
   /// will be fired in preference to a null [condition].
-  final GuardCondition<E> condition;
+  final GuardCondition<E>? condition;
 
   /// An optional label used only on the exported diagrams to given the [condition]
   /// a descriptive label.  @See [label]
-  final String conditionLabel;
+  final String? conditionLabel;
 
   /// The [SideEffect] function to call when this choice is
   /// selected as the transition.
-  final SideEffect<E> sideEffect;
+  final SideEffect<E>? sideEffect;
 
   /// An optional label used only on the exported diagrams to given the [sideEffect]
   /// a descriptive label.  @See [label]
-  final String sideEffectLabel;
+  final String? sideEffectLabel;
 
   /// list of the target states the will be transitioned into.
   List<Type> get targetStates;
@@ -91,9 +91,8 @@ abstract class TransitionDefinition< // S extends State,
     final exitPaths = <PartialStatePath>[];
     final enterPaths = <PartialStatePath>[];
 
-    //for (final targetState in targetStates) {
     final fromPath = StatePath.fromLeaf(graph, transition.from.stateType);
-    final toPath = StatePath.fromLeaf(graph, transition.to.stateType);
+    final toPath = StatePath.fromLeaf(graph, transition.to!.stateType);
 
     final commonAncestor = findCommonAncestor(graph, fromPath, toPath);
 
@@ -108,10 +107,11 @@ abstract class TransitionDefinition< // S extends State,
     final exitStates = dedupPaths(exitPaths);
     final enterStates = dedupPaths(enterPaths);
 
-    final fromStateDefinition = graph.stateDefinitions[transition.from];
+    final fromStateDefinition =
+        graph.stateDefinitions[transition.from.runtimeType];
     await callOnExits(fromStateDefinition, transition.event, exitStates);
 
-    if (sideEffect != null) await sideEffect(transition.event);
+    if (sideEffect != null) await sideEffect!(transition.event);
 
     // when entering we must start from the root and work
     // towards the leaf.
@@ -142,11 +142,11 @@ abstract class TransitionDefinition< // S extends State,
   ///
   ///
   PartialStatePath getExitPath(
-      StatePath fromAncestors, StateDefinition commonAncestor) {
+      StatePath fromAncestors, StateDefinition? commonAncestor) {
     final exitTargets = PartialStatePath();
 
     for (final fromAncestor in fromAncestors.path) {
-      if (fromAncestor.stateType == commonAncestor.stateType) break;
+      if (fromAncestor.stateType == commonAncestor!.stateType) break;
 
       exitTargets.addAncestor(fromAncestor);
     }
@@ -156,11 +156,11 @@ abstract class TransitionDefinition< // S extends State,
   ///
   ///
   PartialStatePath getEnterPath(
-      StatePath toAncestors, StateDefinition commonAncestor) {
+      StatePath toAncestors, StateDefinition? commonAncestor) {
     final enterTargets = PartialStatePath();
 
     for (final toAncestor in toAncestors.path) {
-      if (toAncestor.stateType == commonAncestor.stateType) break;
+      if (toAncestor.stateType == commonAncestor!.stateType) break;
 
       enterTargets.addAncestor(toAncestor);
     }
@@ -171,7 +171,7 @@ abstract class TransitionDefinition< // S extends State,
   /// to the [fromAncestors] and [toAncestors] paths.
   ///
   /// If no common ancestor is found then null is returned;
-  StateDefinition findCommonAncestor(
+  StateDefinition? findCommonAncestor(
       Graph graph, StatePath fromAncestors, StatePath toAncestors) {
     final toAncestorSet = toAncestors.path.toSet();
 
@@ -188,7 +188,7 @@ abstract class TransitionDefinition< // S extends State,
   /// for each ancestor up to but not including the common
   /// ancestor of the state we are entering.
   ///
-  Future<void> callOnExits(StateDefinition fromState, Event event,
+  Future<void> callOnExits(StateDefinition? fromState, Event event,
       List<StateDefinition> states) async {
     for (final fromState in states) {
       await onExit(fromState, fromState.stateType, event);
