@@ -1,6 +1,5 @@
 import 'dart:io';
 
-
 abstract class Exporter {
   /// writes to a new line by writting a leading \n
   /// and the writing [indent]  tabs.

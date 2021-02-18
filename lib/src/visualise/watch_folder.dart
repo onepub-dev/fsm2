@@ -73,9 +73,7 @@ class WatchFolder {
 
   void onCreateEvent(FileSystemCreateEvent event) {
     if (recursive && event.isDirectory) {
-      Directory(event.path)
-          .watch()
-          .listen((event) => _controller.add(event));
+      Directory(event.path).watch().listen((event) => _controller.add(event));
     } else {
       // if (lastDeleted != null) {
       //   if (basename(event.path) == basename(lastDeleted)) {

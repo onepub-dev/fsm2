@@ -210,13 +210,13 @@ class SvgFile {
   @override
   String toString() => pathTo;
 
-  static Future<void> showList(List<SvgFile> files, {Progress? progress}) async {
+  static Future<void> showList(List<SvgFile> files,
+      {Progress? progress}) async {
     progress ??= noOp;
 
     final paths = files.map((file) => file.pathTo).toList();
 
-    final Process process =
-        await Process.start('firefox', paths);
+    final Process process = await Process.start('firefox', paths);
 
     process.stdout.transform(utf8.decoder).listen((data) {
       progress!(data);

@@ -7,8 +7,6 @@ import 'mock_watcher.dart';
 import 'watcher.dart';
 
 @GenerateMocks([Watcher])
-
-
 void main() {
   late MockWatcher watcher;
   late Human human;

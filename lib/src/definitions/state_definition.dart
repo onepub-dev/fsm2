@@ -133,8 +133,7 @@ class StateDefinition<S extends State> {
     var parent = this.parent;
     while (transitionDefinition is NoOpTransitionDefinition &&
         parent!.stateType != VirtualRoot) {
-      transitionDefinition = await parent._evaluateTransitions(event)
-          ;
+      transitionDefinition = await parent._evaluateTransitions(event);
       parent = parent.parent;
     }
 
@@ -149,7 +148,7 @@ class StateDefinition<S extends State> {
         as List<TransitionDefinition<E>>?;
 
     if (transitionChoices == null) {
-      return NoOpTransitionDefinition< E>(this, E);
+      return NoOpTransitionDefinition<E>(this, E);
     }
 
     return _evaluateConditions(transitionChoices, event);
@@ -175,7 +174,7 @@ class StateDefinition<S extends State> {
         }
       }
     }
-    return NoOpTransitionDefinition< E>(this, E);
+    return NoOpTransitionDefinition<E>(this, E);
   }
 
   /// A state is a terminal state if it has no transitions and
