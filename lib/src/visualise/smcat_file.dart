@@ -8,7 +8,7 @@ import 'package:path/path.dart' as p;
 
 class SMCatFile {
   String pathTo;
-  int? pageNo;
+  int pageNo = 0;
 
   SvgFile? _svgFile;
   SMCatFile(this.pathTo) {
@@ -77,7 +77,7 @@ class SMCatFile {
   }
 
   int compareTo(SMCatFile other) {
-    return pageNo! - other.pageNo!;
+    return pageNo - other.pageNo;
   }
 
   @override
