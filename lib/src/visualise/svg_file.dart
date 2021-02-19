@@ -67,7 +67,7 @@ class SvgFile {
     await _addInkscapeNamespace(pathTo);
 
     const xPos = 40;
-    final yPos = size.height! + 20;
+    final yPos = size.height + 20;
     final svgPageNo = '''
     <text
      xml:space="preserve"
@@ -165,7 +165,7 @@ class SvgFile {
     return lines;
   }
 
-  int? getAttributeInt(String attribute) {
+  int getAttributeInt(String attribute) {
     final parts = attribute.split('=');
     assert(parts.length == 2);
 
@@ -174,7 +174,7 @@ class SvgFile {
     pts = pts.replaceAll('px', '');
     pts = pts.replaceAll('"', '');
 
-    return int.tryParse(pts);
+    return int.tryParse(pts) ?? 1000;
   }
 
   @override
