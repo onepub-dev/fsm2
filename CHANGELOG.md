@@ -1,3 +1,9 @@
+# 2.0.1
+A few more fields converted to not nullable.
+Maded size not null and getAttributeInt not null.
+made size not nullable.
+made pageno not null
+
 
 # 2.0.0
 completed migration to nnbd. all unit tests passing.
