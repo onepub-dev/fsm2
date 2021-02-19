@@ -31,9 +31,7 @@ class SvgFile {
 
   void reload() {}
 
-  Future<void> show({Progress? progress}) async {
-    progress ??= noOp;
-
+  Future<void> show({Progress progress = noOp}) async {
     final filename = basename(pathTo);
     final workingDir = dirname(pathTo);
 
@@ -41,15 +39,15 @@ class SvgFile {
         workingDirectory: workingDir);
 
     process.stdout.transform(utf8.decoder).listen((data) {
-      progress!(data);
+      progress(data);
     });
 
     process.stderr.transform(utf8.decoder).listen((data) {
-      progress!(data);
+      progress(data);
     });
   }
 
-  DateTime? get lastModified {
+  DateTime get lastModified {
     if (_lastModified == null) {
       if (exists(pathTo)) {
         _lastModified = File(pathTo).lastModifiedSync();
@@ -58,7 +56,7 @@ class SvgFile {
       }
     }
 
-    return _lastModified;
+    return _lastModified!;
   }
 
   /// Add a page no. at the top of the page.
