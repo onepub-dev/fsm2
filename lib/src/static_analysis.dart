@@ -140,7 +140,7 @@ bool analyse(Graph graph) {
   /// and that they only target states that are external to the coregion
   // TODO:
 
-  /// InitialStates MUST target a child state (i.e. they can't target a grand children)
+  /// InitialStates MUST target a child state (i.e. they can't target a grandchildren)
   for (final stateDefinition in stateDefinitionMap.values) {
     if (stateDefinition.initialState == null) continue;
     if (!stateDefinition.isChild(stateDefinition.initialState)) {
