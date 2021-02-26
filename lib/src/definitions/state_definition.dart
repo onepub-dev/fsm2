@@ -269,7 +269,8 @@ class StateDefinition<S extends State> {
       {bool includeChildren = true}) {
     StateDefinition? found;
     for (final stateDefinition in childStateDefinitions) {
-      if (stateDefinition.stateType == stateDefinitionType) {
+      if (stateDefinition.stateType.toString() ==
+          stateDefinitionType.toString()) {
         found = stateDefinition;
         break;
       } else {
