@@ -310,10 +310,10 @@ class SMCTransition {
     //   matcher = name.split('.')[0].substring(1);
     // }
 
-     final state =  findInTree<SMCState>(root, (node) => node.children,
+    final state = findInTree<SMCState>(root, (node) => node.children,
         (child) => child.baseName == stateType.toString());
 
-         if (state == null) {
+    if (state == null) {
       throw SMCatException(
           'FSM is in an inconsistent state. Unable to find state $stateType for ${owner.type}');
     }

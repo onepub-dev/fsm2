@@ -1,3 +1,6 @@
+# 1.0.1
+Back ported changes from 2.0.0
+
 # 1.0.0
 First stable release of fsm2.
 

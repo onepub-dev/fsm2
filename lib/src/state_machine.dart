@@ -111,7 +111,7 @@ class StateMachine {
   }
 
   StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
-    TransitionDefinition<InitialEvent> get initialTransition =>
+  TransitionDefinition<InitialEvent> get initialTransition =>
       OnTransitionDefinition(virtualRoot, null, VirtualRoot, null);
 
   bool _loadStateOfMind(StateDefinition<State> initialState) {
@@ -380,7 +380,6 @@ class StateMachine {
     }
   }
 }
-
 
 class _QueuedEvent {
   Event event;
