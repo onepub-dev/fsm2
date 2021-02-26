@@ -144,7 +144,7 @@ CoRegionBuilder<MobileAndRegistrationTypeAcquired>
       ..state<MobileNoAcquired>((builder) => builder
         //..pageBreak
         ..onEnter((s, e) async => fetchUserDetails())
-        ..on<OnMobileValidated, AcquireUser>()
+        ..on<OnMobileActivated, AcquireUser>()
 
         /// we fetch the user's state based on their mobile.
         ..state<AcquireUser>((builder) => builder
@@ -335,7 +335,7 @@ class OnViableInvitiationFound implements Event {}
 
 class OnUserEnteredMobile implements Event {}
 
-class OnMobileValidated implements Event {}
+class OnMobileActivated implements Event {}
 
 class OnUserDisabled implements Event {}
 
