@@ -49,7 +49,11 @@ class PartialStatePath {
   @override
   int get hashCode {
     // ignore: join_return_with_assignment
-    _hashCode ??= _path.fold(0, (hash, def) => hash += def.stateType.hashCode);
+    _hashCode ??= _path.fold(0, (hash, def) {
+      var _hash = hash;
+      return _hash += def.stateType.hashCode;
+    });
+
     return _hashCode;
   }
 }

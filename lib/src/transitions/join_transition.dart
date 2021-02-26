@@ -70,15 +70,14 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   @override
   List<TransitionNotification> transitions(
       Graph graph, StateDefinition from, Event event) {
-    final transitions = <TransitionNotification>[];
-    // join only ever has one target state.
-    final targetState = targetStates[0];
-    final targetStateDefinition = graph.findStateDefinition(targetState);
+    final List<TransitionNotification> transitions = <TransitionNotification>[];
 
-    // however we have multiple sources
+    // Gather all of the other transition in the coregion defined by onJoins
+    // TODO: what about states that don't have an onjoin do we need
+    // create transitions for each of those?
     for (final join in coregion.joinTransitions) {
-      final notification = TransitionNotification(
-          join.fromStateDefinition, join._triggeredBy, targetStateDefinition);
+      final notification = join.buildTransitionNotification(graph);
+
       if (notification.event != event) {
         notification.skipEnter = true;
       }
@@ -86,5 +85,14 @@ class JoinTransitionDefinition<S extends State, E extends Event,
     }
 
     return transitions;
+  }
+
+  TransitionNotification<E> buildTransitionNotification(Graph graph) {
+    // join only ever has one target state.
+    final targetState = targetStates[0];
+    final targetStateDefinition = graph.findStateDefinition(targetState);
+
+    return TransitionNotification<E>(
+        this, fromStateDefinition, _triggeredBy, targetStateDefinition);
   }
 }

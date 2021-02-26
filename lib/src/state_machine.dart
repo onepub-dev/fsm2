@@ -18,6 +18,7 @@ import 'graph.dart';
 import 'state_path.dart';
 import 'static_analysis.dart' as analysis;
 import 'tracker.dart';
+import 'transitions/on_transition.dart';
 import 'transitions/transition_definition.dart';
 import 'virtual_root.dart';
 
@@ -110,12 +111,14 @@ class StateMachine {
   }
 
   StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
+    TransitionDefinition<InitialEvent> get initialTransition =>
+      OnTransitionDefinition(virtualRoot, null, VirtualRoot, null);
 
   bool _loadStateOfMind(StateDefinition<State> initialState) {
     initialState.onEnter(initialState.stateType, initialEvent);
 
-    final transition =
-        TransitionNotification(virtualRoot, initialEvent, initialState);
+    final transition = TransitionNotification(
+        initialTransition, virtualRoot, initialEvent, initialState);
     _notifyListeners(transition);
     if (initialState.isLeaf) {
       addPath(_stateOfMind, StatePath.fromLeaf(_graph, initialState.stateType));
@@ -353,13 +356,15 @@ class StateMachine {
     return ancestor.stateType;
   }
 
-  Future<void> applyTransitions(StateDefinition<State> from,
-      TransitionDefinition<Event> transitionDefinition, Event event) async {
+  Future<void> applyTransitions<E extends Event>(StateDefinition<State> from,
+      TransitionDefinition<E> transitionDefinition, Event event) async {
+    /// When an event occurs on a join we need to trigger
     final transitions = transitionDefinition.transitions(_graph, from, event);
 
     for (final transition in transitions) {
+      // final _transition = cast(transition.event, transition)!;
       _stateOfMind =
-          await transitionDefinition.trigger(_graph, _stateOfMind, transition);
+          await transition.definition.trigger(_graph, _stateOfMind, transition);
       _notifyListeners(transition);
     }
   }
@@ -375,6 +380,7 @@ class StateMachine {
     }
   }
 }
+
 
 class _QueuedEvent {
   Event event;

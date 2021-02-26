@@ -11,6 +11,7 @@ class SvgFile {
 
   int pageNo;
 
+  bool _hasSize = false;
   Size _size;
 
   DateTime _lastModified;
@@ -118,7 +119,11 @@ class SvgFile {
   }
 
   Size get size {
-    return _size ??= _getPageSize();
+    if (!_hasSize) {
+      _size = _getPageSize();
+      _hasSize = true;
+    }
+    return _size;
   }
 
   /// gets the page height from the svg file.
