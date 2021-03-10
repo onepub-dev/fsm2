@@ -1,3 +1,5 @@
+# 2.0.2
+
 # 2.0.0
 Migrated to nnbd.
 Added option to force regeneration.
