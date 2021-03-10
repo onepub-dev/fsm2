@@ -32,7 +32,7 @@ class CoRegionDefinition<S extends State> extends StateDefinition<S> {
   }
 
   /// There can only be one join target state.
-  Type _joinTargetState;
+  Type? _joinTargetState;
 
   List<JoinTransitionDefinition<State, Event, State>> joinTransitions =
       <JoinTransitionDefinition>[];

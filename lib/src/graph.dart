@@ -11,8 +11,8 @@ class Graph {
             _expandStateDefinitions(virtualRoot, topStateDefinitions);
 
   StateDefinition<VirtualRoot> virtualRoot;
-  Type initialState;
-  String initialStateLabel;
+  Type? initialState;
+  String? initialStateLabel;
 
   /// a full set of stateDefinitions including nested and coregions.
   final Map<Type, StateDefinition> stateDefinitions;
@@ -25,18 +25,18 @@ class Graph {
 
   /// searches the entire tree of [StateDefinition] looking for a matching
   /// state.
-  StateDefinition findStateDefinition(Type runtimeType) =>
-      stateDefinitions[runtimeType];
+  StateDefinition? findStateDefinition(Type? runtimeType) =>
+      stateDefinitions[runtimeType!];
 
   /// Checks if the given [stateType] is a top level state.
-  bool isTopLevelState(Type stateType) {
+  bool isTopLevelState(Type? stateType) {
     for (final sd in topStateDefinitions) {
       if (sd.stateType == stateType) return true;
     }
     return false;
   }
 
-  StateDefinition findStateDefinitionFromString(String stateTypeName) {
+  StateDefinition? findStateDefinitionFromString(String stateTypeName) {
     for (final state in stateDefinitions.values) {
       if (state.stateType.toString() == stateTypeName) {
         return state;
@@ -78,9 +78,8 @@ class Graph {
   }
 
   /// Get's the parent of the given state
-  Type getParent(Type childState) {
-    final def = findStateDefinition(childState);
-    assert(def != null);
+  Type? getParent(Type? childState) {
+    final def = findStateDefinition(childState)!;
 
     return def.parent?.stateType;
   }

@@ -4,19 +4,14 @@ import 'package:fsm2/fsm2.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-class Watcher extends Mock {
-  Future<void> onEnter(Type fromState, Event event);
-  Future<void> onExit(Type toState, Event event);
-
-  void log(String message);
-}
+import 'watcher.mocks.dart';
 
 void main() {
-  Watcher watcher;
-  Human human;
+  late MockWatcher watcher;
+  late Human human;
 
   setUp(() {
-    watcher = Watcher();
+    watcher = MockWatcher();
     human = Human();
   });
 
@@ -36,8 +31,8 @@ void main() {
       transitions.addAll(tds);
       states[sd] = sd;
     }, includeInherited: false);
-    expect(states.length, equals(13));
-    expect(transitions.length, equals(7));
+    expect(states.length, equals(14));
+    expect(transitions.length, equals(8));
     expect(machine.isInState<Alive>(), equals(true));
   });
 
@@ -74,7 +69,7 @@ void main() {
   });
 
   test('Invalid transition', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
     final machine = await _createMachine<Dead>(watcher, human);
     try {
       machine.applyEvent(OnBirthday());
@@ -83,6 +78,21 @@ void main() {
     } catch (e) {
       expect(e, isA<InvalidTransitionException>());
     }
+  });
+
+  test('Transition to child state', () async {
+    final machine = await _createMachine<Alive>(watcher, human);
+    machine.applyEvent(OnDeath());
+    await machine.waitUntilQuiescent;
+    expect(machine.isInState<Purgatory>(), equals(true));
+    machine.applyEvent(OnJudged(Judgement.morallyAmbiguous));
+    await machine.waitUntilQuiescent;
+    expect(machine.isInState<Matrix>(), equals(true));
+    expect(machine.isInState<Dead>(), equals(true));
+    expect(machine.isInState<Purgatory>(), equals(true));
+
+    /// We should be MiddleAged but Alive should not be a separate path.
+    expect(machine.stateOfMind.activeLeafStates().length, 1);
   });
 
   test('Unreachable State.', () async {
@@ -96,7 +106,7 @@ void main() {
   });
 
   test('Transition in nested state.', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
     final machine = await _createMachine<Dead>(watcher, human);
 
     machine.applyEvent(OnJudged(Judgement.good));
@@ -108,7 +118,7 @@ void main() {
   });
 
   test('calls onExit/onEnter', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
     final machine = await _createMachine<Alive>(watcher, human);
 
     /// age this boy until they are middle aged.
@@ -122,7 +132,7 @@ void main() {
   });
 
   test('Test onExit/onEnter for nested state change', () async {
-    final watcher = Watcher();
+    final watcher = MockWatcher();
     final machine = await _createMachine<Alive>(watcher, human);
 
     /// age this boy until they are middle aged.
@@ -149,7 +159,7 @@ void main() {
 }
 
 Future<StateMachine> _createMachine<S extends State>(
-  Watcher watcher,
+  MockWatcher watcher,
   Human human,
 ) async {
   final machine = StateMachine.create((g) => g
@@ -182,7 +192,10 @@ Future<StateMachine> _createMachine<S extends State>(
             condition: (e) => e.judgement == Judgement.good)
         ..on<OnJudged, Catholic>(condition: (e) => e.judgement == Judgement.bad)
         ..on<OnJudged, SalvationArmy>(
-            condition: (e) => e.judgement == Judgement.ugly))
+            condition: (e) => e.judgement == Judgement.ugly)
+        ..on<OnJudged, Matrix>(
+            condition: (e) => e.judgement == Judgement.morallyAmbiguous)
+        ..state<Matrix>((_) {}))
       ..state<InHeaven>((b) => b..state<Buddhist>((b) => b))
       ..state<InHell>((b) => b
         ..state<Christian>(
@@ -207,6 +220,8 @@ class Old implements State {}
 
 class Purgatory implements State {}
 
+class Matrix implements State {}
+
 class InHeaven implements State {}
 
 class InHell implements State {}
@@ -225,7 +240,7 @@ class OnBirthday implements Event {}
 
 class OnDeath implements Event {}
 
-enum Judgement { good, bad, ugly }
+enum Judgement { good, bad, ugly, morallyAmbiguous }
 
 class OnJudged implements Event {
   Judgement judgement;
@@ -247,9 +262,12 @@ Alive {
 },
 Dead {
 	Purgatory {
+		Matrix;
+		Matrix.initial => Matrix;
 		Purgatory => Buddhist : OnJudged;
 		Purgatory => Catholic : OnJudged;
 		Purgatory => SalvationArmy : OnJudged;
+		Purgatory => Matrix : OnJudged;
 	},
 	InHeaven {
 		Buddhist;

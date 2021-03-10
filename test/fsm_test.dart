@@ -4,7 +4,7 @@ import 'package:fsm2/src/types.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-import 'mock_watcher.dart';
+import 'watcher.mocks.dart';
 
 class Solid implements State {}
 
@@ -21,7 +21,7 @@ class OnVaporized implements Event {}
 class OnCondensed implements Event {}
 
 void main() {
-  MockWatcher watcher;
+  late MockWatcher watcher;
 
   setUp(() {
     watcher = MockWatcher();
@@ -125,11 +125,11 @@ StateMachine _createMachine<S extends State>(
           ..state<Solid>((b) => b
             ..on<OnMelted, Liquid>(
                 sideEffect: (e) async => watcher.log(onMeltedMessage))
-            ..onEnter((s, e) async => watcher?.onEnter(s, e))
-            ..onExit((s, e) async => watcher?.onExit(s, e)))
+            ..onEnter((s, e) async => watcher.onEnter(s, e))
+            ..onExit((s, e) async => watcher.onExit(s, e)))
           ..state<Liquid>((b) => b
-            ..onEnter((s, e) async => watcher?.onEnter(s, e))
-            ..onExit((s, e) async => watcher?.onExit(s, e))
+            ..onEnter((s, e) async => watcher.onEnter(s, e))
+            ..onExit((s, e) async => watcher.onExit(s, e))
             ..on<OnFroze, Solid>(
                 sideEffect: (e) async => watcher.log(onFrozenMessage))
             ..on<OnVaporized, Gas>(

@@ -6,9 +6,9 @@ import '../types.dart';
 
 class TransitionNotification<E extends Event> {
   TransitionDefinition<E> definition;
-  StateDefinition from;
+  StateDefinition? from;
   E event;
-  StateDefinition to;
+  StateDefinition? to;
   TransitionNotification(this.definition, this.from, this.event, this.to);
 
   /// Some transitions (fork/join) cause multiple transitions to/from a state.

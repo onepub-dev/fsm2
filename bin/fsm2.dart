@@ -17,7 +17,7 @@ import 'package:path/path.dart';
 /// For details on installing dcli.
 ///
 // ignore_for_file: avoid_print
-Future<void> main(List<String> args) async {
+void main(List<String> args) {
   final parser = ArgParser();
   parser.addFlag(
     'verbose',
@@ -74,27 +74,33 @@ Future<void> main(List<String> args) async {
         'You must pass a to path the basename of the smcat file. e.g. test/life_cycle'));
     showUsage(parser);
   }
+
+  final show = parsed.wasParsed('show');
+
+  final watch = parsed.wasParsed('watch');
+
   final pathTo = parsed.rest[0];
   final folder =
       SMCatFolder(folderPath: dirname(pathTo), basename: getBasename(pathTo));
+  generate(folder, show: show, watch: watch);
+}
 
+Future<void> generate(SMCatFolder folder, {bool? show, required bool watch}) async {
   await folder.generateAll(progress: (line) {
     print(line);
   });
 
-  final show = parsed.wasParsed('show');
-
-  if (parsed.wasParsed('watch')) {
+  if (watch) {
     folder.watch();
 
-    if (show) {
+    if (show!) {
       print(folder.listSvgs);
       await SvgFile.showList(folder.listSvgs, progress: (line) => print(line));
       await for (final svgFile in folder.stream) {
         await svgFile.show(progress: (line) => print(line));
       }
     }
-  } else if (show) {
+  } else if (show!) {
     await folder.show(progress: (line) => print(line));
   }
 }

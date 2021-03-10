@@ -10,9 +10,12 @@ class SMCatFile {
   String pathTo;
   int pageNo = 0;
 
-  SvgFile _svgFile;
+  late SvgFile _svgFile;
+
   SMCatFile(this.pathTo) {
     pageNo = extractPageNo(pathTo);
+
+    _svgFile = SvgFile(svgPath);
   }
 
   String get svgPath {
@@ -25,12 +28,12 @@ class SMCatFile {
   }
 
   SvgFile get svgFile {
-    return _svgFile ?? SvgFile(svgPath);
+    return _svgFile;
   }
 
-  int get height => svgFile.height;
+  int? get height => svgFile.height;
 
-  int get width => svgFile.width;
+  int? get width => svgFile.width;
 
   /// creates an Svg image from the smcat file.
   ///
@@ -38,7 +41,7 @@ class SMCatFile {
   ///
   /// Throws [SMCatException if the conversion fails]
   ///
-  Future<SvgFile> convert({Progress progress}) async {
+  Future<SvgFile> convert({Progress? progress}) async {
     /// default no op progress
     progress ??= noOp;
 
@@ -53,11 +56,11 @@ class SMCatFile {
         workingDirectory: p.dirname(pathTo));
 
     process.stdout.transform(utf8.decoder).listen((data) {
-      progress(data);
+      progress!(data);
     });
 
     process.stderr.transform(utf8.decoder).listen((data) {
-      if (!data.contains('viz.js:33')) progress(data);
+      if (!data.contains('viz.js:33')) progress!(data);
     });
 
     final int exitCode = await process.exitCode;
@@ -70,9 +73,8 @@ class SMCatFile {
       return _svgFile;
     } else {
       progress('Generation of $svgPath failed.');
-      return null;
-      // throw SMCatException(
-      //     'Generation of $svgPath failed. exitCode: $exitCode');
+      throw SMCatException(
+          'Generation of $svgPath failed. exitCode: $exitCode');
     }
   }
 

@@ -32,7 +32,7 @@ class NoOpTransitionDefinition<S extends State, E extends Event>
 
   @override
   List<TransitionNotification> transitions(
-      Graph graph, StateDefinition from, Event event) {
+      Graph graph, StateDefinition? from, Event event) {
     return <TransitionNotification>[];
   }
 }

@@ -1,6 +1,5 @@
 import 'package:fsm2/src/state_machine.dart';
 import 'package:tree_iterator/tree_iterator.dart';
-import 'package:meta/meta.dart';
 import 'package:path/path.dart';
 
 import 'exporter.dart';
@@ -143,15 +142,15 @@ class SMCatExporter implements Exporter {
   /// writes a string to the given page file.
   @override
   void write(String string,
-      {@required int indent, @required int page, bool endOfLine = false}) {
-    exports.write(page, '\n${_indent(indent)}$string');
+      {required int indent, required int? page, bool endOfLine = false}) {
+    exports.write(page!, '\n${_indent(indent)}$string');
     if (endOfLine) exports.write(page, '\n');
   }
 
   /// writes a string to the given page file.
   @override
-  void append(String string, {@required int page, bool endOfLine = false}) {
-    exports.write(page, string);
+  void append(String string, {required int? page, bool endOfLine = false}) {
+    exports.write(page!, string);
 
     if (endOfLine) exports.write(page, '\n');
   }

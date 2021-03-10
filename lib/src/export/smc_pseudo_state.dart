@@ -1,10 +1,9 @@
-import 'package:meta/meta.dart';
 
 import 'smc_state.dart';
 
 class SMCPseudoState extends SMCState {
   SMCPseudoState(SMCState owner,
-      {@required String name, @required SMCStateType type})
+      {required String name, required SMCStateType type})
       : super(name: name, type: type, pageBreak: false) {
     super.parent = owner;
   }
