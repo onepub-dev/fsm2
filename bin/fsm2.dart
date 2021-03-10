@@ -54,6 +54,13 @@ void main(List<String> args) {
     help: 'Install the smcat dependencies',
   );
 
+  parser.addFlag(
+    'force',
+    abbr: 'f',
+    negatable: false,
+    help: 'Force regeneration of svg files even if they are upto date.',
+  );
+
   final parsed = parser.parse(args);
 
   if (parsed.wasParsed('help')) {
@@ -79,17 +86,28 @@ void main(List<String> args) {
 
   final watch = parsed.wasParsed('watch');
 
+  final force = parsed.wasParsed('force');
+
   final pathTo = parsed.rest[0];
   final folder =
       SMCatFolder(folderPath: dirname(pathTo), basename: getBasename(pathTo));
-  generate(folder, show: show, watch: watch);
+  waitForEx(generate(folder, show: show, watch: watch, force: force));
 }
 
-Future<void> generate(SMCatFolder folder, {bool? show, required bool watch}) async {
-  await folder.generateAll(progress: (line) {
-    print(line);
-  });
+Future<void> generate(SMCatFolder folder,
+    {bool? show, required bool watch, required bool force}) async {
+  var count = 0;
+  await folder.generateAll(
+      force: force,
+      progress: (line) {
+        print(line);
+        count++;
+      });
 
+  if (count == 0) {
+    print(
+        'No files found that needed generating. Use -f to regenerate all files.');
+  }
   if (watch) {
     folder.watch();
 

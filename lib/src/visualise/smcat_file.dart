@@ -41,11 +41,9 @@ class SMCatFile {
   ///
   /// Throws [SMCatException if the conversion fails]
   ///
-  Future<SvgFile> convert({Progress? progress}) async {
-    /// default no op progress
-    progress ??= noOp;
-
-    if (!isConversionRequired()) return svgFile;
+  Future<SvgFile> convert(
+      {Progress progress = noOp, required bool force}) async {
+    if (!force && !isConversionRequired()) return svgFile;
 
     progress('Generating: $svgPath ');
     if (File(svgPath).existsSync()) {
@@ -56,11 +54,11 @@ class SMCatFile {
         workingDirectory: p.dirname(pathTo));
 
     process.stdout.transform(utf8.decoder).listen((data) {
-      progress!(data);
+      progress(data);
     });
 
     process.stderr.transform(utf8.decoder).listen((data) {
-      if (!data.contains('viz.js:33')) progress!(data);
+      if (!data.contains('viz.js:33')) progress(data);
     });
 
     final int exitCode = await process.exitCode;
