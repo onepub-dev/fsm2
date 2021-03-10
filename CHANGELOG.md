@@ -1,3 +1,8 @@
+# 2.0.0
+Migrated to nnbd.
+Added option to force regeneration.
+Converted to nnbd. Fixed #4.
+
 # 1.0.1
 Back ported changes from 2.0.0
 

@@ -30,8 +30,11 @@ void main() {
     final som = machine.stateOfMind;
     final paths = som.activeLeafStates();
     expect(paths.length, equals(3));
-    var types =
-        som.pathForLeafState(HandleFan)!.path.map((sd) => sd.stateType).toList();
+    var types = som
+        .pathForLeafState(HandleFan)!
+        .path
+        .map((sd) => sd.stateType)
+        .toList();
     expect(types, equals([HandleFan, CleanAir, MaintainAir, VirtualRoot]));
     types = som
         .pathForLeafState(HandleLamp)!

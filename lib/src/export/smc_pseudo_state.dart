@@ -1,4 +1,3 @@
-
 import 'smc_state.dart';
 
 class SMCPseudoState extends SMCState {
