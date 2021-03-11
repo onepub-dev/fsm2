@@ -1,3 +1,6 @@
+# 2.0.3
+Added missing guardconditions to fork and join. No unit tests as yet.
+
 # 2.0.2
 
 # 2.0.0
