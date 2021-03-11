@@ -109,12 +109,17 @@ class StateBuilder<S extends State> {
   /// Used to enter a co-region by targeting the set of states within the
   /// coregion to transition to.
   void onFork<E extends Event>(BuildFork<E> buildFork,
-      {Function(State, E)? condition}) {
+      {GuardCondition<E>? condition,
+      SideEffect? sideEffect,
+      String? conditionLabel,
+      String? sideEffectLabel}) {
     final builder = ForkBuilder<E>();
     buildFork(builder);
     final definition = builder.build();
 
-    final choice = ForkTransitionDefinition<S, E>(_stateDefinition, definition);
+    final choice = ForkTransitionDefinition<S, E>(
+        _stateDefinition, definition, condition, sideEffect,
+        sideEffectLabel: sideEffectLabel, conditionLabel: conditionLabel);
 
     _stateDefinition.addTransition(choice);
   }

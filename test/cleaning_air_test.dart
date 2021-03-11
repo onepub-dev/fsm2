@@ -147,7 +147,7 @@ StateMachine createMachine(MockWatcher watcher) {
               ..target<HandleFan>()
               ..target<HandleLamp>()
               ..target<WaitForGoodAir>(),
-            condition: (s, e) => e.quality < 10))
+            condition: (e) => e.quality < 10))
       ..coregion<CleanAir>((b) => b
         ..state<HandleFan>((b) => b
           ..onEnter((s, e) async {

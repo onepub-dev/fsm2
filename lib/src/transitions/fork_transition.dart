@@ -10,8 +10,14 @@ class ForkTransitionDefinition<S extends State, E extends Event>
   /// List of state types that are the target of this fork.
 
   final ForkDefinition definition;
-  ForkTransitionDefinition(StateDefinition stateDefinition, this.definition)
-      : super(stateDefinition);
+  ForkTransitionDefinition(StateDefinition stateDefinition, this.definition,
+      GuardCondition<E>? condition, SideEffect? sideEffect,
+      {String? conditionLabel, String? sideEffectLabel})
+      : super(stateDefinition,
+            condition: condition,
+            sideEffect: sideEffect,
+            conditionLabel: conditionLabel,
+            sideEffectLabel: sideEffectLabel);
 
   @override
   List<Type> get targetStates => definition.stateTargets;
