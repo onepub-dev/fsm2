@@ -1,4 +1,7 @@
 # 2.0.3
+Added missing initialisation for quality in unit tests.
+
+# 2.0.3
 Added missing guardconditions to fork and join. No unit tests as yet.
 
 # 2.0.2
