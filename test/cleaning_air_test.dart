@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 import 'watcher.mocks.dart';
 
-final onBadAir = OnBadAir();
+final onBadAir = OnBadAir(8);
 
 final onGoodAir = OnGoodAir();
 
@@ -297,7 +297,8 @@ class WaitForGoodAir implements State {}
 class MaintainAir implements State {}
 
 class OnBadAir implements Event {
-  late int quality;
+  OnBadAir(this.quality);
+  int quality;
 }
 
 class OnTurnLampOff implements Event {}
