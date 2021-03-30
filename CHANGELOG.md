@@ -1,3 +1,6 @@
+# 2.0.4
+Fixes #7
+
 # 2.0.3
 Added missing initialisation for quality in unit tests.
 
