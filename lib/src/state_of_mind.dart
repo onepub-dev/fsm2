@@ -41,7 +41,7 @@ class StateOfMind {
 
   StatePath? pathForLeafState(Type leafState) {
     for (final path in _leafPaths) {
-      if (path.leaf!.stateType == leafState) {
+      if (path.leaf.stateType == leafState) {
         return path;
       }
     }
@@ -49,11 +49,13 @@ class StateOfMind {
   }
 
   /// returns a StateDefinition for all active states
-  List<StateDefinition?> activeLeafStates() {
-    final defs = <StateDefinition?>[];
+  List<StateDefinition> activeLeafStates() {
+    final defs = <StateDefinition>[];
 
     for (final active in _leafPaths) {
-      defs.add(active.leaf);
+      if (active.isNotEmpty) {
+        defs.add(active.leaf);
+      }
     }
     return defs;
   }
@@ -105,7 +107,7 @@ class StateOfMind {
 
       /// chain up the path so we can compare each 'parent' path
       /// to the list of parents we have [seen].
-      while (next.leaf!.stateType != VirtualRoot().runtimeType) {
+      while (next.leaf.stateType != VirtualRoot().runtimeType) {
         if (seen.contains(next)) {
           remove.add(next);
         }

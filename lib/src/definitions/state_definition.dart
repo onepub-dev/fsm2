@@ -6,6 +6,7 @@ import '../builders/co_region_builder.dart';
 import '../builders/state_builder.dart';
 
 import '../exceptions.dart';
+import '../state_path.dart';
 import '../transitions/noop_transition.dart';
 import '../transitions/transition_definition.dart';
 import '../types.dart';
@@ -331,10 +332,36 @@ class StateDefinition<S extends State> {
     }
   }
 
-  bool isChild(Type? initialState) {
-    return childStateDefinitions
-        .map((sd) => sd.stateType)
-        .contains(initialState);
+  StatePath get statePath {
+    final path = <StateDefinition>[];
+
+    StateDefinition? parent = this;
+    while (parent != null) {
+      path.add(parent);
+      parent = parent.parent;
+    }
+
+    return StatePath(path);
+  }
+
+  /// Returns true if the given [state] is a direct child
+  /// of this [StateDefinition].
+  bool isDirectChild(Type state) {
+    return childStateDefinitions.map((sd) => sd.stateType).contains(state);
+  }
+
+  /// Returns true if we are a descendant of [potentialAncestor]
+  bool isDecendentOf(StatePath potentialAncestor) {
+    StateDefinition? parent = this;
+
+    while (parent != null) {
+      if (parent == potentialAncestor.leaf) {
+        return true;
+      }
+      parent = parent.parent;
+    }
+
+    return false;
   }
 
   /// default implementation.

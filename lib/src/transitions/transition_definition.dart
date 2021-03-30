@@ -85,7 +85,7 @@ abstract class TransitionDefinition< // S extends State,
   /// [StateOfMind].
   ///
   /// As the statemachine can be in multiple states the [stateOfMind] argument indicates what
-  /// [stateOfMind] the [transition] is to be processed againts.
+  /// [stateOfMind] the [transition] is to be processed against.
   /// /
   Future<StateOfMind> trigger(Graph graph, StateOfMind stateOfMind,
       TransitionNotification<E> transition) async {
@@ -99,7 +99,7 @@ abstract class TransitionDefinition< // S extends State,
     final commonAncestor = findCommonAncestor(graph, fromPath, toPath);
 
     if (!transition.skipExit) {
-      exitPaths.add(_getExitPaths(fromPath, commonAncestor));
+      exitPaths.addAll(_getExitPaths(stateOfMind, fromPath, commonAncestor));
     }
 
     if (!transition.skipEnter) {
@@ -156,18 +156,39 @@ abstract class TransitionDefinition< // S extends State,
   bool canTrigger(E event) => true;
 
   ///
-  ///
-  PartialStatePath _getExitPaths(
-      StatePath fromAncestors, StateDefinition? commonAncestor) {
-    final exitTargets = PartialStatePath();
+  /// We must call onExit for the [fromPath] and all its ancestors
+  /// as well as any active children and their ancestors
+  List<PartialStatePath> _getExitPaths(StateOfMind stateOfMind,
+      StatePath fromPath, StateDefinition? commonAncestor) {
+    final exitTargets = <PartialStatePath>[];
+    final anscestorTargets = PartialStatePath();
 
-    for (final fromAncestor in fromAncestors.path) {
+    /// add each state until (but excluding) the common ancestor
+    for (final fromAncestor in fromPath.path) {
       if (fromAncestor.stateType == commonAncestor!.stateType) {
         break;
       }
 
-      exitTargets.addAncestor(fromAncestor);
+      anscestorTargets.addAncestor(fromAncestor);
     }
+
+    if (anscestorTargets.isNotEmpty) {
+      exitTargets.add(anscestorTargets);
+    }
+
+    /// We now need to add any active child states.
+    for (final state in stateOfMind.activeLeafStates()) {
+      if (state.isDecendentOf(fromPath)) {
+        /// add each state until (but excluding) the common ancestor
+        for (final childState in state.statePath.path) {
+          if (childState.stateType == fromPath.leaf.stateType) {
+            break;
+          }
+          exitTargets.add(state.statePath);
+        }
+      }
+    }
+
     return exitTargets;
   }
 

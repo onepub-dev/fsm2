@@ -10,18 +10,20 @@ import 'virtual_root.dart';
 ///
 /// This class should only be used to store
 /// a path which starts from an active leaf.
-
 class PartialStatePath {
   /// List of states from the leaf (stored as the first element in the array) to the root state.
-  final List<StateDefinition?> _path;
+  final List<StateDefinition> _path;
 
   PartialStatePath() : this._internal();
 
-  PartialStatePath._internal() : _path = <StateDefinition?>[];
+  PartialStatePath._internal() : _path = <StateDefinition>[];
 
   PartialStatePath.fromPath(this._path);
 
-  StateDefinition<State>? get leaf => _path.first;
+  /// Returns the [StateDefinition] for the tip of the branch.
+  /// Throws a StateError if you try to access [leaf] for an
+  /// empty [PartialStatePath]
+  StateDefinition<State> get leaf => _path.first;
 
   /// returns a unmodifiable list with the full path from the leaf to its root.
   List<StateDefinition> get path => List.unmodifiable(_path);
@@ -30,26 +32,26 @@ class PartialStatePath {
 
   bool isInState(Type state) {
     for (final stateDef in _path) {
-      if (stateDef!.stateType == state) return true;
+      if (stateDef.stateType == state) return true;
     }
     return false;
   }
 
   /// Adds [stateDefinition] to the existing path
   /// as the oldest ancestor.
-  void addAncestor(StateDefinition<State>? stateDefinition) {
+  void addAncestor(StateDefinition<State> stateDefinition) {
     _path.add(stateDefinition);
   }
 
   /// converts a [PartialStatePath] to a full [StatePath]
-  StatePath fullPath(Graph graph) => StatePath.fromLeaf(graph, leaf!.stateType);
+  StatePath fullPath(Graph graph) => StatePath.fromLeaf(graph, leaf.stateType);
 
   @override
   bool operator ==(covariant PartialStatePath other) {
     if (_path.isEmpty && other._path.isEmpty) return true;
     if (_path.length != other._path.length) return false;
 
-    return leaf!.stateType == other.leaf!.stateType;
+    return leaf.stateType == other.leaf.stateType;
   }
 
   int? _hashCode;
@@ -87,11 +89,17 @@ class StatePath extends PartialStatePath {
   /// of ancestors to the root.
   StatePath.fromLeaf(Graph graph, Type leafState) {
     final ancestors = PartialStatePath();
-    ancestors.addAncestor(graph.findStateDefinition(leafState));
+    final ancestor = graph.findStateDefinition(leafState);
+    if (ancestor != null) {
+      ancestors.addAncestor(ancestor);
+    }
     var parent = graph.getParent(leafState);
 
     while (parent != VirtualRoot) {
-      ancestors.addAncestor(graph.findStateDefinition(parent));
+      final ancestor = graph.findStateDefinition(parent);
+      if (ancestor != null) {
+        ancestors.addAncestor(ancestor);
+      }
       parent = graph.getParent(parent);
     }
 

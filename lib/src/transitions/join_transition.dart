@@ -50,7 +50,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   }
 
   /// used to trigger the last event that triggered this transition.
-  late final E _triggeredBy;
+  late E _triggeredBy;
 
   @override
   bool canTrigger(E event) {

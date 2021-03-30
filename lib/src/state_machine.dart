@@ -268,7 +268,7 @@ class StateMachine {
     return _lock.synchronized(() async {
       var dispatched = false;
       for (final stateDefinition in _stateOfMind.activeLeafStates()) {
-        final transitionDefinition = await stateDefinition!
+        final transitionDefinition = await stateDefinition
             .findTriggerableTransition(stateDefinition.stateType, event);
         if (transitionDefinition == null) continue;
 
