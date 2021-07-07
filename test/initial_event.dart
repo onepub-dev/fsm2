@@ -7,7 +7,7 @@ import 'watcher.mocks.dart';
 void main() {
   test('initial event', () async {
     final watcher = MockWatcher();
-    final machine = createMachine(watcher);
+    createMachine(watcher);
   }, skip: false);
 }
 

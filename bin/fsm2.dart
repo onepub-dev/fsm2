@@ -132,7 +132,7 @@ void install() {
 }
 
 void showUsage(ArgParser parser) {
-  print('Usage: ${Script.current.exeName} <base name of myfsm2>\n');
+  print('Usage: ${DartScript.self.exeName} <base name of myfsm2>\n');
   print('Converts a set of smcat files into svg files.');
   print(
       'If your smcat file has multiple parts due to page breaks then each page will be processed.');

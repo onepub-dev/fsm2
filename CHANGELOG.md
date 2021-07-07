@@ -1,3 +1,8 @@
+# 2.0.5
+Updated packages.
+Updated documentation and repository links in pubspec.yaml.
+
+
 # 2.0.4
 Fixes #7
 
