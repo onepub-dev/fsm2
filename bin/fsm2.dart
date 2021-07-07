@@ -2,12 +2,10 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'package:args/args.dart';
 import 'package:dcli/dcli.dart';
 import 'package:fsm2/src/util/file_util.dart';
 import 'package:fsm2/src/visualise/smcat_folder.dart';
 import 'package:fsm2/src/visualise/svg_file.dart';
-import 'package:path/path.dart';
 
 /// dcli create show.dart
 ///
