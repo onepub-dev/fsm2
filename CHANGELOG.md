@@ -1,3 +1,6 @@
+# 2.0.6
+- Fixed broken link to documentation.
+
 # 2.0.5
 Updated packages.
 Updated documentation and repository links in pubspec.yaml.
