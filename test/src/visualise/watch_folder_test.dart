@@ -7,6 +7,7 @@ import 'package:test/test.dart';
 
 import '../../registration_test.dart' hide log;
 
+/// This test doesn't work. We need some method to trigger the watch.
 void main() {
   test('watch folder', () async {
     final done = Completer<bool>();

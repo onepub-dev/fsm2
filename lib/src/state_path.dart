@@ -1,9 +1,15 @@
 import 'definitions/state_definition.dart';
+import 'exceptions.dart';
 import 'graph.dart';
 import 'types.dart';
 import 'virtual_root.dart';
 
-/// describes a path from a leaf state up to the root state.
+/// Identical to a [StatePath] but we use this class
+/// when we don't guarentee that each path goes
+/// all the way back to to the root.
+///
+/// This class should only be used to store
+/// a path which starts from an active leaf.
 class PartialStatePath {
   /// List of states from the leaf (stored as the first element in the array) to the root state.
   final List<StateDefinition?> _path;
@@ -58,31 +64,39 @@ class PartialStatePath {
   }
 }
 
-/// Identical to a [StatePath] but we use this class
-/// when we don't guarentee that each path goes
-/// all the way back to to the root.
-///
-/// This class should only be used to store
-/// a path which starts from an active leaf.
+/// describes a path from a leaf state up to the root state.
 class StatePath extends PartialStatePath {
-  StatePath(List<StateDefinition> path)
+  StatePath(List<StateDefinition?> path)
       : super.fromPath(List.unmodifiable(path));
 
-  /// Creates a [StatePath] from a leaf by trace
+  /// Creates a [StatePath] from a leaf by tracing
   /// up the graph to determine the complete list
   /// of ancestors to the root.
   StatePath.fromLeaf(Graph graph, Type leafState) {
     final ancestors = PartialStatePath();
-    ancestors.addAncestor(graph.findStateDefinition(leafState));
+    final ancestor = graph.findStateDefinition(leafState);
+    if (ancestor != null) {
+      ancestors.addAncestor(ancestor);
+    }
     var parent = graph.getParent(leafState);
 
     while (parent != VirtualRoot) {
-      ancestors.addAncestor(graph.findStateDefinition(parent));
+      final ancestor = graph.findStateDefinition(parent);
+      if (ancestor != null) {
+        ancestors.addAncestor(ancestor);
+      }
       parent = graph.getParent(parent);
     }
 
     ancestors.addAncestor(graph.virtualRoot);
 
     _path.addAll(ancestors._path);
+  }
+
+  StatePath get parent {
+    if (_path.length == 1) {
+      throw NoParentException('The StatePath $_path does not have a parent');
+    }
+    return StatePath(_path.sublist(1, _path.length));
   }
 }

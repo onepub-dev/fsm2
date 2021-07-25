@@ -42,7 +42,6 @@
             "type": "dart",
             "console": "terminal",
             "args": [
-                "-w",
                 "-s",
                 "test/smcat/page_break_test"
             ]

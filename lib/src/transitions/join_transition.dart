@@ -22,13 +22,15 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   late CoRegionDefinition coregion;
 
   /// For a Join transition the 'to' State is the parent [coregion].
-  JoinTransitionDefinition(
-    StateDefinition<State> parentStateDefinition,
-    GuardCondition<E>? condition,
-    SideEffect? sideEffect,
-  )   : definition = JoinDefinition(TOSTATE),
+  JoinTransitionDefinition(StateDefinition<State> parentStateDefinition,
+      GuardCondition<E>? condition, SideEffect? sideEffect,
+      {String? conditionLabel, String? sideEffectLabel})
+      : definition = JoinDefinition(TOSTATE),
         super(parentStateDefinition,
-            sideEffect: sideEffect, condition: condition) {
+            condition: condition,
+            sideEffect: sideEffect,
+            conditionLabel: conditionLabel,
+            sideEffectLabel: sideEffectLabel) {
     definition.addEvent(E);
 
     var parent = parentStateDefinition;
@@ -47,9 +49,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
     }
   }
 
-  /// used to track the event that triggered this join.
-  /// We need to cache this value as a join may not result in an
-  /// immediate transition as we have to wait for all joins in the coregion to trigger.
+  /// used to trigger the last event that triggered this transition.
   late E _triggeredBy;
 
   /// A join can trigger when its parent coregion has received the required

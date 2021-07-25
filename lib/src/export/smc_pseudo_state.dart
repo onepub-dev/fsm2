@@ -1,7 +1,7 @@
 import 'smc_state.dart';
 
 class SMCPseudoState extends SMCState {
-  SMCPseudoState(SMCState? owner,
+  SMCPseudoState(SMCState owner,
       {required String name, required SMCStateType type})
       : super(name: name, type: type, pageBreak: false) {
     super.parent = owner;

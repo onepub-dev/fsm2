@@ -216,6 +216,7 @@ class StateMachine {
   ///
   void applyEvent<E extends Event>(E event) {
     final qe = _QueuedEvent(event);
+    log('FSM queuing $event');
     _eventQueue.add(qe);
 
     /// process the event on a microtask.
@@ -228,7 +229,9 @@ class StateMachine {
     final event = _eventQueue.first;
 
     try {
+      log('FSM applying ${event.event}');
       await _actualApplyEvent(event.event);
+      log('FSM applied ${event.event}');
       event._completer.complete();
     } on InvalidTransitionException catch (e, st) {
       if (production!) {
@@ -242,6 +245,7 @@ class StateMachine {
       event._completer.completeError(e, st);
     } finally {
       /// now we have finished processing the event we can remove it from the queue.
+      log('FSM removing applied ${event.event} from eventQueue');
       _eventQueue.removeFirst();
     }
   }

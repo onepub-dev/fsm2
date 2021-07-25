@@ -1,13 +1,29 @@
-# 2.0.1
-A few more fields converted to not nullable.
-Maded size not null and getAttributeInt not null.
-made size not nullable.
-made pageno not null
+# 2.0.6
+- Fixed broken link to documentation.
 
+# 2.0.5
+Updated packages.
+Updated documentation and repository links in pubspec.yaml.
+
+
+# 2.0.4
+Fixes #7
+
+# 2.0.3
+Added missing initialisation for quality in unit tests.
+
+# 2.0.3
+Added missing guardconditions to fork and join. No unit tests as yet.
+
+# 2.0.2
 
 # 2.0.0
-completed migration to nnbd. all unit tests passing.
-upgraded to nnbd
+Migrated to nnbd.
+Added option to force regeneration.
+Converted to nnbd. Fixed #4.
+
+# 1.0.1
+Back ported changes from 2.0.0
 
 # 1.0.0
 First stable release of fsm2.
