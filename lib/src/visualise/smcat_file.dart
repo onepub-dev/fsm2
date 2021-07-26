@@ -10,12 +10,9 @@ class SMCatFile {
   String pathTo;
   int pageNo = 0;
 
-  late SvgFile _svgFile;
-
+  SvgFile? _svgFile;
   SMCatFile(this.pathTo) {
     pageNo = extractPageNo(pathTo);
-
-    _svgFile = SvgFile(svgPath);
   }
 
   String get svgPath {
@@ -28,12 +25,12 @@ class SMCatFile {
   }
 
   SvgFile get svgFile {
-    return _svgFile;
+    return _svgFile ?? SvgFile(svgPath);
   }
 
-  int? get height => svgFile.height;
+  int get height => svgFile.height;
 
-  int? get width => svgFile.width;
+  int get width => svgFile.width;
 
   /// creates an Svg image from the smcat file.
   ///
@@ -41,9 +38,11 @@ class SMCatFile {
   ///
   /// Throws [SMCatException if the conversion fails]
   ///
-  Future<SvgFile> convert(
-      {Progress progress = noOp, required bool force}) async {
-    if (!force && !isConversionRequired()) return svgFile;
+  Future<SvgFile?> convert({Progress? progress}) async {
+    /// default no op progress
+    progress ??= noOp;
+
+    if (!isConversionRequired()) return svgFile;
 
     progress('Generating: $svgPath ');
     if (File(svgPath).existsSync()) {
@@ -71,8 +70,9 @@ class SMCatFile {
       return _svgFile;
     } else {
       progress('Generation of $svgPath failed.');
-      throw SMCatException(
-          'Generation of $svgPath failed. exitCode: $exitCode');
+      return null;
+      // throw SMCatException(
+      //     'Generation of $svgPath failed. exitCode: $exitCode');
     }
   }
 

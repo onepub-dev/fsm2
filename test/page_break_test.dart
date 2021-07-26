@@ -1,15 +1,10 @@
 import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
+import 'package:mockito/annotations.dart';
 import 'package:test/test.dart';
 
-import 'watcher.mocks.dart';
-
-// class Watcher extends Mock {
-//   Future<void> onEnter(Type fromState, Event? event);
-//   Future<void> onExit(Type toState, Event? event);
-
-//   void log(String message);
-// }
+import 'mock_watcher.dart';
+import 'watcher.dart';
 
 @GenerateMocks([Watcher])
 void main() {

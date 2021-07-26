@@ -47,7 +47,7 @@ class DotExporter {
       TransitionDefinition transitionDefinition) async {
     var appended = false;
 
-    String? region;
+    String? cluster;
 
     final targetStates = transitionDefinition.targetStates;
 
@@ -55,12 +55,12 @@ class DotExporter {
       final toDef = stateMachine.findStateDefinition(targetState);
 
       if (toDef != null && toDef.parent!.stateType != VirtualRoot) {
-        region = toDef.parent!.stateType.toString();
+        cluster = toDef.parent!.stateType.toString();
       }
 
       for (final event in transitionDefinition.triggerEvents) {
         final node = _Edge(stateDefinition, event, toDef,
-            region: region, terminal: toDef!.isTerminal);
+            region: cluster, terminal: toDef!.isTerminal);
 
         /// see if we have an existing path that ends with [fromState]
         for (final path in _edgePaths) {

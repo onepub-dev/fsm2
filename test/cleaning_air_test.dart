@@ -7,9 +7,11 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-import 'watcher.mocks.dart';
+import 'mock_watcher.dart';
+import 'watcher.dart';
 
-final onBadAir = OnBadAir(8);
+@GenerateMocks([Watcher])
+final onBadAir = OnBadAir();
 
 final onGoodAir = OnGoodAir();
 
@@ -155,7 +157,7 @@ StateMachine createMachine(MockWatcher watcher) {
               ..target<HandleFan>()
               ..target<HandleLamp>()
               ..target<WaitForGoodAir>(),
-            condition: (e) => e.quality < 10))
+            condition: (s, e) => e.quality < 10))
       ..coregion<CleanAir>((b) => b
         ..state<HandleFan>((b) => b
           ..onEnter((s, e) async {
@@ -305,8 +307,7 @@ class WaitForGoodAir implements State {}
 class MaintainAir implements State {}
 
 class OnBadAir implements Event {
-  OnBadAir(this.quality);
-  int quality;
+  late int quality;
 }
 
 class OnTurnLampOff implements Event {}

@@ -33,14 +33,14 @@ class OnTransitionDefinition<S extends State, E extends Event,
   /// a single transition occurs.
   @override
   List<TransitionNotification> transitions(
-      Graph graph, StateDefinition? from, Event event) {
+      Graph graph, StateDefinition from, Event event) {
     final transitions = <TransitionNotification>[];
     transitions.add(buildTransitionNotification(graph, from, event as E));
     return transitions;
   }
 
   TransitionNotification<E> buildTransitionNotification(
-      Graph graph, StateDefinition<State>? from, E event) {
+      Graph graph, StateDefinition<State> from, E event) {
     final targetDefinition = graph.findStateDefinition(toState);
 
     return TransitionNotification<E>(this, from, event, targetDefinition);

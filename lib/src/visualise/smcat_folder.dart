@@ -81,13 +81,8 @@ class SMCatFolder {
       final files = _toGenerate.toSet().toList();
       files.sort((lhs, rhs) => lhs.compareTo(rhs));
       for (final file in files) {
-        try {
-          final svgFile =
-              await file.convert(force: false, progress: (line) => log(line));
-          _generatedController.add(svgFile);
-        } on SMCatException catch (e, _) {
-          /// already logged.
-        }
+        final svgFile = await file.convert(progress: (line) => log(line));
+        _generatedController.add(svgFile);
       }
       _toGenerate.clear();
     });
@@ -112,14 +107,14 @@ class SMCatFolder {
   /// Generate the svg files for all smcat files in [folderPath] with a matching [basename]
   ///
   /// Throws [SMCatException] if the file does not exist.
-  Future<void> generateAll(
-      {required bool force, Progress progress = noOp}) async {
+  Future<void> generateAll({Progress? progress}) async {
+    // progress ??= noOp;
     final files = await Directory(folderPath).list().toList();
+
     for (final entity in files) {
-      // print('testing $entity');
       final file = entity.path;
       if (getBasename(file) == basename && p.extension(file) == '.smcat') {
-        await SMCatFile(file).convert(force: force, progress: progress);
+        await SMCatFile(file).convert(progress: progress);
       }
     }
   }

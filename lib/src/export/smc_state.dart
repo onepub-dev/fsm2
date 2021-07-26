@@ -23,11 +23,11 @@ enum SMCStateType {
 }
 
 class SMCState {
-  late SMCState parent;
-  late StateDefinition<State> sd;
-  late String name;
-  String? _label;
-  late SMCStateType type;
+  SMCState? parent;
+  StateDefinition<State>? sd;
+  String? name;
+  String? label;
+  SMCStateType? type;
 
   /// If true then this state and all child states will
   /// be written to new page file.
@@ -55,10 +55,6 @@ class SMCState {
   /// two pages. We call this a 'straddle' state.
   bool get isStraddleState => pageBreak;
 
-  String get label => _label ?? name;
-
-  set label(String label) => _label = label;
-
   /// If this state straddles two pages
   /// then this is the pageNo of the child page
   /// where we display the state as a top level nested state.
@@ -71,7 +67,7 @@ class SMCState {
   /// If this state straddles two pages
   /// then this is the pageNo of the parent page
   /// where we display the state as a simple state.
-  int? get straddleParentPage {
+  int get straddleParentPage {
     assert(isStraddleState);
 
     return pageNo;
@@ -82,7 +78,7 @@ class SMCState {
   ///
   SMCState.build(StateMachine stateMachine, this.parent, this.sd,
       {required int page}) {
-    pageBreak = sd.pageBreak;
+    pageBreak = sd!.pageBreak;
     pageNo = page;
 
     var childPageNo = pageNo;
@@ -204,7 +200,7 @@ class SMCState {
       {required Color color}) {
     final line = StringBuffer();
     var closeBracket = false;
-    if (name == label) {
+    if (name == label || label == null) {
       line.write(name);
       if (color != Color.none) {
         closeBracket = true;
@@ -260,23 +256,23 @@ class SMCState {
 
     final ancestor = findCommonAncestor(ourPath, otherPath);
 
-    late final SMCState _to;
-    late final SMCState _from;
-
+    final branches = Branches();
     for (final state in ourPath.path) {
       if (state.parent == ancestor) {
-        _from = state;
+        branches.from = state;
         break;
       }
     }
 
     for (final state in otherPath.path) {
       if (state.parent == ancestor) {
-        _to = state;
+        branches.to = state;
         break;
       }
     }
-    return Branches(from: _from, to: _to);
+    assert(branches.to != null);
+    assert(branches.from != null);
+    return branches;
   }
 
   SMCState? findCommonAncestor(_SMCStatePath ourPath, _SMCStatePath otherPath) {

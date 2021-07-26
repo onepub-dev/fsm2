@@ -10,14 +10,8 @@ class ForkTransitionDefinition<S extends State, E extends Event>
   /// List of state types that are the target of this fork.
 
   final ForkDefinition definition;
-  ForkTransitionDefinition(StateDefinition stateDefinition, this.definition,
-      GuardCondition<E>? condition, SideEffect? sideEffect,
-      {String? conditionLabel, String? sideEffectLabel})
-      : super(stateDefinition,
-            condition: condition,
-            sideEffect: sideEffect,
-            conditionLabel: conditionLabel,
-            sideEffectLabel: sideEffectLabel);
+  ForkTransitionDefinition(StateDefinition stateDefinition, this.definition)
+      : super(stateDefinition);
 
   @override
   List<Type> get targetStates => definition.stateTargets;
@@ -29,7 +23,7 @@ class ForkTransitionDefinition<S extends State, E extends Event>
 
   @override
   List<TransitionNotification<E>> transitions(
-      Graph graph, StateDefinition? from, Event event) {
+      Graph graph, StateDefinition from, Event event) {
     final transitions = <TransitionNotification<E>>[];
     for (final targetState in targetStates) {
       final targetDefinition = graph.findStateDefinition(targetState);

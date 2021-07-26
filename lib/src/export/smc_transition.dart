@@ -4,6 +4,7 @@ import 'package:fsm2/src/transitions/fork_transition.dart';
 import 'package:fsm2/src/transitions/join_transition.dart';
 import 'package:fsm2/src/transitions/on_transition.dart';
 import 'package:fsm2/src/transitions/transition_definition.dart';
+import 'package:fsm2/src/virtual_root.dart';
 import 'package:fsm2/src/visualise/smcat_file.dart';
 import 'package:tree_iterator/tree_iterator.dart';
 
@@ -12,10 +13,8 @@ import '../types.dart';
 import 'exporter.dart';
 
 class Branches {
-  SMCState from;
-  SMCState to;
-
-  Branches({required this.from, required this.to});
+  SMCState? from;
+  SMCState? to;
 }
 
 class SMCTransition {
@@ -110,11 +109,20 @@ class SMCTransition {
   /// Generates a psuedo terminal state designed to be
   /// terminal state transition from  [fromState]
   static SMCTerminalState genTerminalState(SMCState fromState) {
-    return SMCTerminalState(fromState, fromState.sd.stateType);
+    if (fromState.sd != null) {
+      return SMCTerminalState(fromState, fromState.sd!.stateType);
+    } else {
+      return SMCTerminalState(null, VirtualRoot);
+    }
   }
 
   static SMCInitialState genInitialState(SMCState state) {
-    return SMCInitialState(state.parent, state.sd.stateType);
+    if (state.sd != null) {
+      return SMCInitialState(state.parent, state.sd!.stateType);
+    } else {
+      /// must be pseudo state so use parent
+      return SMCInitialState(state.parent, state.parent!.sd!.stateType);
+    }
   }
 
   static SMCForkState genForkState(SMCState owner, Type stateType) {
@@ -272,6 +280,8 @@ class SMCTransition {
       final transition =
           SMCTransition(from: parent!, to: genTerminalState(parent));
       transition.label = original.label;
+      if (parent.parent == null) break;
+      assert(parent.parent != null);
       parent = parent.parent;
 
       parent!.transitions.add(transition);
@@ -291,19 +301,12 @@ class SMCTransition {
     /// until we find the matching sd.
     final root = getRoot(owner);
 
-    // var matcher = name;
-    // if (name.startsWith(']')) {
-    //   /// psudo names are of the form ']state.type]
-    //   /// and we just want the state name.
-    //   matcher = name.split('.')[0].substring(1);
-    // }
-
     final state = findInTree<SMCState>(root, (node) => node.children,
         (child) => child.baseName == stateType.toString());
 
     if (state == null) {
       throw SMCatException(
-          "FSM is in an inconsistent state. You must have a transition to state $stateType but the state doesn't exist in the FSM.");
+          'FSM is in an inconsistent state. Unable to find state $stateType for ${owner.type}');
     }
 
     return state;
@@ -371,7 +374,7 @@ class SMCTransition {
     var parent = smcTo.parent;
     var currentPageNo = smcTo.pageNo;
     while (currentPageNo > smcFrom!.pageNo) {
-      if (currentPageNo != parent.pageNo) {
+      if (currentPageNo != parent!.pageNo) {
         /// generate an init into the current state
         if (!parent.parent!.isRoot) {
           // we are on a new page so show an init transition.

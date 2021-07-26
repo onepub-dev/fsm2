@@ -12,7 +12,7 @@ class SvgFile {
   late int pageNo;
 
   bool _hasSize = false;
-  Size? _size;
+  late Size _size;
 
   DateTime? _lastModified;
 
@@ -25,15 +25,13 @@ class SvgFile {
     return _lastModified != lastModified;
   }
 
-  int? get width => size!.width;
+  int get width => size.width;
 
-  int? get height => size!.height;
+  int get height => size.height;
 
   void reload() {}
 
-  Future<void> show({Progress? progress}) async {
-    progress ??= noOp;
-
+  Future<void> show({Progress progress = noOp}) async {
     final filename = basename(pathTo);
     final workingDir = dirname(pathTo);
 
@@ -41,15 +39,15 @@ class SvgFile {
         workingDirectory: workingDir);
 
     process.stdout.transform(utf8.decoder).listen((data) {
-      progress!(data);
+      progress(data);
     });
 
     process.stderr.transform(utf8.decoder).listen((data) {
-      progress!(data);
+      progress(data);
     });
   }
 
-  DateTime? get lastModified {
+  DateTime get lastModified {
     if (_lastModified == null) {
       if (exists(pathTo)) {
         _lastModified = File(pathTo).lastModifiedSync();
@@ -67,7 +65,7 @@ class SvgFile {
     await _addInkscapeNamespace(pathTo);
 
     const xPos = 40;
-    final yPos = size!.height! + 20;
+    final yPos = size.height + 20;
     final svgPageNo = '''
     <text
      xml:space="preserve"
@@ -85,9 +83,9 @@ class SvgFile {
 
     await replace(pathTo, '</svg>', svgPageNo);
 
-    final newPageSize = Size.copyFrom(size!);
+    final newPageSize = Size.copyFrom(size);
     newPageSize.height = yPos + 10;
-    await updatePageHeight(pathTo, size!, newPageSize);
+    await updatePageHeight(pathTo, size, newPageSize);
   }
 
   /// We increase the page hieght so we can fit the page no. at the bottom of the
@@ -118,7 +116,7 @@ class SvgFile {
     return pageNo - other.pageNo;
   }
 
-  Size? get size {
+  Size get size {
     if (!_hasSize) {
       _size = _getPageSize();
       _hasSize = true;
@@ -165,7 +163,7 @@ class SvgFile {
     return lines;
   }
 
-  int? getAttributeInt(String attribute) {
+  int getAttributeInt(String attribute) {
     final parts = attribute.split('=');
     assert(parts.length == 2);
 

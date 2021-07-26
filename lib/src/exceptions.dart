@@ -78,14 +78,3 @@ class JoinWithNoCoregionException implements Exception {
   @override
   String toString() => message;
 }
-
-/// You tried to get the parent of a StatePath that
-/// is just a VirtualRoot.
-class NoParentException implements Exception {
-  String message;
-
-  NoParentException(this.message);
-
-  @override
-  String toString() => message;
-}
