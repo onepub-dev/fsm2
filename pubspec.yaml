@@ -1,5 +1,5 @@
 name: fsm2
-version: 2.0.6
+version: 2.0.7
 homepage: https://noojee.gitbook.io/fsm2/
 documentation: https://noojee.gitbook.io/fsm2/
 description: FSM2 provides an implementation of the core design aspects of the UML state diagrams allowing both declarative transitions and dynamic transitions along with Guard Conditions.
