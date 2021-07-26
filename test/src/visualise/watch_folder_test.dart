@@ -1,26 +1,18 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:dcli/dcli.dart';
 import 'package:fsm2/src/visualise/watch_folder.dart';
 import 'package:test/test.dart';
 
 import '../../registration_test.dart' hide log;
 
+/// This test doesn't work. We need some method to trigger the watch.
 void main() {
   test('watch folder', () async {
     final done = Completer<bool>();
 
     var count = 0;
 
-    final files =
-        find('registration.*.svg', workingDirectory: 'test/smcat').toList();
-    for (final file in files) {
-      delete(file);
-    }
-
-    /// The export should create 5 pages each in a separate file
-    const expectedPageCount = 5;
     WatchFolder(
         pathTo: 'test/smcat',
         extension: 'smcat',
@@ -28,7 +20,7 @@ void main() {
           log('$file $action');
           count++;
 
-          if (count == expectedPageCount) {
+          if (count == 5) {
             done.complete(true);
           }
         });

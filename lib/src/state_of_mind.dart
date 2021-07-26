@@ -1,3 +1,5 @@
+import 'package:fsm2/src/virtual_root.dart';
+
 import 'definitions/state_definition.dart';
 
 import 'state_path.dart';
@@ -39,7 +41,7 @@ class StateOfMind {
 
   StatePath? pathForLeafState(Type leafState) {
     for (final path in _leafPaths) {
-      if (path.leaf!.stateType == leafState) {
+      if (path.leaf.stateType == leafState) {
         return path;
       }
     }
@@ -47,11 +49,13 @@ class StateOfMind {
   }
 
   /// returns a StateDefinition for all active states
-  List<StateDefinition?> activeLeafStates() {
-    final defs = <StateDefinition?>[];
+  List<StateDefinition> activeLeafStates() {
+    final defs = <StateDefinition>[];
 
     for (final active in _leafPaths) {
-      defs.add(active.leaf);
+      if (active.isNotEmpty) {
+        defs.add(active.leaf);
+      }
     }
     return defs;
   }
@@ -85,6 +89,36 @@ class StateOfMind {
     if (deduped.length != _leafPaths.length) {
       _leafPaths.clear();
       _leafPaths.addAll(deduped);
+    }
+  }
+
+  /// We don't need a discrete parent StatePath if the
+  /// state of mind also contains a child of that parent.
+  ///
+  void stripRedundantParents() {
+    final seen = <StatePath>{};
+    final remove = <StatePath>{};
+
+    /// sortest paths first as we need to see the parent paths first
+    _leafPaths.sort((lhs, rhs) => lhs.path.length - rhs.path.length);
+
+    for (final path in _leafPaths) {
+      StatePath next = path;
+
+      /// chain up the path so we can compare each 'parent' path
+      /// to the list of parents we have [seen].
+      while (next.leaf.stateType != VirtualRoot().runtimeType) {
+        if (seen.contains(next)) {
+          remove.add(next);
+        }
+
+        next = next.parent;
+      }
+      seen.add(path);
+    }
+
+    for (final path in remove) {
+      _leafPaths.remove(path);
     }
   }
 }

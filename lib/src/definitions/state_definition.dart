@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:developer';
 
 import 'package:meta/meta.dart';
 
@@ -6,6 +6,7 @@ import '../builders/co_region_builder.dart';
 import '../builders/state_builder.dart';
 
 import '../exceptions.dart';
+import '../state_path.dart';
 import '../transitions/noop_transition.dart';
 import '../transitions/transition_definition.dart';
 import '../types.dart';
@@ -80,28 +81,46 @@ class StateDefinition<S extends State> {
     return definitions;
   }
 
-  Future<void> _onEnter(Type fromState, Event event) async {
-    await onEnter(fromState, event);
+  Future<void> _onEnter(Type fromState, Event? event) async {
+    try {
+      log('FSM onEnter called for $stateType due to ${event.runtimeType}');
+      await onEnter(fromState, event);
+      log('FSM onEnter completed for $stateType due to ${event.runtimeType}');
+    } catch (e) {
+      log('FSM onEnter threw $e for $stateType due to ${event.runtimeType}');
+      rethrow;
+    }
   }
 
   /// callback used when we enter toState.
   /// Provides a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
-  OnEnter onEnter = (Type toState, Event event) {};
+  OnEnter onEnter = (toState, event) {
+    return null;
+  };
 
   /// This method is called when we exit this state to give the
   /// [StateDefinition] a chance to do any internal cleanup.
   /// If you must call [_onExit] so that we can call the user
   /// defined [onExit] method.
   @mustCallSuper
-  Future<void> _onExit(Type fromState, Event event) async {
-    await onExit(fromState, event);
+  Future<void> _onExit(Type fromState, Event? event) async {
+    try {
+      log('FSM onExit called for $stateType due to ${event.runtimeType}');
+      await onExit(fromState, event);
+      log('FSM onExit completed for $stateType due to ${event.runtimeType}');
+    } catch (e) {
+      log('FSM onExit threw $e for $stateType due to ${event.runtimeType}');
+      rethrow;
+    }
   }
 
   /// callback used when we exiting this [State].
   /// Provide provide a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
-  OnExit onExit = (Type toState, Event? event) {};
+  OnExit onExit = (toState, event) {
+    return null;
+  };
 
   /// Returns the first transition that can be triggered for the given [event] from the
   /// given [fromState].
@@ -134,6 +153,7 @@ class StateDefinition<S extends State> {
     while (transitionDefinition is NoOpTransitionDefinition &&
         parent!.stateType != VirtualRoot) {
       transitionDefinition = await parent._evaluateTransitions(event);
+      // as FutureOr<NoOpTransitionDefinition<State, Event>>);
       parent = parent.parent;
     }
 
@@ -148,7 +168,7 @@ class StateDefinition<S extends State> {
         as List<TransitionDefinition<E>>?;
 
     if (transitionChoices == null) {
-      return NoOpTransitionDefinition<E>(this, E);
+      return NoOpTransitionDefinition<S, E>(this, E);
     }
 
     return _evaluateConditions(transitionChoices, event);
@@ -174,7 +194,7 @@ class StateDefinition<S extends State> {
         }
       }
     }
-    return NoOpTransitionDefinition<E>(this, E);
+    return NoOpTransitionDefinition<S, E>(this, E);
   }
 
   /// A state is a terminal state if it has no transitions and
@@ -206,8 +226,9 @@ class StateDefinition<S extends State> {
   ///
   /// Set [includeInherited] to false to exclude inherited transitions.
   ///
-  List<TransitionDefinition> getTransitions({bool includeInherited = true}) {
-    final transitionDefinitions = <TransitionDefinition>[];
+  List<TransitionDefinition<Event>> getTransitions(
+      {bool includeInherited = true}) {
+    final transitionDefinitions = <TransitionDefinition<Event>>[];
 
     for (final transitions in _eventTranstionsMap.values) {
       transitionDefinitions.addAll(transitions);
@@ -311,10 +332,36 @@ class StateDefinition<S extends State> {
     }
   }
 
-  bool isChild(Type? initialState) {
-    return childStateDefinitions
-        .map((sd) => sd.stateType)
-        .contains(initialState);
+  StatePath get statePath {
+    final path = <StateDefinition>[];
+
+    StateDefinition? parent = this;
+    while (parent != null) {
+      path.add(parent);
+      parent = parent.parent;
+    }
+
+    return StatePath(path);
+  }
+
+  /// Returns true if the given [state] is a direct child
+  /// of this [StateDefinition].
+  bool isDirectChild(Type state) {
+    return childStateDefinitions.map((sd) => sd.stateType).contains(state);
+  }
+
+  /// Returns true if we are a descendant of [potentialAncestor]
+  bool isDecendentOf(StatePath potentialAncestor) {
+    StateDefinition? parent = this;
+
+    while (parent != null) {
+      if (parent == potentialAncestor.leaf) {
+        return true;
+      }
+      parent = parent.parent;
+    }
+
+    return false;
   }
 
   /// default implementation.
@@ -324,11 +371,11 @@ class StateDefinition<S extends State> {
 }
 
 /// used to hide internal api
-Future<void> onEnter(StateDefinition sd, Type toState, Event event) async {
+Future<void> onEnter(StateDefinition sd, Type toState, Event? event) async {
   await sd._onEnter(toState, event);
 }
 
-Future<void> onExit(StateDefinition sd, Type fromState, Event event) async {
+Future<void> onExit(StateDefinition sd, Type fromState, Event? event) async {
   await sd._onExit(fromState, event);
 }
 

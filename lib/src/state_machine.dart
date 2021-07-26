@@ -216,6 +216,7 @@ class StateMachine {
   ///
   void applyEvent<E extends Event>(E event) {
     final qe = _QueuedEvent(event);
+    log('FSM queuing $event');
     _eventQueue.add(qe);
 
     /// process the event on a microtask.
@@ -228,20 +229,25 @@ class StateMachine {
     final event = _eventQueue.first;
 
     try {
+      log('FSM applying ${event.event}');
       await _actualApplyEvent(event.event);
+      log('FSM applied ${event.event}');
       event._completer.complete();
-    } on InvalidTransitionException catch (e, st) {
+    } on InvalidTransitionException catch (e) {
+      log('FSM InvalidTransitionException for ${event.event}');
       if (production!) {
-        log('InvalidTransitionException suppressed: $e');
+        log('FSM InvalidTransitionException suppressed: $e');
 
         event._completer.complete();
       } else {
-        event._completer.completeError(e, st);
+        event._completer.completeError(e);
       }
-    } catch (e, st) {
-      event._completer.completeError(e, st);
+    } catch (e) {
+      log('FSM Exception applying ${event.event}');
+      event._completer.completeError(e);
     } finally {
       /// now we have finished processing the event we can remove it from the queue.
+      log('FSM removing applied ${event.event} from eventQueue');
       _eventQueue.removeFirst();
     }
   }
@@ -262,7 +268,7 @@ class StateMachine {
     return _lock.synchronized(() async {
       var dispatched = false;
       for (final stateDefinition in _stateOfMind.activeLeafStates()) {
-        final transitionDefinition = await stateDefinition!
+        final transitionDefinition = await stateDefinition
             .findTriggerableTransition(stateDefinition.stateType, event);
         if (transitionDefinition == null) continue;
 
@@ -356,14 +362,9 @@ class StateMachine {
     return ancestor.stateType;
   }
 
-  // TransitionNotification<T>? cast<T extends Event>(T def, dynamic x) {
-  //   final t = x is TransitionNotification<T> ? x : null;
-  //   return t;
-  // }
-
-  Future<void> applyTransitions<E extends Event>(StateDefinition<State> from,
+  Future<void> applyTransitions<E extends Event>(StateDefinition<State>? from,
       TransitionDefinition<E> transitionDefinition, Event event) async {
-    /// When an event occurs on a join we need to trigger
+    /// When an event occurs on a join we need to trigger multiple transitions
     final transitions = transitionDefinition.transitions(_graph, from, event);
 
     for (final transition in transitions) {
@@ -378,7 +379,7 @@ class StateMachine {
   void _notifyListeners(TransitionNotification transition) {
     for (final onTransition in _graph.onTransitionListeners) {
       if (!production!) {
-        log('transition: from: ${transition.from.stateType} event: ${transition.event.runtimeType} to: ${transition.to!.stateType}');
+        log('transition: from: ${transition.from!.stateType} event: ${transition.event.runtimeType} to: ${transition.to!.stateType}');
       }
 
       onTransition(transition.from, transition.event, transition.to);

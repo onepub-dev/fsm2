@@ -16,6 +16,6 @@ doc/api/
 .history
 test/gv/
 test/*.gv
-test/smcat/
+test/smcat/*
 tool/*.smcat
 .failed_tracker

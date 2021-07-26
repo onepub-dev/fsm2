@@ -3,15 +3,12 @@ import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
 import 'package:fsm2/src/types.dart';
 import 'package:fsm2/src/virtual_root.dart';
-import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-import 'mock_watcher.dart';
-import 'watcher.dart';
+import 'watcher.mocks.dart';
 
-@GenerateMocks([Watcher])
-final onBadAir = OnBadAir();
+final onBadAir = OnBadAir(8);
 
 final onGoodAir = OnGoodAir();
 
@@ -19,12 +16,8 @@ final onFanRunning = OnFanRunning();
 final onLampOn = OnLampOn();
 
 void main() {
-  setUpAll(() {});
   test('fork', () async {
     final watcher = MockWatcher();
-    when(watcher.onEnter(MonitorAir, onBadAir));
-
-    throwOnMissingStub(watcher);
     final machine = createMachine(watcher);
     expect(machine.isInState<MonitorAir>(), equals(true));
     machine.applyEvent(onBadAir);
@@ -63,9 +56,7 @@ void main() {
 
   test('join', () async {
     final watcher = MockWatcher();
-
     final machine = createMachine(watcher);
-
     expect(machine.isInState<MonitorAir>(), equals(true));
     verify(watcher.onEnter(MonitorAir, machine.initialEvent));
 
@@ -126,7 +117,6 @@ void main() {
 
   test('export', () async {
     final watcher = MockWatcher();
-    throwOnMissingStub(watcher);
     final machine = createMachine(watcher);
     machine.export('test/smcat/cleaning_air_test.smcat');
     final lines = read('test/smcat/cleaning_air_test.smcat')
@@ -157,7 +147,7 @@ StateMachine createMachine(MockWatcher watcher) {
               ..target<HandleFan>()
               ..target<HandleLamp>()
               ..target<WaitForGoodAir>(),
-            condition: (s, e) => e.quality < 10))
+            condition: (e) => e.quality < 10))
       ..coregion<CleanAir>((b) => b
         ..state<HandleFan>((b) => b
           ..onEnter((s, e) async {
@@ -307,7 +297,8 @@ class WaitForGoodAir implements State {}
 class MaintainAir implements State {}
 
 class OnBadAir implements Event {
-  late int quality;
+  OnBadAir(this.quality);
+  int quality;
 }
 
 class OnTurnLampOff implements Event {}

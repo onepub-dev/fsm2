@@ -12,7 +12,7 @@ import 'state_builder.dart';
 ///
 /// Instance of this class is passed to [StateMachine.create] method.
 class GraphBuilder {
-  Type? _initialState;
+  late Type _initialState;
   final _stateDefinitions = <StateDefinition>[];
   final List<TransitionListener> _onTransitionListeners = [];
   final StateDefinition<VirtualRoot> virtualRoot =

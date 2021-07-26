@@ -4,7 +4,7 @@ import 'package:fsm2/src/types.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-import 'mock_watcher.dart';
+import 'watcher.mocks.dart';
 
 class Solid implements State {}
 

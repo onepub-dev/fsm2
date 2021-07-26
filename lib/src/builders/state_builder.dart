@@ -17,7 +17,7 @@ class StateBuilder<S extends State> {
 
   /// The initial state for the substate
   /// If there are no child states then this is just 'this'.
-  Type? _initialState;
+  Type _initialState = _UndefinedInitialState;
 
   StateBuilder(StateDefinition parent, this._stateDefinition) {
     _stateDefinition.setParent(parent);
@@ -109,12 +109,17 @@ class StateBuilder<S extends State> {
   /// Used to enter a co-region by targeting the set of states within the
   /// coregion to transition to.
   void onFork<E extends Event>(BuildFork<E> buildFork,
-      {Function(State, E)? condition}) {
+      {GuardCondition<E>? condition,
+      SideEffect? sideEffect,
+      String? conditionLabel,
+      String? sideEffectLabel}) {
     final builder = ForkBuilder<E>();
     buildFork(builder);
     final definition = builder.build();
 
-    final choice = ForkTransitionDefinition<S, E>(_stateDefinition, definition);
+    final choice = ForkTransitionDefinition<S, E>(
+        _stateDefinition, definition, condition, sideEffect,
+        sideEffectLabel: sideEffectLabel, conditionLabel: conditionLabel);
 
     _stateDefinition.addTransition(choice);
   }
@@ -147,12 +152,12 @@ class StateBuilder<S extends State> {
       return _stateDefinition;
     } else {
       /// If no initial state then the first state is the initial state.
-      if (_initialState == null &&
+      if (_initialState == _UndefinedInitialState &&
           _stateDefinition.childStateDefinitions.isNotEmpty) {
         _initialState = _stateDefinition.childStateDefinitions[0].stateType;
       }
 
-      assert(_initialState != null);
+      assert(_initialState != _UndefinedInitialState);
       final sd = _stateDefinition.findStateDefintion(_initialState,
           includeChildren: false);
       if (sd == null) {
@@ -170,3 +175,5 @@ class StateBuilder<S extends State> {
     _initialState = I;
   }
 }
+
+class _UndefinedInitialState extends State {}

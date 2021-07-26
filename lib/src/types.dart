@@ -29,7 +29,7 @@ abstract class State {}
 class TerminalState extends State {}
 
 /// Used by the [StateMachine.history] to represent a pseudo 'first' event that
-/// that indicates how we got into the FSM initialState.
+/// that indicates how we got in the FSM initialState.
 class InitialEvent extends Event {}
 
 /// Base class for all Events that you pass to the FSM.
@@ -59,10 +59,10 @@ typedef BuildGraph = void Function(GraphBuilder);
 typedef SideEffect<E extends Event> = Future<void> Function(E event);
 
 /// The method signature for a [State]s [onEnter] method
-typedef OnEnter = Future<void>? Function(Type fromState, Event event);
+typedef OnEnter = Future<void>? Function(Type fromState, Event? event);
 
 /// The method signature for a [State]s [onExit] method
-typedef OnExit = Future<void>? Function(Type toState, Event event);
+typedef OnExit = Future<void>? Function(Type toState, Event? event);
 
 /// Callback when a transition occurs.
 /// We pass, fromState, Event that triggered the transition and the target state.

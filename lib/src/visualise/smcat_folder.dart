@@ -23,7 +23,7 @@ class SMCatFolder {
   final lock = Lock();
 
   /// We add an event each time an SvgFile is generated.
-  final _generatedController = StreamController<SvgFile?>();
+  final _generatedController = StreamController<SvgFile>();
 
   /// when we see a mod we want to delay the generation as we often
   /// see multiple modifications when a file is being updated.
@@ -74,15 +74,20 @@ class SMCatFolder {
   /// stream each time it is generated.  A single SvgFile
   /// will be generated each time you change the smcat file
   /// or call [queueGeneration]
-  Stream<SvgFile?> get stream => _generatedController.stream;
+  Stream<SvgFile> get stream => _generatedController.stream;
 
   void delayedGeneration() {
     lock.synchronized(() async {
       final files = _toGenerate.toSet().toList();
       files.sort((lhs, rhs) => lhs.compareTo(rhs));
       for (final file in files) {
-        final svgFile = await file.convert(progress: (line) => log(line));
-        _generatedController.add(svgFile);
+        try {
+          final svgFile =
+              await file.convert(force: false, progress: (line) => log(line));
+          _generatedController.add(svgFile);
+        } on SMCatException catch (e, _) {
+          /// already logged.
+        }
       }
       _toGenerate.clear();
     });
@@ -107,14 +112,14 @@ class SMCatFolder {
   /// Generate the svg files for all smcat files in [folderPath] with a matching [basename]
   ///
   /// Throws [SMCatException] if the file does not exist.
-  Future<void> generateAll({Progress? progress}) async {
-    // progress ??= noOp;
+  Future<void> generateAll(
+      {required bool force, Progress progress = noOp}) async {
     final files = await Directory(folderPath).list().toList();
-
     for (final entity in files) {
+      // print('testing $entity');
       final file = entity.path;
       if (getBasename(file) == basename && p.extension(file) == '.smcat') {
-        await SMCatFile(file).convert(progress: progress);
+        await SMCatFile(file).convert(force: force, progress: progress);
       }
     }
   }

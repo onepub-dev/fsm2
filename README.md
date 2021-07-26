@@ -44,7 +44,7 @@ machine.applyEvent(OnMelted());
 # Documentation
 Full documentation is available on gitbooks at:
 
-https://bsutton.gitbook.io/fsm2/
+https://noojee.gitbook.io/fsm2/
 
 
 

@@ -80,6 +80,7 @@ class Graph {
   /// Get's the parent of the given state
   Type? getParent(Type? childState) {
     final def = findStateDefinition(childState)!;
+
     return def.parent?.stateType;
   }
 }

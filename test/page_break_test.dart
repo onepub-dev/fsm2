@@ -1,12 +1,16 @@
 import 'package:dcli/dcli.dart' hide equals;
 import 'package:fsm2/fsm2.dart';
-import 'package:mockito/annotations.dart';
 import 'package:test/test.dart';
 
-import 'mock_watcher.dart';
-import 'watcher.dart';
+import 'watcher.mocks.dart';
 
-@GenerateMocks([Watcher])
+// class Watcher extends Mock {
+//   Future<void> onEnter(Type fromState, Event? event);
+//   Future<void> onExit(Type toState, Event? event);
+
+//   void log(String message);
+// }
+
 void main() {
   late MockWatcher watcher;
   late Human human;
