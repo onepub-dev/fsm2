@@ -109,9 +109,8 @@ abstract class TransitionDefinition< // S extends State,
     final exitStates = dedupPaths(exitPaths);
     final enterStates = dedupPaths(enterPaths);
 
-    final fromStateDefinition =
-        graph.stateDefinitions[transition.from.runtimeType];
-    await _callOnExits(fromStateDefinition, transition.event, exitStates);
+    final toStateDefinition = graph.stateDefinitions[transition.to.runtimeType];
+    await _callOnExits(toStateDefinition, transition.event, exitStates);
 
     await _callSideEffect(transition);
 
