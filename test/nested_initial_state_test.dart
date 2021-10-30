@@ -67,36 +67,65 @@ void main() {
     machine.applyEvent(OnKickStart());
     await machine.waitUntilQuiescent;
     expect(machine.isInState<Main>(), equals(true));
-
-    machine.applyEvent(OnTickFirst());
-    await machine.waitUntilQuiescent;
     expect(machine.isInState<First>(), equals(true));
     expect(machine.isInState<One>(), equals(true));
+    expect(machine.isInState<Second>(), equals(true));
+    expect(machine.isInState<Three>(), equals(true));
+  });
+
+  test('should be able to transition nested stated machines', () async {
+    final machine = createMachine();
+    await machine.waitUntilQuiescent;
+
+    machine.applyEvent(OnKickStart());
+    await machine.waitUntilQuiescent;
+    expect(machine.isInState<Main>(), equals(true));
+    expect(machine.isInState<First>(), equals(true));
+    expect(machine.isInState<One>(), equals(true));
+    expect(machine.isInState<Second>(), equals(true));
+    expect(machine.isInState<Three>(), equals(true));
+
+    machine.applyEvent(OnToggle());
+    await machine.waitUntilQuiescent;
+    expect(machine.isInState<Main>(), equals(true));
+    expect(machine.isInState<First>(), equals(true));
+    expect(machine.isInState<Two>(), equals(true));
+    expect(machine.isInState<Second>(), equals(true));
+    expect(machine.isInState<Four>(), equals(true));
   });
 
   test(
-    'should reset navigate back to initial state if transition to state '
+    'should reset state back to initial state if transition to state '
     'machine again',
     () async {
       final machine = createMachine();
       await machine.waitUntilQuiescent;
 
-      expect(machine.isInState<Main>(), equals(true));
-
-      machine.applyEvent(OnTickFirst());
+      machine.applyEvent(OnKickStart());
       await machine.waitUntilQuiescent;
+      expect(machine.isInState<Main>(), equals(true));
       expect(machine.isInState<First>(), equals(true));
       expect(machine.isInState<One>(), equals(true));
+      expect(machine.isInState<Second>(), equals(true));
+      expect(machine.isInState<Three>(), equals(true));
 
       machine.applyEvent(OnToggle());
       await machine.waitUntilQuiescent;
+      expect(machine.isInState<Main>(), equals(true));
       expect(machine.isInState<First>(), equals(true));
       expect(machine.isInState<Two>(), equals(true));
+      expect(machine.isInState<Second>(), equals(true));
+      expect(machine.isInState<Four>(), equals(true));
 
       machine.applyEvent(OnTickFirst());
       await machine.waitUntilQuiescent;
+      expect(machine.isInState<Main>(), equals(true));
+      // First goes back to initial state
       expect(machine.isInState<First>(), equals(true));
       expect(machine.isInState<One>(), equals(true));
+      // Second remains with previous state
+      expect(machine.isInState<Second>(), equals(true));
+      expect(machine.isInState<Four>(), equals(true));
     },
   );
 }
