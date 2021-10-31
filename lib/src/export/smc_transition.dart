@@ -29,8 +29,7 @@ class SMCTransition {
   String? label;
   String? pseudoState;
 
-  SMCTransition({required this.from, required this.to})
-      : assert(from.name != to.name);
+  SMCTransition({required this.from, required this.to});
 
   /// A single [TransitionDefinition] can result in multiple transition lines.
   static List<SMCTransition> build(StateMachine stateMachine, SMCState owner,
