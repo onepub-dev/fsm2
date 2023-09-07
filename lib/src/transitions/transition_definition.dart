@@ -1,28 +1,35 @@
 import 'dart:developer';
 import 'dart:math' as math;
 
-import 'package:fsm2/src/state_of_mind.dart';
-
 import '../definitions/state_definition.dart';
 import '../graph.dart';
+import '../state_of_mind.dart';
 import '../state_path.dart';
 import '../types.dart';
 import 'transition_notification.dart';
 
 /// Defines FSM transition: the change from one state to another.
-abstract class TransitionDefinition< // S extends State,
-    E extends Event> {
+abstract class TransitionDefinition<E extends Event> {
+  TransitionDefinition(this.fromStateDefinition,
+      {this.condition = noGuardCondition,
+      this.sideEffect,
+      this.conditionLabel,
+      this.sideEffectLabel});
+
   /// The state this transition is attached to.
   final StateDefinition<State> fromStateDefinition;
 
-  /// The condition that must be met for this [TransitionDefinition] to be triggered.
+  /// The condition that must be met for this [TransitionDefinition]
+  /// to be triggered.
   /// If [condition] is null then it always evaluates to true and the
   /// event will be triggered. Null conditions are always the last [condition]
-  /// to be evaulated against an event, so any other [condition] that returns true
+  /// to be evaulated against an event, so any other [condition]
+  /// that returns true
   /// will be fired in preference to a null [condition].
-  final GuardCondition<E>? condition;
+  final GuardCondition<E> condition;
 
-  /// An optional label used only on the exported diagrams to given the [condition]
+  /// An optional label used only on the exported diagrams to
+  ///  given the [condition]
   /// a descriptive label.  @See [label]
   final String? conditionLabel;
 
@@ -30,7 +37,8 @@ abstract class TransitionDefinition< // S extends State,
   /// selected as the transition.
   final SideEffect<E>? sideEffect;
 
-  /// An optional label used only on the exported diagrams to given the [sideEffect]
+  /// An optional label used only on the exported diagrams to
+  /// given the [sideEffect]
   /// a descriptive label.  @See [label]
   final String? sideEffectLabel;
 
@@ -41,12 +49,6 @@ abstract class TransitionDefinition< // S extends State,
   /// Whether the events are and/or'ed together is an
   /// implementation detail of the [TransitionDefinition] implementation.
   List<Type> get triggerEvents;
-
-  TransitionDefinition(this.fromStateDefinition,
-      {this.condition,
-      this.sideEffect,
-      this.conditionLabel,
-      this.sideEffectLabel});
 
   ///
   /// Returns a transition label for use on exported diagrams. The
@@ -67,9 +69,7 @@ abstract class TransitionDefinition< // S extends State,
   /// ```
   ///
   String labelForEvent(Type event) {
-    final buf = StringBuffer();
-
-    buf.write(event.toString());
+    final buf = StringBuffer()..write(event.toString());
 
     if (conditionLabel != null) {
       buf.write(' [$conditionLabel]');
@@ -81,18 +81,20 @@ abstract class TransitionDefinition< // S extends State,
   }
 
   ///
-  /// Applies [transition] to the  current statemachine and returns the resulting
+  /// Applies [transition] to the  current statemachine and returns
+  /// the resulting
   /// [StateOfMind].
   ///
-  /// As the statemachine can be in multiple states the [stateOfMind] argument indicates what
+  /// As the statemachine can be in multiple states the [stateOfMind]
+  /// argument indicates what
   /// [stateOfMind] the [transition] is to be processed against.
   /// /
   Future<StateOfMind> trigger(Graph graph, StateOfMind stateOfMind,
-      TransitionNotification<E> transition) async {
+      TransitionNotification<E> transition,
+      {required bool applySideEffects}) async {
     final exitPaths = <PartialStatePath>[];
     final enterPaths = <PartialStatePath>[];
 
-    //for (final targetState in targetStates) {
     final fromPath = StatePath.fromLeaf(graph, transition.from!.stateType);
     final toPath = StatePath.fromLeaf(graph, transition.to!.stateType);
 
@@ -111,9 +113,11 @@ abstract class TransitionDefinition< // S extends State,
 
     final fromStateDefinition =
         graph.stateDefinitions[transition.from.runtimeType];
-    await _callOnExits(fromStateDefinition, transition.event, exitStates);
 
-    await _callSideEffect(transition);
+    if (applySideEffects) {
+      await _callOnExits(fromStateDefinition, transition.event, exitStates);
+      await _callSideEffect(transition);
+    }
 
     // when entering we must start from the root and work
     // towards the leaf.
@@ -141,8 +145,10 @@ abstract class TransitionDefinition< // S extends State,
       addPath(stateOfMind, toPath);
     }
 
-    /// If we transition from a child to a parent then we need to remove the parent
-    /// No need to run onExit as we are still in the parent state due to the child.
+    /// If we transition from a child to a parent then we need to
+    ///  remove the parent
+    /// No need to run onExit as we are still in the parent state
+    ///  due to the child.
     stateOfMind.stripRedundantParents();
 
     log('Updated stateOfMind: $stateOfMind');
@@ -151,7 +157,8 @@ abstract class TransitionDefinition< // S extends State,
   }
 
   ///
-  /// Used by onJoin and the likes to suppress a trigger if not all pre-conditions have been met.
+  /// Used by onJoin and the likes to suppress a trigger if not all
+  /// pre-conditions have been met.
   ///
   bool canTrigger(E event) => true;
 
@@ -199,7 +206,9 @@ abstract class TransitionDefinition< // S extends State,
     final enterTargets = PartialStatePath();
 
     for (final toAncestor in toAncestors.path) {
-      if (toAncestor.stateType == commonAncestor!.stateType) break;
+      if (toAncestor.stateType == commonAncestor!.stateType) {
+        break;
+      }
 
       enterTargets.addAncestor(toAncestor);
     }
@@ -215,7 +224,9 @@ abstract class TransitionDefinition< // S extends State,
     final toAncestorSet = toAncestors.path.toSet();
 
     for (final ancestor in fromAncestors.path) {
-      if (toAncestorSet.contains(ancestor)) return ancestor;
+      if (toAncestorSet.contains(ancestor)) {
+        return ancestor;
+      }
     }
     return null;
   }
@@ -268,7 +279,9 @@ abstract class TransitionDefinition< // S extends State,
         if (statePath.path.length >= (maxLength - i)) {
           final ofInterest =
               statePath.path[i - (maxLength - statePath.path.length)];
-          if (!seenPaths.contains(ofInterest)) orderedPaths.add(ofInterest);
+          if (!seenPaths.contains(ofInterest)) {
+            orderedPaths.add(ofInterest);
+          }
           seenPaths.add(ofInterest);
         }
       }
@@ -288,6 +301,7 @@ abstract class TransitionDefinition< // S extends State,
         log('FSM calling sideEffect due to ${transition.event} ');
         await sideEffect!(transition.event);
         log('FSM completed sideEffect due to ${transition.event} ');
+        // ignore: avoid_catches_without_on_clauses
       } catch (e) {
         log('FSM sideEffect  due to ${transition.event} threw $e');
         rethrow;
