@@ -1,5 +1,4 @@
 import 'package:fsm2/fsm2.dart';
-import 'package:fsm2/src/types.dart';
 import 'package:test/test.dart';
 
 import 'watcher.mocks.dart';
@@ -7,7 +6,7 @@ import 'watcher.mocks.dart';
 void main() {
   test('initial event', () async {
     final watcher = MockWatcher();
-    createMachine(watcher);
+    await createMachine(watcher);
   }, skip: false);
 }
 
@@ -17,12 +16,14 @@ class Typing implements State {}
 
 class Idle implements State {}
 
-StateMachine createMachine(MockWatcher watcher) {
-  final machine = StateMachine.create((g) => g
+Future<StateMachine> createMachine(MockWatcher watcher) async {
+  final machine = await StateMachine.create((g) => g
     ..initialState<Typing>()
     ..state<Typing>((b) => b
       ..onFork<OnValueChange>(
-        (b) => b..target<Point>()..target<Autocomplete>(),
+        (b) => b
+          ..target<Point>()
+          ..target<Autocomplete>(),
         condition: (e) => true, // Some logic to check if it is a formula
       )
       ..coregion<TypingFormula>((b) => b
@@ -54,7 +55,7 @@ StateMachine createMachine(MockWatcher watcher) {
           ..state<PointDisabled>((b) => b))))
     // ignore: avoid_print
     ..onTransition((from, e, to) => print(
-        'Received Event $e in State ${from!.stateType} transitioning to State ${to!.stateType}')));
+        '''Received Event $e in State ${from!.stateType} transitioning to State ${to!.stateType}''')));
   return machine;
 }
 
@@ -97,6 +98,6 @@ class OnBlur extends Event {}
 class OnFocus extends Event {}
 
 class OnValueChange implements Event {
-  final bool isFormula;
   const OnValueChange({required this.isFormula});
+  final bool isFormula;
 }

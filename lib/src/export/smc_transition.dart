@@ -1,36 +1,30 @@
-import 'package:fsm2/src/export/smc_pseudo_state.dart';
-import 'package:fsm2/src/export/smc_state.dart';
-import 'package:fsm2/src/transitions/fork_transition.dart';
-import 'package:fsm2/src/transitions/join_transition.dart';
-import 'package:fsm2/src/transitions/on_transition.dart';
-import 'package:fsm2/src/transitions/transition_definition.dart';
-import 'package:fsm2/src/visualise/smcat_file.dart';
+import 'package:meta/meta.dart';
 import 'package:tree_iterator/tree_iterator.dart';
 
 import '../state_machine.dart';
+import '../transitions/fork_transition.dart';
+import '../transitions/join_transition.dart';
+import '../transitions/on_transition.dart';
+import '../transitions/transition_definition.dart';
 import '../types.dart';
+import '../visualise/smcat_file.dart';
 import 'exporter.dart';
+import 'smc_pseudo_state.dart';
+import 'smc_state.dart';
 
-class Branches {
-  SMCState from;
-  SMCState to;
-
-  Branches({required this.from, required this.to});
-}
-
+@immutable
 class SMCTransition {
+  SMCTransition({required this.from, required this.to, required this.label})
+      : assert(from.name != to.name, 'from and to must have the same name');
+
   /// names are case sensitive.
 
   /// The State Type.
-  SMCState from;
+  final SMCState from;
 
   /// The State Type.
-  SMCState to;
-  String? label;
-  String? pseudoState;
-
-  SMCTransition({required this.from, required this.to})
-      : assert(from.name != to.name);
+  final SMCState to;
+  final String? label;
 
   /// A single [TransitionDefinition] can result in multiple transition lines.
   static List<SMCTransition> build(StateMachine stateMachine, SMCState owner,
@@ -39,19 +33,19 @@ class SMCTransition {
 
     // fork
     if (transition is ForkTransitionDefinition) {
-      /// Create a transition from [from] state to a generated pseudo fork state.
+      /// Create a transition from [from] state to a generated
+      /// pseudo fork state.
       final smct = SMCTransition(
           from: findSMCState(owner, transition.fromStateDefinition.stateType),
-          to: genForkState(owner, transition.fromStateDefinition.stateType));
-      smct.label = transition.label;
+          to: genForkState(owner, transition.fromStateDefinition.stateType),
+          label: transition.label);
       // owner.parent.transitions.add(smc);
       expandPageBreaks(stateMachine, owner, smct);
 
       /// Wire the fork psuedo state to each target state
       for (final target in transition.targetStates) {
-        final pseudoToState =
-            SMCTransition(from: smct.to, to: findSMCState(owner, target));
-        pseudoToState.label = '';
+        final pseudoToState = SMCTransition(
+            from: smct.to, to: findSMCState(owner, target), label: '');
         expandPageBreaks(stateMachine, owner, pseudoToState);
       }
     }
@@ -61,14 +55,15 @@ class SMCTransition {
       /// joins are added to the coregion ancestor
       var parent = owner;
       while (parent.type != SMCStateType.coregion) {
-        parent = parent.parent;
+        parent = parent.parent!;
       }
 
-      /// Create a transition from [from] state to a generated pseudo fork state.
+      /// Create a transition from [from] state to a
+      /// generated pseudo fork state.
       final smct = SMCTransition(
           from: findSMCState(owner, transition.fromStateDefinition.stateType),
-          to: genJoinState(owner, transition.targetStates[0]));
-      smct.label = transition.label;
+          to: genJoinState(owner, transition.targetStates[0]),
+          label: transition.label);
       // smc.pseudoState = ']${transition.targetStates[0].toString()}.Join';
       // parent.parent.transitions.add(smc);
       expandPageBreaks(stateMachine, parent, smct);
@@ -76,8 +71,8 @@ class SMCTransition {
       /// need to create a pseudostate to display the join bar.
       final pseudoToState = SMCTransition(
           from: genJoinState(owner, transition.targetStates[0]),
-          to: findSMCState(owner, transition.targetStates[0]));
-      pseudoToState.label = '';
+          to: findSMCState(owner, transition.targetStates[0]),
+          label: '');
       // parent.parent.transitions.add(pseudoToState);
       expandPageBreaks(stateMachine, parent, pseudoToState);
     }
@@ -85,7 +80,7 @@ class SMCTransition {
     // on
     else //  (transition is OnTransition)
     {
-      assert(transition is OnTransitionDefinition);
+      assert(transition is OnTransitionDefinition, 'wrong tranistion type');
       for (final trigger in transition.triggerEvents) {
         final target = transition.targetStates[0];
 
@@ -93,12 +88,12 @@ class SMCTransition {
             from: owner,
             to: target == TerminalState
                 ? genTerminalState(owner)
-                : findSMCState(owner, target));
-        smct.label = transition.labelForEvent(trigger);
+                : findSMCState(owner, target),
+            label: transition.labelForEvent(trigger));
 
         if (target == TerminalState) {
           /// The final transition is always placed outside the substate.
-          expandPageBreaks(stateMachine, owner.parent, smct);
+          expandPageBreaks(stateMachine, owner.parent!, smct);
         } else {
           expandPageBreaks(stateMachine, owner, smct);
         }
@@ -109,29 +104,29 @@ class SMCTransition {
 
   /// Generates a psuedo terminal state designed to be
   /// terminal state transition from  [fromState]
-  static SMCTerminalState genTerminalState(SMCState fromState) {
-    return SMCTerminalState(fromState, fromState.sd.stateType);
-  }
+  static SMCTerminalState genTerminalState(SMCState fromState) =>
+      SMCTerminalState(fromState, fromState.sd.stateType);
 
-  static SMCInitialState genInitialState(SMCState state) {
-    return SMCInitialState(state.parent, state.sd.stateType);
-  }
+  static SMCInitialState genInitialState(SMCState state) =>
+      SMCInitialState(state.parent!, state.sd.stateType);
 
   static SMCForkState genForkState(SMCState owner, Type stateType) {
-    final fork = SMCForkState(owner, stateType);
+    final fork = SMCForkState(owner, stateType)
 
-    /// we assign an initial page no so we don't get npe's but it may need to be
-    /// re-assigned.
-    fork.pageNo = owner.pageNo;
+      /// we assign an initial page no so we don't get npe's
+      /// but it may need to be
+      /// re-assigned.
+      ..pageNo = owner.pageNo;
     return fork;
   }
 
   static SMCJoinState genJoinState(SMCState owner, Type stateType) {
-    final join = SMCJoinState(owner, stateType);
+    final join = SMCJoinState(owner, stateType)
 
-    /// we assign an initial page no so we don't get npe's but it may need to be
-    /// re-assigned.
-    join.pageNo = owner.pageNo;
+      /// we assign an initial page no so we don't get npe's
+      ///  but it may need to be
+      /// re-assigned.
+      ..pageNo = owner.pageNo;
     return join;
   }
 
@@ -144,16 +139,14 @@ class SMCTransition {
   }
 
   @override
-  bool operator ==(covariant SMCTransition other) {
-    return from == other.from && to == other.to && label == other.label;
-  }
+  bool operator ==(covariant SMCTransition other) =>
+      from == other.from && to == other.to && label == other.label;
 
   @override
-  int get hashCode {
-    return from.hashCode + to.hashCode + (label ?? '').hashCode;
-  }
+  int get hashCode => from.hashCode + to.hashCode + (label ?? '').hashCode;
 
-  /// As we have page breaks the target state may no always be on the current page.
+  /// As we have page breaks the target state may no always
+  /// be on the current page.
   /// We may also end up with a single transition having multiple targets:
   ///  The intended target which appears on a different page.
   ///
@@ -164,14 +157,19 @@ class SMCTransition {
   /// - is the transition to a state on an ancestor page
   ///  - 'n' transition must be show.
   ///  - one from the child state indication an exit from the current page/sub state
-  ///  - one for each intermediate page showing an exit from the 'top' state on the page
-  ///  - one from the parent state to the intended target (on the intended targets page)
-  ///  - what symbol does UML2 to show a transition that exits the current sub state?
+  ///  - one for each intermediate page showing an exit from the 'top'
+  /// state on the page
+  ///  - one from the parent state to the intended target
+  /// (on the intended targets page)
+  ///  - what symbol does UML2 to show a transition that exits
+  /// the current sub state?
 
   /// - is the transition 'to' a state on a child page
-  ///    - on the child page we show an 'initial transition' into the child state
+  ///    - on the child page we show an 'initial transition' into
+  ///  the child state
   ///    - we then transition up the tree from the child state to the parent
-  ///      adding an initial transition to each state that stradles a page boundary.
+  ///      adding an initial transition to each state that
+  /// stradles a page boundary.
   ///
   ///    - from the 'pages top state'.
   ///
@@ -179,9 +177,6 @@ class SMCTransition {
   ///
   static void expandPageBreaks(
       StateMachine stateMachine, SMCState owner, SMCTransition smcTransition) {
-    // final from = stateMachine.findStateDefinitionFromString(smcTransition.from);
-    // final to = stateMachine.findStateDefinitionFromString(smcTransition.to);
-
     final smcFrom = smcTransition.from;
     final smcTo = smcTransition.to;
 
@@ -223,9 +218,8 @@ class SMCTransition {
       /// the branches will be sibligs so we start
       /// by creating a bridging transition between the
       /// siblines.
-      final bridgeTransition =
-          SMCTransition(from: branches.from, to: branches.to);
-      bridgeTransition.label = smcTransition.label;
+      final bridgeTransition = SMCTransition(
+          from: branches.from, to: branches.to, label: smcTransition.label);
       owner.transitions.add(bridgeTransition);
 
       addExitTransitions(owner, branches.from, smcFrom, smcTransition);
@@ -236,13 +230,13 @@ class SMCTransition {
   // /// Adds a direct link between two states which MUST be on the same page.
   static void addDirectTransition(
       SMCState from, SMCState to, int commonPage, SMCTransition orginal) {
-    assert(from.pageNo == to.pageNo);
+    assert(from.pageNo == to.pageNo, 'to and from must be on the same page');
 
     /// generate an exit from the current state
-    final transition = SMCTransition(from: from, to: to);
-    transition.label = orginal.label;
+    final transition = SMCTransition(from: from, to: to, label: orginal.label);
 
-    // WHO is the owner here as I think it controls what page these go on which is possibly not the same as the commonPage.
+    // WHO is the owner here as I think it controls what page these go
+    // on which is possibly not the same as the commonPage.
     // Same goes for each of the other transitions.
     final owner = findPageOwner(from, commonPage);
 
@@ -251,17 +245,17 @@ class SMCTransition {
 
   static void addExitTransitions(SMCState owner, SMCState smcFrom,
       SMCState smcTo, SMCTransition original) {
-    if (smcFrom == smcTo) return;
+    if (smcFrom == smcTo) {
+      return;
+    }
 
     if (isOnSamePage(smcFrom, smcTo)) {
       return;
     }
 
     /// generate an exit from the current state
-    final transition =
-        SMCTransition(from: smcFrom, to: genTerminalState(smcFrom));
-
-    transition.label = original.label;
+    final transition = SMCTransition(
+        from: smcFrom, to: genTerminalState(smcFrom), label: original.label);
 
     owner.transitions.add(transition);
 
@@ -269,17 +263,16 @@ class SMCTransition {
     var parent = owner.parent;
     while (parent != smcTo) {
       /// generate an exit from the current state
-      final transition =
-          SMCTransition(from: parent, to: genTerminalState(parent));
-      transition.label = original.label;
+      final transition = SMCTransition(
+          from: parent!, to: genTerminalState(parent), label: original.label);
       parent = parent.parent;
 
-      parent.transitions.add(transition);
+      parent!.transitions.add(transition);
     }
 
     /// add final transtiion to the actual 'to' state
-    final finalTransition = SMCTransition(from: parent, to: smcTo);
-    finalTransition.label = original.label;
+    final finalTransition =
+        SMCTransition(from: parent!, to: smcTo, label: original.label);
     smcTo.transitions.add(finalTransition);
   }
 
@@ -287,7 +280,8 @@ class SMCTransition {
   /// If the name is for a pseudo state then we return the state
   /// that the pseudo state name is based on.
   static SMCState findSMCState(SMCState owner, Type stateType) {
-    /// traverse the tree back up to the virtual root and then search down from there
+    /// traverse the tree back up to the virtual root and
+    /// then search down from there
     /// until we find the matching sd.
     final root = getRoot(owner);
 
@@ -303,18 +297,19 @@ class SMCTransition {
 
     if (state == null) {
       throw SMCatException(
-          "FSM is in an inconsistent state. You must have a transition to state $stateType but the state doesn't exist in the FSM.");
+          '''FSM is in an inconsistent state. You must have a transition to state $stateType but the state doesn't exist in the FSM.''');
     }
 
     return state;
   }
 
   /// Find the root of the SMCState tree.
+  // ignore: flutter_style_todos
   /// TODO: consider passing done the root from the exporter.
   static SMCState getRoot(SMCState owner) {
     var parent = owner.parent;
 
-    while (parent.type != SMCStateType.root) {
+    while (parent!.type != SMCStateType.root) {
       parent = parent.parent;
     }
     return parent;
@@ -323,38 +318,38 @@ class SMCTransition {
   /// Work our way up the tree from the given [state] until we find
   /// the exit straddle state on [targetPageNo].
   /// Each page can have an 'enter' straddle state and an 'exit' straddle state.
-  /// The 'exit' straddle state is the straddle state that takes us to a child page.
-  /// The 'enter' straddle state is the straddle state that takes to a parent page.
+  /// The 'exit' straddle state is the straddle state that takes
+  /// us to a child page.
+  /// The 'enter' straddle state is the straddle state that
+  /// takes to a parent page.
   static SMCState getStraddleStateForPage(SMCState state, int? targetPageNo) {
     var current = state;
     while (current.pageNo != targetPageNo) {
-      current = current.parent;
+      current = current.parent!;
     }
 
     /// The first state we see on a new page should be a straddle state.
-    /// assert(current.isStraddleState); of course if we are on the same page then no straddle state
+    /// assert(current.isStraddleState); of course if we are
+    /// on the same page then no straddle state
 
     return current;
   }
 
-  static bool isOnSamePage(SMCState lhs, SMCState rhs) {
-    return
-        // !lhs.isStraddleState &&
-        //     !rhs.isStraddleState &&
-        lhs.pageNo == rhs.pageNo;
-  }
+  static bool isOnSamePage(SMCState lhs, SMCState rhs) =>
+      lhs.pageNo == rhs.pageNo;
 
   /// True if the [state] is on [page]. If the [state] is a
   /// straddle state then it is considered on the same page if
   /// either the parent or child page is equal to [page].
-  static bool isOnPage(SMCState state, int page) {
-    return state.pageNo == page ||
-        (state.isStraddleState && state.straddleChildPage == page);
-  }
+  static bool isOnPage(SMCState state, int page) =>
+      state.pageNo == page ||
+      (state.isStraddleState && state.straddleChildPage == page);
 
   static void addEnterTransitions(SMCState? owner, SMCState? smcFrom,
       SMCState smcTo, SMCTransition smcTransition) {
-    if (smcFrom == smcTo) return;
+    if (smcFrom == smcTo) {
+      return;
+    }
 
     /// On the 'to' page we show a 'initial' transition.
     ///
@@ -362,28 +357,28 @@ class SMCTransition {
 
         /// generate an init into [smcTo] from its parent
         from: genInitialState(smcTo),
-        to: smcTo);
-    transition.label = smcTransition.label;
-    smcTo.parent.transitions.add(transition);
+        to: smcTo,
+        label: smcTransition.label);
+    smcTo.parent!.transitions.add(transition);
 
     /// Starting from the [smcTo] work our way back up to [smcFrom]
     /// Write an enter transition as we move to each new ancestor page
     var parent = smcTo.parent;
     var currentPageNo = smcTo.pageNo;
     while (currentPageNo > smcFrom!.pageNo) {
-      if (currentPageNo != parent.pageNo) {
+      if (currentPageNo != parent!.pageNo) {
         /// generate an init into the current state
-        if (!parent.parent.isRoot) {
+        if (!parent.parent!.isRoot) {
           // we are on a new page so show an init transition.
-          final transition =
-              SMCTransition(from: genInitialState(parent), to: parent);
-
-          transition.label = smcTransition.label;
-          parent.parent.transitions.add(transition);
+          final transition = SMCTransition(
+              from: genInitialState(parent),
+              to: parent,
+              label: smcTransition.label);
+          parent.parent!.transitions.add(transition);
         }
       }
       parent = parent.parent;
-      currentPageNo = parent.pageNo;
+      currentPageNo = parent!.pageNo;
     }
 
     /// We are back up at the [scmFrom] state so add a
@@ -395,11 +390,11 @@ class SMCTransition {
       transition = SMCTransition(
           // generate an exit from the current state
           from: smcFrom,
-          to: to);
-      transition.label = smcTransition.label;
+          to: to,
+          label: smcTransition.label);
 
       /// originally had parent.parent?
-      parent.transitions.add(transition);
+      parent!.transitions.add(transition);
     }
   }
 
@@ -409,14 +404,16 @@ class SMCTransition {
   /// If there are multiple siblings at the same level we
   /// retrn the first one.
   ///
-  /// [start] must be either in the [page] or in a later page (one with a higher no.)
+  /// [start] must be either in the [page] or in a
+  /// later page (one with a higher no.)
   static SMCState findPageOwner(SMCState start, int page) {
     var parent = start;
 
-    assert(parent.pageNo <= page || isOnPage(parent, page));
+    assert(parent.pageNo <= page || isOnPage(parent, page),
+        'inconsistant page hierarchy');
 
     while (!isOnPage(parent, page)) {
-      parent = parent.parent;
+      parent = parent.parent!;
     }
 
     if (!parent.isRoot) {}

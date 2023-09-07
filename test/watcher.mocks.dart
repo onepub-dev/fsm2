@@ -2,12 +2,14 @@
 // in fsm2/test/mock_watcher.dart.
 // Do not manually edit this file.
 
-import 'dart:async' as _i3;
+// ignore_for_file: inference_failure_on_instance_creation
 
-import 'package:fsm2/src/types.dart' as _i4;
-import 'package:mockito/mockito.dart' as _i1;
+import 'dart:async' as i3;
 
-import 'watcher.dart' as _i2;
+import 'package:fsm2/src/types.dart' as i4;
+import 'package:mockito/mockito.dart' as i1;
+
+import 'watcher.dart' as i2;
 
 // ignore_for_file: comment_references
 // ignore_for_file: unnecessary_parenthesis
@@ -15,21 +17,21 @@ import 'watcher.dart' as _i2;
 /// A class which mocks [Watcher].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockWatcher extends _i1.Mock implements _i2.Watcher {
+class MockWatcher extends i1.Mock implements i2.Watcher {
   MockWatcher() {
-    _i1.throwOnMissingStub(this);
+    i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<void> onEnter(Type? t, _i4.Event? e) =>
+  i3.Future<void> onEnter(Type? t, i4.Event? e) =>
       (super.noSuchMethod(Invocation.method(#onEnter, [t, e]),
-          returnValue: Future.value(null),
-          returnValueForMissingStub: Future<void>.value()) as _i3.Future<void>);
+          returnValue: Future.value(),
+          returnValueForMissingStub: Future<void>.value()) as i3.Future<void>);
   @override
-  _i3.Future<void> onExit(Type? t, _i4.Event? e) =>
+  i3.Future<void> onExit(Type? t, i4.Event? e) =>
       (super.noSuchMethod(Invocation.method(#onExit, [t, e]),
-          returnValue: Future.value(null),
-          returnValueForMissingStub: Future<void>.value()) as _i3.Future<void>);
+          returnValue: Future.value(),
+          returnValueForMissingStub: Future<void>.value()) as i3.Future<void>);
   @override
   void log(String? message) =>
       super.noSuchMethod(Invocation.method(#log, [message]),

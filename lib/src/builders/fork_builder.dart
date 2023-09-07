@@ -6,11 +6,10 @@ import 'graph_builder.dart';
 ///
 /// Instance of this class is passed to [GraphBuilder.state] method.
 class ForkBuilder<E extends Event> {
+  ForkBuilder() : _forkDefinition = ForkDefinition<E>();
   final ForkDefinition<E> _forkDefinition;
 
-  ForkBuilder() : _forkDefinition = ForkDefinition<E>();
-
-  ForkDefinition build() => _forkDefinition;
+  ForkDefinition<E> build() => _forkDefinition;
 
   void target<S extends State>() {
     _forkDefinition.addTarget(S);

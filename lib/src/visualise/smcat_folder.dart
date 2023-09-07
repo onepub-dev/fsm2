@@ -2,23 +2,22 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:fsm2/src/util/file_util.dart' as u;
-import 'package:fsm2/src/visualise/progress.dart';
-import 'package:fsm2/src/visualise/svg_file.dart';
-import 'package:fsm2/src/visualise/watch_folder.dart';
 import 'package:path/path.dart' as p;
 import 'package:synchronized/synchronized.dart';
 
+import '../util/file_util.dart' as u;
+import 'progress.dart';
 import 'smcat_file.dart';
+import 'svg_file.dart';
+import 'watch_folder.dart';
 
 /// Used to manage/monitor a folder containing smcat files.
 ///
 class SMCatFolder {
-  String folderPath;
-  String basename;
-
   /// [folderPath] is the name of the folder holding the smcat files.
   SMCatFolder({required this.folderPath, required this.basename});
+  String folderPath;
+  String basename;
 
   final lock = Lock();
 
@@ -53,7 +52,7 @@ class SMCatFolder {
   List<SvgFile> get listSvgs {
     final smcats = list;
 
-    final List<SvgFile> found = <SvgFile>[];
+    final found = <SvgFile>[];
 
     for (final smcat in smcats) {
       if (u.exists(smcat.svgPath)) {
@@ -64,10 +63,7 @@ class SMCatFolder {
   }
 
   void watch() {
-    WatchFolder(
-        pathTo: folderPath,
-        extension: 'smcat',
-        onChanged: (pathTo, action) => _onChanged(pathTo, action));
+    WatchFolder(pathTo: folderPath, extension: 'smcat', onChanged: _onChanged);
   }
 
   /// returns a stream of SvgFile. An SvgFile is added to the
@@ -76,14 +72,13 @@ class SMCatFolder {
   /// or call [queueGeneration]
   Stream<SvgFile> get stream => _generatedController.stream;
 
-  void delayedGeneration() {
-    lock.synchronized(() async {
-      final files = _toGenerate.toSet().toList();
-      files.sort((lhs, rhs) => lhs.compareTo(rhs));
+  Future<void> delayedGeneration() async {
+    await lock.synchronized(() async {
+      final files = _toGenerate.toSet().toList()
+        ..sort((lhs, rhs) => lhs.compareTo(rhs));
       for (final file in files) {
         try {
-          final svgFile =
-              await file.convert(force: false, progress: (line) => log(line));
+          final svgFile = await file.convert(force: false, progress: log);
           _generatedController.add(svgFile);
         } on SMCatException catch (e, _) {
           /// already logged.
@@ -99,17 +94,18 @@ class SMCatFolder {
     }
   }
 
-  /// Used by the watch mechanism to queue a smcat file for conversion to an svg file.
+  /// Used by the watch mechanism to queue a smcat file for
+  /// conversion to an svg file.
   ///
   /// You can however also queue files for generation via this mechanism.
   void queueGeneration(SMCatFile smCatFile) {
     _toGenerate.add(smCatFile);
 
-    Future.delayed(
-        const Duration(microseconds: 1500), () => delayedGeneration());
+    Future.delayed(const Duration(microseconds: 1500), delayedGeneration);
   }
 
-  /// Generate the svg files for all smcat files in [folderPath] with a matching [basename]
+  /// Generate the svg files for all smcat files in [folderPath]
+  /// with a matching [basename]
   ///
   /// Throws [SMCatException] if the file does not exist.
   Future<void> generateAll(

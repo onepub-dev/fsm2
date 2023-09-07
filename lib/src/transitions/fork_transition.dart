@@ -7,17 +7,14 @@ import 'transition_notification.dart';
 
 class ForkTransitionDefinition<S extends State, E extends Event>
     extends TransitionDefinition<E> {
+  ForkTransitionDefinition(super.stateDefinition, this.definition,
+      GuardCondition<E> condition, SideEffect<E>? sideEffect,
+      {super.conditionLabel, super.sideEffectLabel})
+      : super(condition: condition, sideEffect: sideEffect);
+
   /// List of state types that are the target of this fork.
 
-  final ForkDefinition definition;
-  ForkTransitionDefinition(StateDefinition stateDefinition, this.definition,
-      GuardCondition<E>? condition, SideEffect? sideEffect,
-      {String? conditionLabel, String? sideEffectLabel})
-      : super(stateDefinition,
-            condition: condition,
-            sideEffect: sideEffect,
-            conditionLabel: conditionLabel,
-            sideEffectLabel: sideEffectLabel);
+  final ForkDefinition<E> definition;
 
   @override
   List<Type> get targetStates => definition.stateTargets;
@@ -34,7 +31,7 @@ class ForkTransitionDefinition<S extends State, E extends Event>
     for (final targetState in targetStates) {
       final targetDefinition = graph.findStateDefinition(targetState);
 
-      final E _event = event as E;
+      final _event = event as E;
 
       final notification =
           TransitionNotification<E>(this, from, _event, targetDefinition);

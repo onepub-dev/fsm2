@@ -4,13 +4,12 @@
 
 // part  'co_region_definition.dart';
 
-import 'package:fsm2/src/transitions/join_transition.dart';
-
+import '../transitions/join_transition.dart';
 import '../types.dart';
 import 'state_definition.dart';
 
 class CoRegionDefinition<S extends State> extends StateDefinition<S> {
-  CoRegionDefinition(Type stateType) : super(stateType);
+  CoRegionDefinition(super.stateType);
 
   /// List of Events that must be received for the join to trigger.
   /// As we receive each one we set the value to true.
@@ -27,9 +26,7 @@ class CoRegionDefinition<S extends State> extends StateDefinition<S> {
 
   /// default implementation.
   @override
-  bool canTrigger(Type event) {
-    return _onReceived(event);
-  }
+  bool canTrigger(Type event) => _onReceived(event);
 
   /// There can only be one join target state.
   Type? _joinTargetState;
@@ -43,9 +40,11 @@ class CoRegionDefinition<S extends State> extends StateDefinition<S> {
     _joinTargetState ??= joinTransitionDefinition.targetStates[0];
 
     /// All joins for a coregion must target the same state.
+    // ignore: flutter_style_todos
     /// TODO: we could allow multiple targets by creating a map of target states
     /// and the set of events required to trigger them. But that is for later.
-    assert(_joinTargetState == joinTransitionDefinition.targetStates[0]);
+    assert(_joinTargetState == joinTransitionDefinition.targetStates[0],
+        'unexpected state');
 
     joinTransitions.add(joinTransitionDefinition);
 

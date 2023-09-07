@@ -24,7 +24,8 @@ import 'state_machine.dart';
 abstract class State {}
 
 /// Special class used to represent the terminal state of the FSM.
-/// If you add an 'on' transition to [TerminalState] then an transition arrow to a terminal state
+/// If you add an 'on' transition to [TerminalState] then an
+///  transition arrow to a terminal state
 /// icon  will be displayed when you export your statemachine to a diagram.
 class TerminalState extends State {}
 
@@ -52,7 +53,8 @@ class InitialEvent extends Event {}
 /// ```
 abstract class Event {}
 
-typedef GuardCondition<E extends Event> = bool Function(E event);
+typedef GuardCondition<E> = bool Function(E event);
+bool noGuardCondition(Event v) => true;
 
 typedef BuildGraph = void Function(GraphBuilder);
 
@@ -65,7 +67,8 @@ typedef OnEnter = Future<void>? Function(Type fromState, Event? event);
 typedef OnExit = Future<void>? Function(Type toState, Event? event);
 
 /// Callback when a transition occurs.
-/// We pass, fromState, Event that triggered the transition and the target state.
+/// We pass, fromState, Event that triggered the transition
+/// and the target state.
 /// A single event may result in multiple calls to the listener when we have
 /// active concurrent regions.
 typedef TransitionListener = void Function(

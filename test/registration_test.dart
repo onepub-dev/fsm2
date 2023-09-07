@@ -1,6 +1,6 @@
+import 'package:dcli_core/dcli_core.dart' as core;
 import 'package:fsm2/fsm2.dart';
-import 'package:fsm2/src/builders/co_region_builder.dart';
-import 'package:fsm2/src/builders/state_builder.dart';
+import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
 // enum RWStates
@@ -13,25 +13,27 @@ import 'package:test/test.dart';
 
 void main() {
   test('analyse', () async {
-    final fsm = createMachine();
+    final fsm = await createMachine();
     expect(fsm.analyse(), equals(true));
   });
 
   test('Export', () async {
-    final fsm = createMachine();
-    const file = 'test/smcat/registration.smcat';
-    // var exports =
-    fsm.export(file);
+    await core.withTempDir((tempDir) async {
+      final pathTo = join(tempDir, 'registration.scmcat');
+      final fsm = await createMachine();
+      // var exports =
+      fsm.export(pathTo);
 
-    // for (var page in exports.pages) {
-    //   var lines = read(page.path).toList().reduce((value, line) => value += '\n' + line);
-    //   expect(lines, equals(graph));
-    // }
+      // for (var page in exports.pages) {
+      //   var lines = read(page.path).toList().reduce((value, line) => value += '\n' + line);
+      //   expect(lines, equals(graph));
+      // }
+    });
   });
 }
 
-StateMachine createMachine() {
-  final stateMachine = StateMachine.create(
+Future<StateMachine> createMachine() async {
+  final stateMachine = await StateMachine.create(
       (g) => g
         ..initialState<AppLaunched>()
 
@@ -55,8 +57,7 @@ StateMachine createMachine() {
             )
 
         ///RegistrationRequired
-        ..coregion<RegistrationRequired>(
-            (builder) => registrationRequired(builder))
+        ..coregion<RegistrationRequired>(registrationRequired)
         ..state<AskCAForInvite>((b) {})
         ..onTransition(log),
       production: true);
@@ -79,13 +80,12 @@ void registrationRequired(StateBuilder<RegistrationRequired> builder) {
         conditionLabel: 'Recover Account')
 
     /// HasRegistrationType
-    ..state<RegistrationTypeSelected>(
-        (builder) => registrationTypeSelected(builder))
+    ..state<RegistrationTypeSelected>(registrationTypeSelected)
     // ..pageBreak
-    ..state<RegionPage>((builder) => regionPage(builder))
-    ..state<NamePage>((builder) => namePage(builder))
-    ..state<EmailPage>((b) => emailPage(b))
-    ..state<TrialPhonePage>((builder) => trialPhonePage(builder))
+    ..state<RegionPage>(regionPage)
+    ..state<NamePage>(namePage)
+    ..state<EmailPage>(emailPage)
+    ..state<TrialPhonePage>(trialPhonePage)
 
     /// for missing transitions
     ..on<OnTrialNotRequired, TrialRequired>(condition: (e) => true)
@@ -100,31 +100,29 @@ void registrationRequired(StateBuilder<RegistrationRequired> builder) {
 }
 
 StateBuilder<RegistrationTypeSelected> registrationTypeSelected(
-    StateBuilder<RegistrationTypeSelected> builder) {
-  return builder
-    // ..pageBreak
-    ..state<NewOrganisation>((builder) => builder
-      ..onEnter((s, e) async =>
-          RegistrationWizard.setType(RegistrationType.acceptInvite)))
-    ..state<RecoverAccount>((builder) => builder
-      ..onEnter((s, e) async =>
-          RegistrationWizard.setType(RegistrationType.newOrganisation))
-      ..on<OnUserNotFound, EmailRequired>())
-    ..state<AcceptInvitation>((builder) => acceptInvitation(builder))
-    ..coregion<MobileAndRegistrationTypeAcquired>(
-        (builder) => mobileAndRegistationTypeAcquired(builder));
-}
+        StateBuilder<RegistrationTypeSelected> builder) =>
+    builder
+      // ..pageBreak
+      ..state<NewOrganisation>((builder) => builder
+        ..onEnter((s, e) async =>
+            RegistrationWizard.setType(RegistrationType.acceptInvite)))
+      ..state<RecoverAccount>((builder) => builder
+        ..onEnter((s, e) async =>
+            RegistrationWizard.setType(RegistrationType.newOrganisation))
+        ..on<OnUserNotFound, EmailRequired>())
+      ..state<AcceptInvitation>(acceptInvitation)
+      ..coregion<MobileAndRegistrationTypeAcquired>(
+          mobileAndRegistationTypeAcquired);
 
 StateBuilder<AcceptInvitation> acceptInvitation(
-    StateBuilder<AcceptInvitation> builder) {
-  return builder
-    ..onEnter((s, e) async =>
-        RegistrationWizard.setType(RegistrationType.recoverAccount))
-    ..on<NoInviteFound, AskCAForInvite>()
-    ..on<ExpiredInvite, AskCAForInvite>()
-    ..on<OnUserNotFound, EmailRequired>()
-    ..on<OnUserEnteredMobile, MobileNoAcquired>();
-}
+        StateBuilder<AcceptInvitation> builder) =>
+    builder
+      ..onEnter((s, e) async =>
+          RegistrationWizard.setType(RegistrationType.recoverAccount))
+      ..on<NoInviteFound, AskCAForInvite>()
+      ..on<ExpiredInvite, AskCAForInvite>()
+      ..on<OnUserNotFound, EmailRequired>()
+      ..on<OnUserEnteredMobile, MobileNoAcquired>();
 
 class NoInviteFound extends Event {}
 
@@ -134,85 +132,77 @@ class AskCAForInvite extends State {}
 
 CoRegionBuilder<MobileAndRegistrationTypeAcquired>
     mobileAndRegistationTypeAcquired(
-        CoRegionBuilder<MobileAndRegistrationTypeAcquired> builder) {
-  return builder
-    ..state<EmailNotRequired>((_) {})
-    ..state<AcquireMobileNo>((builder) => builder
-      ..on<OnUserEnteredMobile, MobileNoAcquired>()
+            CoRegionBuilder<MobileAndRegistrationTypeAcquired> builder) =>
+        builder
+          ..state<EmailNotRequired>((_) {})
+          ..state<AcquireMobileNo>((builder) => builder
+            ..on<OnUserEnteredMobile, MobileNoAcquired>()
 
-      /// HasMobileNo
-      ..state<MobileNoAcquired>((builder) => builder
-        //..pageBreak
-        ..onEnter((s, e) async => fetchUserDetails())
-        ..on<OnMobileValidated, AcquireUser>()
+            /// HasMobileNo
+            ..state<MobileNoAcquired>((builder) => builder
+              //..pageBreak
+              ..onEnter((s, e) async => fetchUserDetails())
+              ..on<OnMobileValidated, AcquireUser>()
 
-        /// we fetch the user's state based on their mobile.
-        ..state<AcquireUser>((builder) => builder
-          ..on<OnUserNotFound, EmailRequired>()
-          ..on<OnUserDisabled, AccountDisabledTerminal>()
-          ..on<OnUserEnabled, AccountEnabled>()
-          ..on<OnUserAcquisitionFailed, UserAcquistionRetryRequired>())
+              /// we fetch the user's state based on their mobile.
+              ..state<AcquireUser>((builder) => builder
+                ..on<OnUserNotFound, EmailRequired>()
+                ..on<OnUserDisabled, AccountDisabledTerminal>()
+                ..on<OnUserEnabled, AccountEnabled>()
+                ..on<OnUserAcquisitionFailed, UserAcquistionRetryRequired>())
 
-        /// The user's account is active
-        ..state<AccountEnabled>((builder) => builder
-          ..on<OnInActiveCustomerFound, InactiveCustomerTerminal>()
-          ..on<OnActiveCustomerFound, ActiveCustomer>()
-          ..on<OnViableInvitiationFound, ViableInvitation>())
+              /// The user's account is active
+              ..state<AccountEnabled>((builder) => builder
+                ..on<OnInActiveCustomerFound, InactiveCustomerTerminal>()
+                ..on<OnActiveCustomerFound, ActiveCustomer>()
+                ..on<OnViableInvitiationFound, ViableInvitation>())
 
-        // hacks for missing states
-        ..state<AccountDisabledTerminal>((_) {})
-        ..state<UserAcquistionRetryRequired>((_) {})
-        ..state<InactiveCustomerTerminal>((_) {})
-        ..state<ActiveCustomer>((_) {})
-        ..state<ViableInvitation>((_) {})
-        ..state<TrialRequired>((_) {})
-        ..state<TrailAcquired>((_) {})));
-}
+              // hacks for missing states
+              ..state<AccountDisabledTerminal>((_) {})
+              ..state<UserAcquistionRetryRequired>((_) {})
+              ..state<InactiveCustomerTerminal>((_) {})
+              ..state<ActiveCustomer>((_) {})
+              ..state<ViableInvitation>((_) {})
+              ..state<TrialRequired>((_) {})
+              ..state<TrailAcquired>((_) {})));
 
-StateBuilder<EmailPage> emailPage(StateBuilder<EmailPage> b) {
-  return b
-    ..initialState<EmailRequired>()
-    //..pageBreak
-    ..on<OnEmailInvalid, EmailRequired>()
-    ..on<OnEmailValidated, EmailAcquired>()
-    ..on<OnEmailNotRequired, EmailNotRequired>()
-    ..state<EmailRequired>((_) {})
-    ..state<EmailAcquired>((_) {});
-}
+StateBuilder<EmailPage> emailPage(StateBuilder<EmailPage> b) => b
+  ..initialState<EmailRequired>()
+  //..pageBreak
+  ..on<OnEmailInvalid, EmailRequired>()
+  ..on<OnEmailValidated, EmailAcquired>()
+  ..on<OnEmailNotRequired, EmailNotRequired>()
+  ..state<EmailRequired>((_) {})
+  ..state<EmailAcquired>((_) {});
 
-StateBuilder<NamePage> namePage(StateBuilder<NamePage> builder) {
-  return builder
-    ..initialState<NameRequired>()
-    //..pageBreak
-    ..on<OnNameInvalid, NameRequired>()
-    ..on<OnNameValidated, NameAcquired>()
-    ..on<OnNameNotRequired, NameNotRequired>()
-    ..state<NameRequired>((_) {})
-    ..state<NameAcquired>((_) {})
-    ..state<NameNotRequired>((_) {});
-}
+StateBuilder<NamePage> namePage(StateBuilder<NamePage> builder) => builder
+  ..initialState<NameRequired>()
+  //..pageBreak
+  ..on<OnNameInvalid, NameRequired>()
+  ..on<OnNameValidated, NameAcquired>()
+  ..on<OnNameNotRequired, NameNotRequired>()
+  ..state<NameRequired>((_) {})
+  ..state<NameAcquired>((_) {})
+  ..state<NameNotRequired>((_) {});
 
 StateBuilder<TrialPhonePage> trialPhonePage(
-    StateBuilder<TrialPhonePage> builder) {
-  return builder
-    ..initialState<TrialRequired>()
-    //..pageBreak
-    ..on<OnTrailInvalid, TrialRequired>()
-    ..on<OnTrailValidated, TrailAcquired>()
-    ..on<OnTrialNotRequired, TrialNotRequired>();
-}
+        StateBuilder<TrialPhonePage> builder) =>
+    builder
+      ..initialState<TrialRequired>()
+      //..pageBreak
+      ..on<OnTrailInvalid, TrialRequired>()
+      ..on<OnTrailValidated, TrailAcquired>()
+      ..on<OnTrialNotRequired, TrialNotRequired>();
 
-StateBuilder<RegionPage> regionPage(StateBuilder<RegionPage> builder) {
-  return builder
-    ..initialState<RegionRequired>()
-    //..pageBreak
-    ..on<OnRegionInvalid, RegionRequired>()
-    ..on<OnRegionValidated, RegionAcquired>()
-    ..on<OnRegionNotRequired, RegionNotRequired>()
-    ..state<RegionRequired>((_) {})
-    ..state<RegionAcquired>((_) {})
-    ..state<RegionNotRequired>((_) {});
-}
+StateBuilder<RegionPage> regionPage(StateBuilder<RegionPage> builder) => builder
+  ..initialState<RegionRequired>()
+  //..pageBreak
+  ..on<OnRegionInvalid, RegionRequired>()
+  ..on<OnRegionValidated, RegionAcquired>()
+  ..on<OnRegionNotRequired, RegionNotRequired>()
+  ..state<RegionRequired>((_) {})
+  ..state<RegionAcquired>((_) {})
+  ..state<RegionNotRequired>((_) {});
 
 class OnEmailNotRequired implements Event {}
 
@@ -278,6 +268,7 @@ void fetchUserDetails() {}
 
 void fetchUserStatus() {}
 
+// ignore: avoid_classes_with_only_static_members
 class RegistrationWizard {
   static void restart() {}
 

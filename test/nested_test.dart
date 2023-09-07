@@ -1,7 +1,11 @@
 @Timeout(Duration(minutes: 10))
-import 'package:dcli/dcli.dart' hide equals;
+library;
+
+import 'package:dcli/dcli.dart';
+import 'package:dcli_core/dcli_core.dart' as core;
 import 'package:fsm2/fsm2.dart';
 import 'package:mockito/mockito.dart';
+import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
 import 'watcher.mocks.dart';
@@ -17,7 +21,7 @@ void main() {
 
   test('initial State should be Alive and Young', () async {
     final machine = await _createMachine<Alive>(watcher, human);
-    await machine.waitUntilQuiescent;
+    await machine.complete;
 
     expect(machine.isInState<Alive>(), equals(true));
     expect(machine.isInState<Young>(), equals(true));
@@ -39,7 +43,7 @@ void main() {
   test('Test no op transition', () async {
     final machine = await _createMachine<Alive>(watcher, human);
     machine.applyEvent(OnBirthday());
-    await machine.waitUntilQuiescent;
+    await machine.complete;
     expect(machine.isInState<Alive>(), equals(true));
     expect(machine.isInState<Young>(), equals(true));
     verifyInOrder([watcher.log('OnBirthday')]);
@@ -50,7 +54,7 @@ void main() {
     for (var i = 0; i < 19; i++) {
       machine.applyEvent(OnBirthday());
     }
-    await machine.waitUntilQuiescent;
+    await machine.complete;
     expect(machine.isInState<Alive>(), equals(true));
     expect(machine.isInState<MiddleAged>(), equals(true));
     verifyInOrder([watcher.log('OnBirthday')]);
@@ -59,10 +63,10 @@ void main() {
   test('Test multiple transitions', () async {
     final machine = await _createMachine<Alive>(watcher, human);
     machine.applyEvent(OnBirthday());
-    await machine.waitUntilQuiescent;
+    await machine.complete;
     expect(machine.isInState<Young>(), equals(true));
     machine.applyEvent(OnDeath());
-    await machine.waitUntilQuiescent;
+    await machine.complete;
     expect(machine.isInState<Dead>(), equals(true));
 
     verifyInOrder([watcher.log('OnBirthday')]);
@@ -73,8 +77,9 @@ void main() {
     final machine = await _createMachine<Dead>(watcher, human);
     try {
       machine.applyEvent(OnBirthday());
-      await machine.waitUntilQuiescent;
+      await machine.complete;
       fail('InvalidTransitionException not thrown');
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       expect(e, isA<InvalidTransitionException>());
     }
@@ -83,10 +88,10 @@ void main() {
   test('Transition to child state', () async {
     final machine = await _createMachine<Alive>(watcher, human);
     machine.applyEvent(OnDeath());
-    await machine.waitUntilQuiescent;
+    await machine.complete;
     expect(machine.isInState<Purgatory>(), equals(true));
     machine.applyEvent(OnJudged(Judgement.morallyAmbiguous));
-    await machine.waitUntilQuiescent;
+    await machine.complete;
     expect(machine.isInState<Matrix>(), equals(true));
     expect(machine.isInState<Dead>(), equals(true));
     expect(machine.isInState<Purgatory>(), equals(true));
@@ -96,7 +101,7 @@ void main() {
   });
 
   test('Unreachable State.', () async {
-    final machine = StateMachine.create(
+    final machine = await StateMachine.create(
         (g) => g
           ..initialState<Alive>()
           ..state<Alive>((b) => b..state<Dead>((b) {})),
@@ -110,7 +115,7 @@ void main() {
     final machine = await _createMachine<Dead>(watcher, human);
 
     machine.applyEvent(OnJudged(Judgement.good));
-    await machine.waitUntilQuiescent;
+    await machine.complete;
 
     /// should be in both states.
     expect(machine.isInState<InHeaven>(), equals(true));
@@ -126,7 +131,7 @@ void main() {
     for (var i = 0; i < 19; i++) {
       machine.applyEvent(onBirthday);
     }
-    await machine.waitUntilQuiescent;
+    await machine.complete;
     verify(await watcher.onExit(Young, onBirthday));
     verify(await watcher.onEnter(MiddleAged, onBirthday));
   });
@@ -138,7 +143,7 @@ void main() {
     /// age this boy until they are middle aged.
     final onDeath = OnDeath();
     machine.applyEvent(onDeath);
-    await machine.waitUntilQuiescent;
+    await machine.complete;
     verify(await watcher.onExit(Young, onDeath));
     verify(await watcher.onExit(Alive, onDeath));
     verify(await watcher.onEnter(Dead, onDeath));
@@ -146,15 +151,19 @@ void main() {
   });
 
   test('Export', () async {
-    final machine = await _createMachine<Alive>(watcher, human);
-    machine.analyse();
-    machine.export('test/smcat/nested_test.smcat');
+    await core.withTempDir((tempDir) async {
+      final pathToSmCat = join(tempDir, 'nested_test.smcat');
+      final machine = await _createMachine<Alive>(watcher, human);
+      machine
+        ..analyse()
+        ..export(pathToSmCat);
 
-    final lines = read('test/smcat/nested_test.smcat')
-        .toList()
-        .reduce((value, line) => value += '\n$line');
+      final lines = read(pathToSmCat)
+          .toList()
+          .reduce((value, line) => value += '\n$line');
 
-    expect(lines, equals(_graph));
+      expect(lines, equals(_graph));
+    });
   });
 }
 
@@ -198,8 +207,9 @@ Future<StateMachine> _createMachine<S extends State>(
         ..state<Matrix>((_) {}))
       ..state<InHeaven>((b) => b..state<Buddhist>((b) => b))
       ..state<InHell>((b) => b
-        ..state<Christian>(
-            (b) => b..state<SalvationArmy>((b) {})..state<Catholic>((b) => b))))
+        ..state<Christian>((b) => b
+          ..state<SalvationArmy>((b) {})
+          ..state<Catholic>((b) => b))))
     ..onTransition((from, event, to) => watcher.log('${event.runtimeType}')));
   return machine;
 }
@@ -208,44 +218,43 @@ class Human {
   int age = 0;
 }
 
-class Alive implements State {}
+class Alive extends State {}
 
-class Dead implements State {}
+class Dead extends State {}
 
 class Young extends Alive {}
 
-class MiddleAged implements State {}
+class MiddleAged extends State {}
 
-class Old implements State {}
+class Old extends State {}
 
-class Purgatory implements State {}
+class Purgatory extends State {}
 
-class Matrix implements State {}
+class Matrix extends State {}
 
-class InHeaven implements State {}
+class InHeaven extends State {}
 
-class InHell implements State {}
+class InHell extends State {}
 
-class Christian implements State {}
+class Christian extends State {}
 
-class Buddhist implements State {}
+class Buddhist extends State {}
 
-class Catholic implements State {}
+class Catholic extends State {}
 
-class SalvationArmy implements State {}
+class SalvationArmy extends State {}
 
 /// events
 
-class OnBirthday implements Event {}
+class OnBirthday extends Event {}
 
-class OnDeath implements Event {}
+class OnDeath extends Event {}
 
 enum Judgement { good, bad, ugly, morallyAmbiguous }
 
 class OnJudged implements Event {
-  Judgement judgement;
-
   OnJudged(this.judgement);
+  Judgement judgement;
 }
 
 var _graph = '''

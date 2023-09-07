@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer';
-
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
@@ -13,6 +12,13 @@ typedef OnFolderChanged = void Function(
 /// Used to manage/monitor a folder containing files with the given extension.
 ///
 class WatchFolder {
+  /// The file [extension] to filter what we are interested in.
+  /// The [extension] should NOT start with a period.
+  WatchFolder(
+      {required this.pathTo,
+      required this.extension,
+      required this.onChanged,
+      this.recursive = false});
   String pathTo;
   String extension;
 
@@ -20,24 +26,14 @@ class WatchFolder {
 
   OnFolderChanged onChanged;
 
-  /// The file [extension] to filter what we are interested in.
-  /// The [extension] should NOT start with a period.
-  WatchFolder(
-      {required this.pathTo,
-      required this.extension,
-      this.recursive = false,
-      required this.onChanged});
-
   /// Watches the folder for any changes which involve a file ending
   /// in .[extension]
-  void watch() {
+  Future<void> watch() async {
     // ignore: avoid_print
     log('watching $pathTo');
-    Directory(pathTo).watch().listen((event) {
-      _controller.add(event);
-    });
+    Directory(pathTo).watch().listen(_controller.add);
 
-    _startDispatcher();
+    await _startDispatcher();
   }
 
   final _controller = StreamController<FileSystemEvent>();
@@ -55,8 +51,9 @@ class WatchFolder {
   }
 
   /// Call this method to stop watching a folder.
-  void stop() {
-    subscriber.cancel();
+  Future<void> stop() async {
+    await subscriber.cancel();
+    await _controller.close();
   }
 
   void onFileSystemEvent(FileSystemEvent event) {
@@ -73,7 +70,7 @@ class WatchFolder {
 
   void onCreateEvent(FileSystemCreateEvent event) {
     if (recursive && event.isDirectory) {
-      Directory(event.path).watch().listen((event) => _controller.add(event));
+      Directory(event.path).watch().listen(_controller.add);
     } else {
       // if (lastDeleted != null) {
       //   if (basename(event.path) == basename(lastDeleted)) {
@@ -111,7 +108,8 @@ class WatchFolder {
 
     // if (event.isDirectory) {
     //   actioned = true;
-    //   await MoveCommand().importMoveDirectory(from: libRelative(from), to: libRelative(to), alreadyMoved: true);
+    //   await MoveCommand().importMoveDirectory(from: libRelative(from),
+    //to: libRelative(to), alreadyMoved: true);
     // } else {
     //   if (extension(from) == '.dart') {
     //     /// we don't process the move if the 'to' isn't a dart file.
@@ -119,12 +117,14 @@ class WatchFolder {
     //     if (isDirectory(to) || isFile(to) && extension(to) == '.dart') {
     //       actioned = true;
     //       await MoveCommand()
-    //           .moveFile(from: libRelative(from), to: libRelative(to), fromDirectory: false, alreadyMoved: true);
+    //           .moveFile(from: libRelative(from), to: libRelative(to),
+    // fromDirectory: false, alreadyMoved: true);
     //     }
     //   }
     // }
     // if (actioned) {
-    //   print('Move: directory: ${event.isDirectory} ${event.path} destination: ${event.destination}');
+    //   print('Move: directory: ${event.isDirectory} ${event.path}
+    //destination: ${event.destination}');
     // }
   }
 

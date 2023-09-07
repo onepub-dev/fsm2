@@ -2,8 +2,8 @@ import 'dart:developer';
 
 import 'package:fsm2/fsm2.dart';
 
-void main() {
-  final machine = StateMachine.create((g) => g
+void main() async {
+  final machine = await StateMachine.create((g) => g
     ..initialState<Solid>()
     ..state<Solid>((b) => b
       ..on<OnMelted, Liquid>(sideEffect: (e) async => log('Melted'))
@@ -19,14 +19,12 @@ void main() {
       ..onExit((s, e) async => log('Exiting $s State'))
       ..on<OnCondensed, Liquid>(sideEffect: (e) async => log('Condensed')))
     ..onTransition((from, e, to) => log(
-        'Received Event $e in State ${from!.stateType} transitioning to State ${to!.stateType}')));
-
-  machine.analyse();
-  machine.export('test/smcat/water.smcat');
-
-  machine.applyEvent(OnMelted());
-
-  machine.applyEvent(OnFroze());
+        '''Received Event $e in State ${from!.stateType} transitioning to State ${to!.stateType}''')));
+  machine
+    ..analyse()
+    ..export('test/smcat/water.smcat')
+    ..applyEvent(OnMelted())
+    ..applyEvent(OnFroze());
 }
 
 class Solid implements State {}

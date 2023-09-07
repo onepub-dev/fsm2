@@ -1,15 +1,21 @@
+import 'package:dcli/dcli.dart';
+import 'package:dcli_core/dcli_core.dart' as core;
 import 'package:fsm2/fsm2.dart';
+import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
-import 'package:dcli/dcli.dart' hide equals;
 
 late StateMachine machine;
 void main() {
   test('export', () async {
-    _createMachine();
-    machine.analyse();
-    machine.export('test/smcat/life_test.smcat');
+    await core.withTempDir((tempDir) async {
+      final pathToTest = join(tempDir, 'life_test.smcat');
 
-    const graph = '''
+      await _createMachine();
+      machine
+        ..analyse()
+        ..export(pathToTest);
+
+      const graph = '''
 
 Twinkle {
 	Twinkle => Gestation : Conception;
@@ -29,16 +35,16 @@ Adult {
 Dead;
 initial => Twinkle : Twinkle;''';
 
-    final lines = read('test/smcat/life_test.smcat')
-        .toList()
-        .reduce((value, line) => value += '\n$line');
+      final lines =
+          read(pathToTest).toList().reduce((value, line) => value += '\n$line');
 
-    expect(lines, equals(graph));
+      expect(lines, equals(graph));
+    });
   });
 }
 
-void _createMachine() {
-  machine = StateMachine.create((g) => g
+Future<void> _createMachine() async {
+  machine = await StateMachine.create((g) => g
     ..initialState<Twinkle>()
     ..state<Twinkle>((b) => b..on<Conception, Gestation>())
     ..state<Gestation>((b) => b..on<Born, Baby>())

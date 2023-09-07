@@ -1,12 +1,13 @@
-import 'package:fsm2/src/state_machine.dart';
-import 'package:tree_iterator/tree_iterator.dart';
 import 'package:path/path.dart';
+import 'package:tree_iterator/tree_iterator.dart';
 
+import '../state_machine.dart';
 import 'exporter.dart';
 import 'smc_state.dart';
 import 'smc_transition.dart';
 
-/// Class exports a [StateMachine] to a state-machine-cat notation file so that the FMS can be visualised.
+/// Class exports a [StateMachine] to a state-machine-cat notation
+///  file so that the FMS can be visualised.
 ///
 /// https://github.com/sverweij/state-machine-cat
 ///
@@ -25,9 +26,12 @@ import 'smc_transition.dart';
 /// ```
 
 class SMCatExporter implements Exporter {
+  /// creates a map of the terminal ordinals to what
+  /// parent state they belong to.
+  /// var terminalsOwnedByRegion = <Type, List<int>>{};
+  SMCatExporter(this.stateMachine);
   final StateMachine stateMachine;
-  final SMCState virtualRoot =
-      SMCState(name: 'initial', type: SMCStateType.root, pageBreak: false);
+  final SMCState virtualRoot = SMCState.root(name: 'initial', pageBreak: false);
 
   /// we need to suppress any duplicate transitions which can
   /// happen when we are forking.
@@ -35,14 +39,7 @@ class SMCatExporter implements Exporter {
 
   final exports = ExportedPages();
 
-  /// creates a map of the terminal ordinals to what
-  /// parent state they belong to.
-  /// var terminalsOwnedByRegion = <Type, List<int>>{};
-  SMCatExporter(this.stateMachine);
-
-  ExportedPages export(String path) {
-    return _save(path);
-  }
+  ExportedPages export(String path) => _save(path);
 
   ExportedPages _save(String path) {
     final smcRoot = _build();
@@ -51,15 +48,11 @@ class SMCatExporter implements Exporter {
 
     const indent = 0;
     smcRoot.write(this, indent: indent);
-    // raf.writeStringSync(';\n');
 
-    final ancestor = stateMachine.oldestAncestor(stateMachine.initialState);
+    final ancestor = oldestAncestor(stateMachine, stateMachine.initialState);
 
-    write(
-        'initial => ${ancestor.toString()} : ${stateMachine.initialStateLabel};',
-        page: 0,
-        indent: 0,
-        endOfLine: true);
+    write('initial => $ancestor : ${stateMachine.initialStateLabel};',
+        page: 0, indent: 0, endOfLine: true);
 
     _closePageFiles();
 
@@ -70,10 +63,11 @@ class SMCatExporter implements Exporter {
     virtualRoot.pageNo = 0;
     for (final child in stateMachine.topStateDefinitions) {
       virtualRoot
-          .addChild(SMCState.build(stateMachine, virtualRoot, child, page: 0));
+          .addChild(SMCState.child(parent: virtualRoot, sd: child, pageNo: 0));
     }
 
-    // we can only build the transitions once the full statemachine tree is built.
+    // we can only build the transitions once the full
+    // statemachine tree is built.
     traverseTree<SMCState>(virtualRoot, (node) => node.children, (node) {
       node.buildTransitions(stateMachine);
 
@@ -132,7 +126,9 @@ class SMCatExporter implements Exporter {
   int _countPageBreaks(SMCState smcRoot) {
     var pageBreaks = 0;
 
-    if (smcRoot.pageBreak) pageBreaks++;
+    if (smcRoot.pageBreak) {
+      pageBreaks++;
+    }
     for (final child in smcRoot.children) {
       pageBreaks += _countPageBreaks(child);
     }
@@ -144,7 +140,9 @@ class SMCatExporter implements Exporter {
   void write(String string,
       {required int indent, required int? page, bool endOfLine = false}) {
     exports.write(page!, '\n${_indent(indent)}$string');
-    if (endOfLine) exports.write(page, '\n');
+    if (endOfLine) {
+      exports.write(page, '\n');
+    }
   }
 
   /// writes a string to the given page file.
@@ -152,10 +150,10 @@ class SMCatExporter implements Exporter {
   void append(String string, {required int? page, bool endOfLine = false}) {
     exports.write(page!, string);
 
-    if (endOfLine) exports.write(page, '\n');
+    if (endOfLine) {
+      exports.write(page, '\n');
+    }
   }
 
-  String _indent(int level) {
-    return '\t' * (level - 1);
-  }
+  String _indent(int level) => '\t' * (level - 1);
 }

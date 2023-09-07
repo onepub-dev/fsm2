@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 import 'definitions/state_definition.dart';
 import 'exceptions.dart';
 import 'graph.dart';
@@ -10,15 +12,17 @@ import 'virtual_root.dart';
 ///
 /// This class should only be used to store
 /// a path which starts from an active leaf.
+@immutable
 class PartialStatePath {
-  /// List of states from the leaf (stored as the first element in the array) to the root state.
-  final List<StateDefinition> _path;
-
   PartialStatePath() : this._internal();
 
   PartialStatePath._internal() : _path = <StateDefinition>[];
 
-  PartialStatePath.fromPath(this._path);
+  const PartialStatePath.fromPath(this._path);
+
+  /// List of states from the leaf (stored as the first element in the array)
+  ///  to the root state.
+  final List<StateDefinition> _path;
 
   /// Returns the [StateDefinition] for the tip of the branch.
   /// Throws a StateError if you try to access [leaf] for an
@@ -32,7 +36,9 @@ class PartialStatePath {
 
   bool isInState(Type state) {
     for (final stateDef in _path) {
-      if (stateDef.stateType == state) return true;
+      if (stateDef.stateType == state) {
+        return true;
+      }
     }
     return false;
   }
@@ -48,25 +54,18 @@ class PartialStatePath {
 
   @override
   bool operator ==(covariant PartialStatePath other) {
-    if (_path.isEmpty && other._path.isEmpty) return true;
-    if (_path.length != other._path.length) return false;
+    if (_path.isEmpty && other._path.isEmpty) {
+      return true;
+    }
+    if (_path.length != other._path.length) {
+      return false;
+    }
 
     return leaf.stateType == other.leaf.stateType;
   }
 
-  int? _hashCode;
-
   @override
-  int get hashCode {
-    if (_hashCode == null) {
-      final _hash = _path.fold(
-          0, (int hash, StateDefinition<State>? def) => _calcHash(hash, def));
-
-      _hashCode = _hash;
-    }
-
-    return _hashCode!;
-  }
+  int get hashCode => _path.fold(0, _calcHash);
 
   int _calcHash(int hash, StateDefinition<State>? def) {
     var _hash = hash;

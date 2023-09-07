@@ -1,29 +1,28 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:fsm2/src/util/file_util.dart';
-import 'package:fsm2/src/visualise/progress.dart';
+
 import 'package:path/path.dart';
+
+import '../util/file_util.dart';
+import 'progress.dart';
 import 'size.dart';
 
 class SvgFile {
-  String pathTo;
+  SvgFile(this.pathTo) {
+    pageNo = extractPageNo(pathTo);
+    lastModified;
+  }
+  final String pathTo;
 
-  late int pageNo;
+  late final int pageNo;
 
   bool _hasSize = false;
   Size? _size;
 
   DateTime? _lastModified;
 
-  SvgFile(this.pathTo) {
-    pageNo = extractPageNo(pathTo);
-    lastModified;
-  }
-
-  bool get hasChanged {
-    return _lastModified != lastModified;
-  }
+  bool get hasChanged => _lastModified != lastModified;
 
   int? get width => size!.width;
 
@@ -37,7 +36,7 @@ class SvgFile {
     final filename = basename(pathTo);
     final workingDir = dirname(pathTo);
 
-    final Process process = await Process.start('firefox', [filename],
+    final process = await Process.start('firefox', [filename],
         workingDirectory: workingDir);
 
     process.stdout.transform(utf8.decoder).listen((data) {
@@ -85,12 +84,12 @@ class SvgFile {
 
     await replace(pathTo, '</svg>', svgPageNo);
 
-    final newPageSize = Size.copyFrom(size!);
-    newPageSize.height = yPos + 10;
+    final newPageSize = Size.copyFrom(size!)..height = yPos + 10;
     await updatePageHeight(pathTo, size!, newPageSize);
   }
 
-  /// We increase the page hieght so we can fit the page no. at the bottom of the
+  /// We increase the page hieght so we can fit the page no. at
+  /// the bottom of the
   /// page without it being over any of the diagram.
   Future<void> updatePageHeight(
       String svgPath, Size pageSize, Size newPageSize) async {
@@ -114,9 +113,7 @@ class SvgFile {
     await replace(svgPath, existing, replacement);
   }
 
-  int compareTo(SvgFile other) {
-    return pageNo - other.pageNo;
-  }
+  int compareTo(SvgFile other) => pageNo - other.pageNo;
 
   Size? get size {
     if (!_hasSize) {
@@ -128,10 +125,8 @@ class SvgFile {
 
   /// gets the page height from the svg file.
   Size _getPageSize() {
-    // print(
-    //     'exists: ${exists(pathTo)} $pathTo size: ${FileStat.statSync(pathTo).size}');
     final size = Size(0, 0);
-    final List<String> lines = load();
+    final lines = load();
     final svgLine = lines.firstWhere(
         (line) => line.trim().startsWith('<svg width'),
         orElse: () => '<svg width="1000pt" height="500pt"');
@@ -142,14 +137,14 @@ class SvgFile {
     }
 
     final attributes = svgLine.trim().split(' ');
-    assert(attributes.length == 3);
+    assert(attributes.length == 3, 'expected three attributtes');
 
     final widthAttribute = attributes[1];
-    assert(widthAttribute.startsWith('width'));
+    assert(widthAttribute.startsWith('width'), 'expected width');
     size.width = getAttributeInt(widthAttribute);
 
     final heightAttribute = attributes[2];
-    assert(heightAttribute.startsWith('height'));
+    assert(heightAttribute.startsWith('height'), 'expected height');
     size.height = getAttributeInt(heightAttribute);
 
     return size;
@@ -167,7 +162,7 @@ class SvgFile {
 
   int? getAttributeInt(String attribute) {
     final parts = attribute.split('=');
-    assert(parts.length == 2);
+    assert(parts.length == 2, 'expected key value paire');
 
     var pts = parts[1];
     pts = pts.replaceAll('pt', '');
@@ -178,12 +173,12 @@ class SvgFile {
   }
 
   @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => pathTo.hashCode;
 
   @override
-  bool operator ==(covariant SvgFile other) {
-    return pathTo == other.pathTo;
-  }
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(covariant SvgFile other) => pathTo == other.pathTo;
 
   Future<void> replace(
       String svgPath, String existing, String replacement) async {
@@ -207,6 +202,7 @@ class SvgFile {
 
       backupFile.renameSync(svgPath);
       log('replace complete $svgPath');
+      // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       log('Excepton in replace: $e, $st');
     }
@@ -221,7 +217,7 @@ class SvgFile {
 
     final paths = files.map((file) => file.pathTo).toList();
 
-    final Process process = await Process.start('firefox', paths);
+    final process = await Process.start('firefox', paths);
 
     process.stdout.transform(utf8.decoder).listen((data) {
       progress!(data);

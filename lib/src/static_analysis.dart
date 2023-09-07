@@ -30,10 +30,10 @@ bool analyse(Graph graph) {
       Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
 
   final remainingStateMap =
-      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions);
+      Map<Type, StateDefinition<State>>.from(graph.stateDefinitions)
 
-  /// always remove the virtual root as is never directly used.
-  remainingStateMap.remove(VirtualRoot);
+        /// always remove the virtual root as is never directly used.
+        ..remove(VirtualRoot);
   stateDefinitionMap.remove(VirtualRoot);
 
   /// the initial state is alwasy reachable.
@@ -52,10 +52,12 @@ bool analyse(Graph graph) {
           /// this will be reported later.
           continue;
         }
-        remainingStateMap.remove(targetState);
+        remainingStateMap
+          ..remove(targetState)
 
-        /// If the targetDefinition can be reached then the initial state can be reached.
-        remainingStateMap.remove(targetDefinition.initialState);
+          /// If the targetDefinition can be reached then the
+          ///  initial state can be reached.
+          ..remove(targetDefinition.initialState);
 
         // if the stateDefinition can be reached so can all its parents.
         var parent = targetDefinition.parent!;
@@ -85,7 +87,7 @@ bool analyse(Graph graph) {
       allGood = false;
       // ignore: avoid_print
       print(
-          'Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.');
+          '''Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.''');
     }
   }
 
@@ -93,14 +95,18 @@ bool analyse(Graph graph) {
   /// 1) the toState must be defined
   /// 2) the toState must be a leaf state
   for (final stateDefinition in stateDefinitionMap.values) {
-    if (stateDefinition.stateType == VirtualRoot) continue;
+    if (stateDefinition.stateType == VirtualRoot) {
+      continue;
+    }
     // print('Found state: ${stateDefinition.stateType}');
     for (final transitionDefinition
         in stateDefinition.getTransitions(includeInherited: false)) {
       final targetStates = transitionDefinition.targetStates;
       for (final targetState in targetStates) {
         // Ignore our special terminal state.
-        if (targetState == TerminalState) continue;
+        if (targetState == TerminalState) {
+          continue;
+        }
         final toStateDefinition = graph.stateDefinitions[targetState];
         if (toStateDefinition == null) {
           allGood = false;
@@ -111,7 +117,8 @@ bool analyse(Graph graph) {
 
         // if (toStateDefinition.isAbstract) {
         //   allGood = false;
-        //   print('Found transition to abstract state ${targetState}. Only leaf states may be the target of a transition');
+        //   print('Found transition to abstract state ${targetState}.
+        //Only leaf states may be the target of a transition');
         // }
       }
     }
@@ -124,30 +131,31 @@ bool analyse(Graph graph) {
         allGood = false;
         // ignore: avoid_print
         print(
-            'Found coregion ${stateDefinition.stateType} which has no children.');
+            '''Found coregion ${stateDefinition.stateType} which has no children.''');
       }
 
       if (stateDefinition.childStateDefinitions.length == 1) {
         allGood = false;
         // ignore: avoid_print
         print(
-            'Found coregion ${stateDefinition.stateType} which has a single child. CoRegions must have at least two chilren.');
+            '''Found coregion ${stateDefinition.stateType} which has a single child. CoRegions must have at least two chilren.''');
       }
     }
   }
 
   /// Check that all child joins of a coregion target the same external state
   /// and that they only target states that are external to the coregion
-  // TODO:
-
-  /// InitialStates MUST target a child state (i.e. they can't target a grand children)
+  /// InitialStates MUST target a child state (i.e. they can't target a
+  /// grand children)
   for (final stateDefinition in stateDefinitionMap.values) {
-    if (stateDefinition.initialState == null) continue;
+    if (stateDefinition.initialState == null) {
+      continue;
+    }
     if (!stateDefinition.isDirectChild(stateDefinition.initialState!)) {
       allGood = false;
       // ignore: avoid_print
       print(
-          'The initialState for ${stateDefinition.stateType} must target a child. ${stateDefinition.initialState} is not a child.');
+          '''The initialState for ${stateDefinition.stateType} must target a child. ${stateDefinition.initialState} is not a child.''');
     }
   }
 

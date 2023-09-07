@@ -2,10 +2,13 @@
 
 import 'dart:async';
 import 'dart:io';
+
+import 'package:args/args.dart';
 import 'package:dcli/dcli.dart';
 import 'package:fsm2/src/util/file_util.dart';
 import 'package:fsm2/src/visualise/smcat_folder.dart';
 import 'package:fsm2/src/visualise/svg_file.dart';
+import 'package:path/path.dart';
 
 /// dcli create show.dart
 ///
@@ -15,49 +18,45 @@ import 'package:fsm2/src/visualise/svg_file.dart';
 /// For details on installing dcli.
 ///
 // ignore_for_file: avoid_print
-void main(List<String> args) {
-  final parser = ArgParser();
-  parser.addFlag(
-    'verbose',
-    abbr: 'v',
-    negatable: false,
-    help: 'Logs additional details to the cli',
-  );
-
-  parser.addFlag(
-    'help',
-    abbr: 'h',
-    negatable: false,
-    help: 'Shows the help message',
-  );
-
-  parser.addFlag(
-    'show',
-    abbr: 's',
-    negatable: false,
-    help: 'After generating the image file it will be displayed using firefox.',
-  );
-
-  parser.addFlag(
-    'watch',
-    abbr: 'w',
-    negatable: false,
-    help: 'Monitors the smcat files and regenerates the svg if they change.',
-  );
-
-  parser.addFlag(
-    'install',
-    abbr: 'i',
-    negatable: false,
-    help: 'Install the smcat dependencies',
-  );
-
-  parser.addFlag(
-    'force',
-    abbr: 'f',
-    negatable: false,
-    help: 'Force regeneration of svg files even if they are upto date.',
-  );
+Future<void> main(List<String> args) async {
+  final parser = ArgParser()
+    ..addFlag(
+      'verbose',
+      abbr: 'v',
+      negatable: false,
+      help: 'Logs additional details to the cli',
+    )
+    ..addFlag(
+      'help',
+      abbr: 'h',
+      negatable: false,
+      help: 'Shows the help message',
+    )
+    ..addFlag(
+      'show',
+      abbr: 's',
+      negatable: false,
+      help:
+          'After generating the image file it will be displayed using firefox.',
+    )
+    ..addFlag(
+      'watch',
+      abbr: 'w',
+      negatable: false,
+      help: 'Monitors the smcat files and regenerates the svg if they change.',
+    )
+    ..addFlag(
+      'install',
+      abbr: 'i',
+      negatable: false,
+      help: 'Install the smcat dependencies',
+    )
+    ..addFlag(
+      'force',
+      abbr: 'f',
+      negatable: false,
+      help: 'Force regeneration of svg files even if they are upto date.',
+    );
 
   final parsed = parser.parse(args);
 
@@ -89,11 +88,11 @@ void main(List<String> args) {
   final pathTo = parsed.rest[0];
   final folder =
       SMCatFolder(folderPath: dirname(pathTo), basename: getBasename(pathTo));
-  waitForEx(generate(folder, show: show, watch: watch, force: force));
+  await generate(folder, show: show, watch: watch, force: force);
 }
 
 Future<void> generate(SMCatFolder folder,
-    {bool? show, required bool watch, required bool force}) async {
+    {required bool watch, required bool force, bool? show}) async {
   var count = 0;
   await folder.generateAll(
       force: force,
@@ -103,21 +102,21 @@ Future<void> generate(SMCatFolder folder,
       });
 
   if (count == 0) {
-    print(
-        'No files found that needed generating. Use -f to regenerate all files.');
+    print('''
+No files found that needed generating. Use -f to regenerate all files.''');
   }
   if (watch) {
     folder.watch();
 
     if (show!) {
       print(folder.listSvgs);
-      await SvgFile.showList(folder.listSvgs, progress: (line) => print(line));
+      await SvgFile.showList(folder.listSvgs, progress: print);
       await for (final svgFile in folder.stream) {
-        await svgFile.show(progress: (line) => print(line));
+        await svgFile.show(progress: print);
       }
     }
   } else if (show!) {
-    await folder.show(progress: (line) => print(line));
+    await folder.show(progress: print);
   }
 }
 
@@ -130,10 +129,10 @@ void install() {
 }
 
 void showUsage(ArgParser parser) {
-  print('Usage: ${DartScript.self.exeName} <base name of myfsm2>\n');
-  print('Converts a set of smcat files into svg files.');
-  print(
-      'If your smcat file has multiple parts due to page breaks then each page will be processed.');
-  print(parser.usage);
+  print('''
+Usage: ${DartScript.self.exeName} <base name of myfsm2>
+Converts a set of smcat files into svg files.
+If your smcat file has multiple parts due to page breaks then each page will be processed.
+${parser.usage}''');
   exit(1);
 }

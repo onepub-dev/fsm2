@@ -28,6 +28,4 @@ int extractPageNo(String filename) {
   return nPageNo;
 }
 
-bool exists(String pathTo) {
-  return File(pathTo).existsSync();
-}
+bool exists(String pathTo) => File(pathTo).existsSync();

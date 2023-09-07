@@ -1,6 +1,5 @@
-import 'package:fsm2/src/exceptions.dart';
-
 import 'definitions/state_definition.dart';
+import 'exceptions.dart';
 import 'types.dart';
 import 'virtual_root.dart';
 
@@ -31,7 +30,9 @@ class Graph {
   /// Checks if the given [stateType] is a top level state.
   bool isTopLevelState(Type? stateType) {
     for (final sd in topStateDefinitions) {
-      if (sd.stateType == stateType) return true;
+      if (sd.stateType == stateType) {
+        return true;
+      }
     }
     return false;
   }

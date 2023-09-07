@@ -1,22 +1,22 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:fsm2/src/util/file_util.dart';
-import 'package:fsm2/src/visualise/progress.dart';
-import 'package:fsm2/src/visualise/svg_file.dart';
 import 'package:path/path.dart' as p;
 
+import '../util/file_util.dart';
+import 'progress.dart';
+import 'svg_file.dart';
+
 class SMCatFile {
-  String pathTo;
-  int pageNo = 0;
-
-  late SvgFile _svgFile;
-
   SMCatFile(this.pathTo) {
     pageNo = extractPageNo(pathTo);
 
     _svgFile = SvgFile(svgPath);
   }
+  String pathTo;
+  int pageNo = 0;
+
+  late SvgFile _svgFile;
 
   String get svgPath {
     final basename = getBasename(pathTo);
@@ -27,9 +27,7 @@ class SMCatFile {
     }
   }
 
-  SvgFile get svgFile {
-    return _svgFile;
-  }
+  SvgFile get svgFile => _svgFile;
 
   int? get height => svgFile.height;
 
@@ -42,15 +40,17 @@ class SMCatFile {
   /// Throws [SMCatException if the conversion fails]
   ///
   Future<SvgFile> convert(
-      {Progress progress = noOp, required bool force}) async {
-    if (!force && !isConversionRequired()) return svgFile;
+      {required bool force, Progress progress = noOp}) async {
+    if (!force && !isConversionRequired()) {
+      return svgFile;
+    }
 
     progress('Generating: $svgPath ');
     if (File(svgPath).existsSync()) {
       File(svgPath).deleteSync();
     }
 
-    final Process process = await Process.start('smcat', [p.basename(pathTo)],
+    final process = await Process.start('smcat', [p.basename(pathTo)],
         workingDirectory: p.dirname(pathTo));
 
     process.stdout.transform(utf8.decoder).listen((data) {
@@ -58,10 +58,12 @@ class SMCatFile {
     });
 
     process.stderr.transform(utf8.decoder).listen((data) {
-      if (!data.contains('viz.js:33')) progress(data);
+      if (!data.contains('viz.js:33')) {
+        progress(data);
+      }
     });
 
-    final int exitCode = await process.exitCode;
+    final exitCode = await process.exitCode;
 
     if (exitCode == 0) {
       /// See if the filename contains a page no.
@@ -76,9 +78,7 @@ class SMCatFile {
     }
   }
 
-  int compareTo(SMCatFile other) {
-    return pageNo - other.pageNo;
-  }
+  int compareTo(SMCatFile other) => pageNo - other.pageNo;
 
   @override
   String toString() => pathTo;
@@ -95,8 +95,8 @@ class SMCatFile {
 }
 
 class SMCatException implements Exception {
-  String message;
   SMCatException(this.message);
+  String message;
 
   @override
   String toString() => message;

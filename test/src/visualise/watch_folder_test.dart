@@ -25,7 +25,7 @@ void main() {
           }
         });
 
-    final fsm = createMachine();
+    final fsm = await createMachine();
     const file = 'test/smcat/registration.smcat';
     // var exports =
     fsm.export(file);

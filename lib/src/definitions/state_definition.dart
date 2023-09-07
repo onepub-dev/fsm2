@@ -4,7 +4,6 @@ import 'package:meta/meta.dart';
 
 import '../builders/co_region_builder.dart';
 import '../builders/state_builder.dart';
-
 import '../exceptions.dart';
 import '../state_path.dart';
 import '../transitions/noop_transition.dart';
@@ -15,6 +14,8 @@ import 'co_region_definition.dart';
 
 /// A [StateDefinition] represents a state defined in the statemachine builder.
 class StateDefinition<S extends State> {
+  StateDefinition(this.stateType);
+
   /// Optional label used when visualising the FSM.
   String? onEnterLabel;
 
@@ -27,8 +28,6 @@ class StateDefinition<S extends State> {
   /// If true then this state and all child states
   /// will be printed on a separate page.
   bool pageBreak = false;
-
-  StateDefinition(this.stateType);
 
   /// If this is a nested state the [parent]
   /// is a link to the parent of this state.
@@ -43,7 +42,8 @@ class StateDefinition<S extends State> {
 
   /// The maps the set of [TransitionDefinition]s for a given [Event]
   /// for this [State].
-  /// [TransitionDefinition] are defined via calls to [StateBuilder.on], [StateBuilder.onFork] or [StateBuilder.onJoin]
+  /// [TransitionDefinition] are defined via calls to [StateBuilder.on],
+  ///  [StateBuilder.onFork] or [StateBuilder.onJoin]
   /// methods. There can be multiple transitions for each
   /// event due to the condition argument (which is a guard condition).
   ///
@@ -70,7 +70,9 @@ class StateDefinition<S extends State> {
   List<StateDefinition> get nestedStateDefinitions {
     final definitions = <StateDefinition>[];
 
-    if (childStateDefinitions.isEmpty) return definitions;
+    if (childStateDefinitions.isEmpty) {
+      return definitions;
+    }
 
     for (final stateDefinition in childStateDefinitions) {
       definitions.add(stateDefinition);
@@ -86,6 +88,7 @@ class StateDefinition<S extends State> {
       log('FSM onEnter called for $stateType due to ${event.runtimeType}');
       await onEnter(fromState, event);
       log('FSM onEnter completed for $stateType due to ${event.runtimeType}');
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       log('FSM onEnter threw $e for $stateType due to ${event.runtimeType}');
       rethrow;
@@ -95,9 +98,7 @@ class StateDefinition<S extends State> {
   /// callback used when we enter toState.
   /// Provides a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
-  OnEnter onEnter = (toState, event) {
-    return null;
-  };
+  OnEnter onEnter = (toState, event) => null;
 
   /// This method is called when we exit this state to give the
   /// [StateDefinition] a chance to do any internal cleanup.
@@ -109,6 +110,7 @@ class StateDefinition<S extends State> {
       log('FSM onExit called for $stateType due to ${event.runtimeType}');
       await onExit(fromState, event);
       log('FSM onExit completed for $stateType due to ${event.runtimeType}');
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       log('FSM onExit threw $e for $stateType due to ${event.runtimeType}');
       rethrow;
@@ -118,23 +120,27 @@ class StateDefinition<S extends State> {
   /// callback used when we exiting this [State].
   /// Provide provide a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
-  OnExit onExit = (toState, event) {
-    return null;
-  };
+  OnExit onExit = (toState, event) => null;
 
-  /// Returns the first transition that can be triggered for the given [event] from the
+  /// Returns the first transition that can be triggered for
+  ///  the given [event] from the
   /// given [fromState].
   ///
-  /// When considering each event we must evaulate the guard condition to determine if the
+  /// When considering each event we must evaulate the guard
+  /// condition to determine if the
   /// transition is valid.
   ///
-  /// If no triggerable [event] can be found for the [fromState] then a [NoOpTransitionDefinition] is returned
+  /// If no triggerable [event] can be found for the [fromState]
+  /// then a [NoOpTransitionDefinition] is returned
   /// indicating that no transition will occur under the current conditions.
   ///
-  /// If no matching [event] can be found for the [fromState] then an [InvalidTransitionException] is thrown.
+  /// If no matching [event] can be found for the [fromState]
+  /// then an [InvalidTransitionException] is thrown.
   ///
-  /// When searching for an event we have to do a recursive search (starting at the [fromState])
-  /// up the tree of nested states as any events on an ancestor [State] also apply to the child [fromState].
+  /// When searching for an event we have to do a recursive
+  /// search (starting at the [fromState])
+  /// up the tree of nested states as any events on an ancestor [State]
+  ///  also apply to the child [fromState].
   ///
   Future<TransitionDefinition?> findTriggerableTransition<E extends Event>(
       Type fromState, E event) async {
@@ -144,7 +150,8 @@ class StateDefinition<S extends State> {
       return null;
     }
 
-    /// does the current state definition have a transition that will fire for the give event.
+    /// does the current state definition have a transition
+    ///  that will fire for the give event.
     transitionDefinition = await _evaluateTransitions(event);
 
     // If [fromState] doesn't have a transitionDefintion that can be triggered
@@ -160,7 +167,8 @@ class StateDefinition<S extends State> {
     return transitionDefinition;
   }
 
-  /// returns a [NoOpTransitionDefinition] if none of the transitions would be triggered
+  /// returns a [NoOpTransitionDefinition] if none of
+  /// the transitions would be triggered
   /// or if there where no transitions for [event].
   Future<TransitionDefinition> _evaluateTransitions<E extends Event>(
       E event) async {
@@ -183,10 +191,10 @@ class StateDefinition<S extends State> {
   ///
   Future<TransitionDefinition<E>> _evaluateConditions<E extends Event>(
       List<TransitionDefinition<E>> transitionChoices, E event) async {
-    assert(transitionChoices.isNotEmpty);
+    assert(transitionChoices.isNotEmpty, 'choices cannot be empty');
     for (final transitionDefinition in transitionChoices) {
-      final dynamic a = transitionDefinition;
-      if ((a.condition as dynamic) == null || (a.condition(event) as bool)) {
+      final td = transitionDefinition;
+      if (td.condition(event)) {
         /// pseudo states such as onJoin may still not be able to trigger.
         if (transitionDefinition.canTrigger(event)) {
           /// static transition
@@ -201,10 +209,7 @@ class StateDefinition<S extends State> {
   /// therefore we can never leave this state.
   /// We need to check any parent states as we inherit
   /// transitions from all our ancestors.
-  bool get isTerminal {
-    return getTransitions().isEmpty;
-    // return _eventTranstionsMap.isNotEmpty && (parent == null || parent.isTerminal);
-  }
+  bool get isTerminal => getTransitions().isEmpty;
 
   /// A state is a leaf state if it has no child states.
   bool get isLeaf => childStateDefinitions.isEmpty;
@@ -251,7 +256,7 @@ class StateDefinition<S extends State> {
     var transitionDefinitions = _eventTranstionsMap[E];
     transitionDefinitions ??= <TransitionDefinition<E>>[];
 
-    if (transitionDefinition.condition == null) {
+    if (transitionDefinition.condition == noGuardCondition) {
       _checkHasNoNullChoices(E);
     }
 
@@ -266,8 +271,7 @@ class StateDefinition<S extends State> {
     final builder = StateBuilder<C>(this, StateDefinition(C));
     //builder.parent = this;
     buildState(builder);
-    final definition = builder.build();
-    definition.setParent(this);
+    final definition = builder.build()..setParent(this);
     childStateDefinitions.add(definition);
   }
 
@@ -279,8 +283,7 @@ class StateDefinition<S extends State> {
     final builder = CoRegionBuilder<CO>(this, CoRegionDefinition(CO));
     //  builder.parent = this;
     buildState(builder);
-    final definition = builder.build();
-    definition.setParent(this);
+    final definition = builder.build()..setParent(this);
     childStateDefinitions.add(definition);
   }
 
@@ -296,7 +299,9 @@ class StateDefinition<S extends State> {
       } else {
         if (includeChildren) {
           found = stateDefinition.findStateDefintion(stateDefinitionType);
-          if (found != null) break;
+          if (found != null) {
+            break;
+          }
         }
       }
     }
@@ -312,7 +317,9 @@ class StateDefinition<S extends State> {
     final transitions = getTransitions();
     // var transitions = _eventTranstionsMap[event.runtimeType];
 
-    if (transitions.isEmpty) return false;
+    if (transitions.isEmpty) {
+      return false;
+    }
 
     /// Do we have a transtion for [event]
     return transitions.fold<bool>(
@@ -322,11 +329,13 @@ class StateDefinition<S extends State> {
   }
 
   void _checkHasNoNullChoices(Type eventType) {
-    if (_eventTranstionsMap[eventType] == null) return;
+    if (_eventTranstionsMap[eventType] == null) {
+      return;
+    }
     for (final transitionDefinition in _eventTranstionsMap[eventType]!) {
       // darts generic typedefs are broken for inheritence
-      final dynamic a = transitionDefinition;
-      if ((a.condition as dynamic) == null) {
+      final a = transitionDefinition;
+      if (a.condition == noGuardCondition) {
         throw NullConditionMustBeLastException(eventType);
       }
     }
@@ -346,9 +355,8 @@ class StateDefinition<S extends State> {
 
   /// Returns true if the given [state] is a direct child
   /// of this [StateDefinition].
-  bool isDirectChild(Type state) {
-    return childStateDefinitions.map((sd) => sd.stateType).contains(state);
-  }
+  bool isDirectChild(Type state) =>
+      childStateDefinitions.map((sd) => sd.stateType).contains(state);
 
   /// Returns true if we are a descendant of [potentialAncestor]
   bool isDecendentOf(StatePath potentialAncestor) {
@@ -365,9 +373,7 @@ class StateDefinition<S extends State> {
   }
 
   /// default implementation.
-  bool canTrigger(Type event) {
-    return true;
-  }
+  bool canTrigger(Type event) => true;
 }
 
 /// used to hide internal api

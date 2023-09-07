@@ -1,8 +1,6 @@
-import 'package:fsm2/src/virtual_root.dart';
-
 import 'definitions/state_definition.dart';
-
 import 'state_path.dart';
+import 'virtual_root.dart';
 
 class StateOfMind {
   /// List of the active leaf states.
@@ -16,7 +14,9 @@ class StateOfMind {
 
   bool isInState(Type state) {
     for (final statePath in _leafPaths) {
-      if (statePath.isInState(state)) return true;
+      if (statePath.isInState(state)) {
+        return true;
+      }
     }
     return false;
   }
@@ -24,7 +24,9 @@ class StateOfMind {
   void _removePath(StatePath path) {
     StatePath? toBeRemoved;
     for (final statePath in _leafPaths) {
-      if (statePath == path) toBeRemoved = statePath;
+      if (statePath == path) {
+        toBeRemoved = statePath;
+      }
     }
 
     // assert(toBeRemoved != null);
@@ -82,13 +84,16 @@ class StateOfMind {
     return details.toString();
   }
 
-  /// With co-regions we can have multiple states that collapse into a single state.
-  /// This can result in duplicate paths so we need to reduce the duplicates to a single state.
+  /// With co-regions we can have multiple states that collapse
+  /// into a single state.
+  /// This can result in duplicate paths so we need to reduce
+  ///  the duplicates to a single state.
   void dedup() {
     final deduped = _leafPaths.toSet().toList();
     if (deduped.length != _leafPaths.length) {
-      _leafPaths.clear();
-      _leafPaths.addAll(deduped);
+      _leafPaths
+        ..clear()
+        ..addAll(deduped);
     }
   }
 
@@ -103,7 +108,7 @@ class StateOfMind {
     _leafPaths.sort((lhs, rhs) => lhs.path.length - rhs.path.length);
 
     for (final path in _leafPaths) {
-      StatePath next = path;
+      var next = path;
 
       /// chain up the path so we can compare each 'parent' path
       /// to the list of parents we have [seen].

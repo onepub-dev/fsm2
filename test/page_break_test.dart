@@ -1,5 +1,7 @@
-import 'package:dcli/dcli.dart' hide equals;
+import 'package:dcli/dcli.dart';
+import 'package:dcli_core/dcli_core.dart' as core;
 import 'package:fsm2/fsm2.dart';
+import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
 import 'watcher.mocks.dart';
@@ -21,17 +23,21 @@ void main() {
   });
 
   test('Export', () async {
-    final machine = await _createMachine<Alive>(watcher, human);
-    machine.analyse();
-    // ignore: unused_local_variable
-    final pages = machine.export('test/smcat/page_break_test.smcat');
+    await core.withTempDir((tempDir) async {
+      final pathTo = join(tempDir, 'page_break_test.smcat');
+      final machine = await _createMachine<Alive>(watcher, human);
+      machine.analyse();
+      // ignore: unused_local_variable
+      final pages = machine.export(pathTo);
 
-    var pageNo = 0;
-    for (final page in pages.pages) {
-      final lines =
-          read(page.path).toList().reduce((value, line) => value += '\n$line');
-      expect(lines, equals(_graphs[pageNo++]));
-    }
+      var pageNo = 0;
+      for (final page in pages.pages) {
+        final lines = read(page.path)
+            .toList()
+            .reduce((value, line) => value += '\n$line');
+        expect(lines, equals(_graphs[pageNo++]));
+      }
+    });
   });
 }
 
@@ -78,8 +84,9 @@ Future<StateMachine> _createMachine<S extends State>(
             conditionLabel: 'ugly'))
       ..state<InHeaven>((b) => b..state<Buddhist>((b) => b))
       ..state<InHell>((b) => b
-        ..state<Christian>(
-            (b) => b..state<SalvationArmy>((b) {})..state<Catholic>((b) => b))))
+        ..state<Christian>((b) => b
+          ..state<SalvationArmy>((b) {})
+          ..state<Catholic>((b) => b))))
     ..onTransition((from, event, to) => watcher.log('${event.runtimeType}')));
   return machine;
 }
@@ -121,9 +128,8 @@ class OnDeath implements Event {}
 enum Judgement { good, bad, ugly }
 
 class OnJudged implements Event {
-  Judgement judgement;
-
   OnJudged(this.judgement);
+  Judgement judgement;
 }
 
 // ignore: unused_element
