@@ -5,18 +5,20 @@ documentation: https://noojee.gitbook.io/fsm2/
 description: FSM2 provides an implementation of the core design aspects of the UML state diagrams allowing both declarative transitions and dynamic transitions along with Guard Conditions.
 repository: https://github.com/bsutton/fsm2
 environment: 
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 dependencies: 
-  completer_ex: ^3.0.0
-  dcli: ^1.6.2
-  logger: ^1.0.0
+  args: ^2.4.2
+  completer_ex: ^4.0.0
+  dcli: ^3.0.2
+  dcli_core: ^3.0.6
+  logger: ^2.0.1
   meta: ^1.6.0
   path: ^1.7.0
   stacktrace_impl: ^2.0.1
   synchronized: ^3.0.0
-  tree_iterator: ^2.0.0
+  tree_iterator: ^3.0.0
 dev_dependencies: 
-  lint: ^1.0.0
+  lint_hard: ^4.0.0
   mockito: ^5.0.0
   test: ^1.0.0
 executables: 
