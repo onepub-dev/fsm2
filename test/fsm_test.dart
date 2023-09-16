@@ -59,7 +59,7 @@ initial => Solid : Solid;''';
   test('initial State should be solid', () async {
     final machine = await _createMachine<Solid>(watcher);
 
-    expect(machine.isInState<Solid>(), equals(true));
+    expect(await machine.isInState<Solid>(), equals(true));
   });
 
   test('State Solid with OnMelted should transition to Liquid and log',
@@ -68,8 +68,16 @@ initial => Solid : Solid;''';
 
     machine.applyEvent(OnMelted());
     await machine.complete;
-    expect(machine.isInState<Liquid>(), equals(true));
+    expect(await machine.isInState<Liquid>(), equals(true));
     verifyInOrder([watcher.log(onMeltedMessage)]);
+  });
+
+  test('condition', () async {
+    final machine = await StateMachine.create((b) => b
+      ..state<Solid>((b) => b.on<OnMelted, Liquid>(condition: (e) => false))
+      ..state<Liquid>((b) {}));
+    machine.applyEvent(OnMelted());
+    await machine.complete;
   });
 
   test('State Liquid with OnFroze should transition to Solid and log',
@@ -77,7 +85,7 @@ initial => Solid : Solid;''';
     final machine = await _createMachine<Liquid>(watcher)
       ..applyEvent(OnFroze());
     await machine.complete;
-    expect(machine.isInState<Solid>(), equals(true));
+    expect(await machine.isInState<Solid>(), equals(true));
     verifyInOrder([watcher.log(onFrozenMessage)]);
   });
 
@@ -86,7 +94,7 @@ initial => Solid : Solid;''';
     final machine = await _createMachine<Liquid>(watcher);
     machine.applyEvent(OnVaporized());
     await machine.complete;
-    expect(machine.isInState<Gas>(), equals(true));
+    expect(await machine.isInState<Gas>(), equals(true));
     verifyInOrder([watcher.log(onVaporizedMessage)]);
   });
 
@@ -96,7 +104,7 @@ initial => Solid : Solid;''';
     final machine = await _createMachine<Solid>(watcher);
     machine.applyEvent(onMelted);
     await machine.complete;
-    expect(machine.isInState<Liquid>(), equals(true));
+    expect(await machine.isInState<Liquid>(), equals(true));
     verify(watcher.onEnter(Liquid, onMelted));
     verifyNever(watcher.onExit(Liquid, onMelted));
   });

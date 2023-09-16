@@ -12,7 +12,7 @@ import 'state_builder.dart';
 ///
 /// Instance of this class is passed to [StateMachine.create] method.
 class GraphBuilder {
-  late Type _initialState;
+  Type? _initialState;
   final _stateDefinitions = <StateDefinition>[];
   final List<TransitionListener> _onTransitionListeners = [];
   final StateDefinition<VirtualRoot> virtualRoot =
@@ -21,6 +21,8 @@ class GraphBuilder {
   String? _initialStateLabel;
 
   /// Sets initial State.
+  /// If initialState isn't called then the first [State] added
+  /// via [state] will be set as the initial state.
   void initialState<S extends State>({String? label}) {
     _initialState = S;
     _initialStateLabel = label ?? _initialState.toString();
@@ -30,6 +32,7 @@ class GraphBuilder {
   void state<S extends State>(
     BuildState<S> buildState,
   ) {
+    _initialState ?? initialState<S>();
     final builder = StateBuilder<S>(virtualRoot, StateDefinition(S));
     buildState(builder);
     final definition = builder.build();

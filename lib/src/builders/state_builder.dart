@@ -69,7 +69,7 @@ class StateBuilder<S extends State> {
   /// The [conditionLabel] is used
   /// to annotate the transition on the diagram.
   void on<E extends Event, TOSTATE extends State>(
-      {GuardCondition<E> condition = noGuardCondition,
+      {GuardCondition<E> condition = noopGuardCondition,
       SideEffect<E>? sideEffect,
       String? conditionLabel,
       String? sideEffectLabel}) {
@@ -117,7 +117,7 @@ class StateBuilder<S extends State> {
   /// Used to enter a co-region by targeting the set of states within the
   /// coregion to transition to.
   void onFork<E extends Event>(BuildFork<E> buildFork,
-      {GuardCondition<E> condition = noGuardCondition,
+      {GuardCondition<E> condition = noopGuardCondition,
       SideEffect<E>? sideEffect,
       String? conditionLabel,
       String? sideEffectLabel}) {
@@ -136,7 +136,7 @@ class StateBuilder<S extends State> {
   ///  the owner[coregion].
   /// Every onJoin in a coregion must target the same external state.
   void onJoin<E extends Event, TOSTATE extends State>(
-      {GuardCondition<E> condition = noGuardCondition,
+      {GuardCondition<E> condition = noopGuardCondition,
       SideEffect? sideEffect}) {
     final onTransition = JoinTransitionDefinition<S, E, TOSTATE>(
         _stateDefinition, condition, sideEffect);

@@ -3,9 +3,6 @@ import 'dart:collection';
 import 'dart:developer';
 
 import 'package:completer_ex/completer_ex.dart';
-import 'package:fsm2/src/state_of_mind.dart';
-import 'package:fsm2/src/transitions/transition_notification.dart';
-import 'package:fsm2/src/types.dart';
 import 'package:meta/meta.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -15,11 +12,14 @@ import 'exceptions.dart';
 import 'export/exporter.dart';
 import 'export/smcat.dart';
 import 'graph.dart';
+import 'state_of_mind.dart';
 import 'state_path.dart';
 import 'static_analysis.dart' as analysis;
 import 'tracker.dart';
 import 'transitions/on_transition.dart';
 import 'transitions/transition_definition.dart';
+import 'transitions/transition_notification.dart';
+import 'types.dart';
 import 'virtual_root.dart';
 
 /// Finite State Machine implementation.
@@ -29,56 +29,6 @@ import 'virtual_root.dart';
 ///
 ///
 class StateMachine {
-  /// only one transition can be happening at at time.
-  final _lock = Lock();
-
-  @visibleForTesting
-  final initialEvent = InitialEvent();
-
-  /// If production mode is off then we track
-  /// each transition to aid with debugging.
-  /// The first entry in the history will
-  final history = <Tracker>[];
-
-  /// To avoid deadlocks if an event is generated during
-  /// a transition we queue transitions.
-  final _eventQueue = Queue<_QueuedEvent>();
-
-  /// Returns [Stream] of States.
-  final StreamController<StateOfMind> _controller =
-      StreamController.broadcast();
-
-  final Graph _graph;
-
-  var _stateOfMind = StateOfMind();
-
-  final bool? production;
-
-  /// Creates a statemachine using a builder pattern.
-  ///
-  /// The [production] flag controls whether [InvalidTransitionException] are thrown.
-  /// We recommend setting [production] to true for your release code as it makes
-  /// your system more forgiving to odd events that are sent when the FSM doesn't
-  /// expect them. Instead these transitions are logged.
-  ///
-  /// [production] defaults to false.
-  factory StateMachine.create(BuildGraph buildGraph,
-      {bool production = false}) {
-    final graphBuilder = GraphBuilder();
-
-    buildGraph(graphBuilder);
-    final machine =
-        StateMachine._(graphBuilder.build(), production: production);
-
-    if (!production) {
-      if (!machine.analyse()) {
-        throw InvalidStateMachine('Check logs');
-      }
-    }
-
-    return machine;
-  }
-
   /// internal ctor
   StateMachine._(this._graph, {this.production}) {
     var initialState = _graph.initialState;
@@ -90,7 +40,7 @@ class StateMachine {
           .stateType;
     }
 
-    assert(initialState != null);
+    assert(initialState != null, 'initialState has not been initialised');
 
     if (!production!) {
       history.add(Tracker(_stateOfMind, initialEvent));
@@ -100,22 +50,85 @@ class StateMachine {
       throw InvalidInitialStateException(
           'The initialState $initialState MUST be a top level state.');
     }
+  }
 
+  /// Creates a statemachine using a builder pattern.
+  ///
+  /// The [production] flag controls whether
+  /// [InvalidTransitionException] are thrown.
+  /// We recommend setting [production] to true
+  /// for your release code as it makes
+  /// your system more forgiving to odd events that
+  /// are sent when the FSM doesn't
+  /// expect them. Instead these transitions are logged.
+  ///
+  /// [production] defaults to false.
+  static Future<StateMachine> create(BuildGraph buildGraph,
+      {bool production = false}) async {
+    final graphBuilder = GraphBuilder();
+
+    buildGraph(graphBuilder);
+    final machine =
+        StateMachine._(graphBuilder.build(), production: production);
+    await machine._load();
+
+    if (!production) {
+      if (!machine.analyse()) {
+        throw InvalidStateMachine('Check logs');
+      }
+    }
+
+    return machine;
+  }
+
+  Future<void> _load() async {
     final initialSd = _graph.findStateDefinition(initialState)!;
 
-    /// Find the initial state by chaining down through the initialStates looking for a leaf.
-    if (!_loadStateOfMind(initialSd)) {
+    /// Find the initial state by chaining down through the
+    /// initialStates looking for a leaf.
+    if (!(await _loadStateOfMind(initialSd))) {
       throw InvalidInitialStateException(
-          'The top level initialState $initialState must lead to a leaf state.');
+          ''''The top level initialState $initialState must lead to a leaf state.''');
     }
   }
 
-  StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
-  TransitionDefinition<InitialEvent> get initialTransition =>
-      OnTransitionDefinition(virtualRoot, null, VirtualRoot, null);
+  /// only one transition can be happening at at time.
+  final _lock = Lock();
 
-  bool _loadStateOfMind(StateDefinition<State> initialState) {
-    initialState.onEnter(initialState.stateType, initialEvent);
+  @visibleForTesting
+  final initialEvent = InitialEvent();
+
+  /// If production mode is off then we track
+  /// each transition to aid with debugging.
+  /// The first entry in the history will be the initial
+  /// state.
+  /// In production mode the list is empty.
+  final history = <Tracker>[];
+
+  /// To avoid deadlocks if an event is generated during
+  /// a transition we queue transitions.
+  final _eventQueue = Queue<_QueuedEvent>();
+
+  /// Returns [Stream] of [StateOfMind].
+  final StreamController<StateOfMind> _controller =
+      StreamController.broadcast();
+
+  final Graph _graph;
+
+  var _stateOfMind = StateOfMind();
+
+  final bool? production;
+
+  /// The base of the state tree.
+  StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
+
+  /// 
+  TransitionDefinition<InitialEvent> get initialTransition =>
+      OnTransitionDefinition(
+          virtualRoot, noopGuardCondition, VirtualRoot, null);
+
+  Future<bool> _loadStateOfMind(StateDefinition<State> initialState) async {
+    await initialState.onEnter(initialState.stateType, initialEvent);
 
     final transition = TransitionNotification(
         initialTransition, virtualRoot, initialEvent, initialState);
@@ -140,8 +153,15 @@ class StateMachine {
 
   /// Returns true if the [StateMachine] is in the given state.
   ///
+  /// Calling [isInState] will wait for the [StateMachine] to complete before
+  /// checking the state.
+  ///
   /// For a nested [State] the machine is said to be in the current
   /// leaf [State] plus any parent state.
+  ///
+  /// ```dart
+  ///   machine.isInState<Hard>()
+  /// ```
   ///
   /// When using a coregion then you can be in multiple leaf states
   /// concurrently.
@@ -169,9 +189,11 @@ class StateMachine {
   ///
   /// If [S] is not a known [State] then an [UnknownStateException]
   /// is thrown.
-  @visibleForTesting
-  bool isInState<S extends State>() {
-    if (_stateOfMind.isInState(S)) return true;
+  Future<bool> isInState<S extends State>() async {
+    await complete;
+    if (_stateOfMind.isInState(S)) {
+      return true;
+    }
 
     /// climb the tree of nested states.
 
@@ -181,7 +203,9 @@ class StateMachine {
     }
     var parent = def.parent!;
     while (parent.stateType != VirtualRoot) {
-      if (parent.stateType == S) return true;
+      if (parent.stateType == S) {
+        return true;
+      }
 
       parent = parent.parent!;
     }
@@ -189,9 +213,7 @@ class StateMachine {
   }
 
   @visibleForTesting
-  StateOfMind get stateOfMind {
-    return _stateOfMind;
-  }
+  StateOfMind get stateOfMind => _stateOfMind;
 
   /// Call this method with an [event] to transition to a new [State].
   ///
@@ -200,7 +222,8 @@ class StateMachine {
   /// would be indeterminant).
   ///
   /// A queueing mechanism is used to avoid dead locks, as such
-  /// you can call [applyEvent] even whilst in the middle of a call to [applyEvent].
+  /// you can call [applyEvent] even whilst in the
+  /// middle of a call to [applyEvent].
   ///
   /// Events MUST be handled asynchronously.
   /// If you need to take an action once an event completes you need to use
@@ -220,12 +243,12 @@ class StateMachine {
     _eventQueue.add(qe);
 
     /// process the event on a microtask.
-    Future.delayed(const Duration(), () => _dispatch());
+    Future.delayed(Duration.zero, _dispatch);
   }
 
   /// dequeue the next event and transition it.
   Future<void> _dispatch() async {
-    assert(_eventQueue.isNotEmpty);
+    assert(_eventQueue.isNotEmpty, 'The event queue is in an invalid state');
     final event = _eventQueue.first;
 
     try {
@@ -242,11 +265,13 @@ class StateMachine {
       } else {
         event._completer.completeError(e);
       }
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       log('FSM Exception applying ${event.event}');
       event._completer.completeError(e);
     } finally {
-      /// now we have finished processing the event we can remove it from the queue.
+      /// now we have finished processing the event
+      /// we can remove it from the queue.
       log('FSM removing applied ${event.event} from eventQueue');
       _eventQueue.removeFirst();
     }
@@ -257,51 +282,69 @@ class StateMachine {
 
   /// waits until all events have been processed.
   /// @visibleForTesting
+  @Deprecated('Use complete')
   Future<void> get waitUntilQuiescent async {
     while (!_isQuiescent) {
       await _eventQueue.last._completer.future;
     }
   }
 
-  Future<void> _actualApplyEvent<E extends Event>(E event) async {
-    /// only one transition at a time.
-    return _lock.synchronized(() async {
-      var dispatched = false;
-      for (final stateDefinition in _stateOfMind.activeLeafStates()) {
-        final transitionDefinition = await stateDefinition
-            .findTriggerableTransition(stateDefinition.stateType, event);
-        if (transitionDefinition == null) continue;
-
-        await applyTransitions(stateDefinition, transitionDefinition, event);
-        dispatched = true;
-      }
-
-      if (!dispatched) {
-        throw InvalidTransitionException(_stateOfMind, event);
-      }
-
-      if (production == false) {
-        history.add(Tracker(_stateOfMind, event));
-      }
-
-      _controller.add(_stateOfMind);
-    });
-  }
-
-  bool analyse() {
-    return analysis.analyse(_graph);
-  }
-
-  /// Returns [Stream] of state types.
-  /// Each time the FSM changes state the new
-  /// state Type is added to the broadcast stream allowing
-  /// you to monitor the transition of states.
+  /// Call this method to ensure that your [StateMachine] has completed
+  /// processing all [Event]s.
+  /// The [StateMachine] is considered to be in an indeterminate state
+  /// until this method completes.
+  /// If can submit additional events after calling [complete] but
+  /// you must then call [complete] again to ensure the new
+  /// events have been processed.
   ///
+  /// ```dart
+  /// await statemachine.complete;
+  /// ```
+  Future<void> get complete async {
+    while (!_isQuiescent) {
+      await _eventQueue.last._completer.future;
+    }
+  }
+
+  Future<void> _actualApplyEvent<E extends Event>(E event) async =>
+
+      /// only one transition at a time.
+      _lock.synchronized(() async {
+        var dispatched = false;
+        for (final stateDefinition in _stateOfMind.activeLeafStates()) {
+          final transitionDefinition = await stateDefinition
+              .findTriggerableTransition(stateDefinition.stateType, event);
+          if (transitionDefinition == null) {
+            continue;
+          }
+
+          await _applyTransitions(stateDefinition, transitionDefinition, event);
+          dispatched = true;
+        }
+
+        if (!dispatched) {
+          throw InvalidTransitionException(_stateOfMind, event);
+        }
+
+        if (production == false) {
+          history.add(Tracker(_stateOfMind, event));
+        }
+
+        _controller.add(_stateOfMind);
+      });
+
+  /// Checks that every leaf in the [StateMachine] can be reached.
+  /// Use this method during development to ensure your [StateMachine]
+  /// is in a consistent state.
+  bool analyse() => analysis.analyse(_graph);
+
+  /// Returns [Stream] of [StateOfMind] which
+  /// reflects the [StateMachine]s complete state each
+  /// time a state change occurs.
+  ///
+  //
   /// Remember that with Nested States a FSM
-  /// can be in multiple states the stream will only
-  /// reflect the state the FMS was directly moved into.
-  /// Any ancestor states that are consequentially moved into
-  /// will not be reflected in the stream.
+  /// can be in multiple states.
   Stream<StateOfMind> get stream => _controller.stream;
 
   /// Exports the [StateMachine] to dot notation which can then
@@ -325,6 +368,7 @@ class StateMachine {
 
   /// Traverses the State tree calling listener for each state
   /// and each statically defined transition.
+  /// This method is intended to help you debug your [StateMachine].
   Future<void> traverseTree(
       void Function(StateDefinition stateDefinition,
               List<TransitionDefinition> transitionDefinitions)
@@ -336,20 +380,15 @@ class StateMachine {
     }
   }
 
-  StateDefinition<State>? findStateDefinition(Type? stateType) {
-    return _graph.findStateDefinition(stateType);
-  }
-
-  StateDefinition<State>? findStateDefinitionFromString(String stateTypeName) {
-    return _graph.findStateDefinitionFromString(stateTypeName);
-  }
+  StateDefinition<State>? _findStateDefinition(Type? stateType) =>
+      _graph.findStateDefinition(stateType);
 
   /// Returns the oldest ancestor for the state.
   /// If the state has no ancestors then we return the state.
   /// The VirtualRoot is not considered an ancestor and will
   /// never be returned.
-  Type oldestAncestor(Type? state) {
-    final sd = findStateDefinition(state)!;
+  Type _oldestAncestor(Type? state) {
+    final sd = _findStateDefinition(state)!;
 
     var ancestor = sd;
 
@@ -362,15 +401,20 @@ class StateMachine {
     return ancestor.stateType;
   }
 
-  Future<void> applyTransitions<E extends Event>(StateDefinition<State>? from,
+  Future<void> _applyTransitions<E extends Event>(StateDefinition<State>? from,
       TransitionDefinition<E> transitionDefinition, Event event) async {
     /// When an event occurs on a join we need to trigger multiple transitions
     final transitions = transitionDefinition.transitions(_graph, from, event);
 
+    /// we only apply exit and sideEffect to the stateOfMind
+    /// for the first transition.
+    var applySideEffects = true;
     for (final transition in transitions) {
       // final _transition = cast(transition.event, transition)!;
-      _stateOfMind =
-          await transition.definition.trigger(_graph, _stateOfMind, transition);
+      _stateOfMind = await transition.definition.trigger(
+          _graph, _stateOfMind, transition,
+          applySideEffects: applySideEffects);
+      applySideEffects = false;
       _notifyListeners(transition);
     }
   }
@@ -379,7 +423,7 @@ class StateMachine {
   void _notifyListeners(TransitionNotification transition) {
     for (final onTransition in _graph.onTransitionListeners) {
       if (!production!) {
-        log('transition: from: ${transition.from!.stateType} event: ${transition.event.runtimeType} to: ${transition.to!.stateType}');
+        log('''transition: from: ${transition.from!.stateType} event: ${transition.event.runtimeType} to: ${transition.to!.stateType}''');
       }
 
       onTransition(transition.from, transition.event, transition.to);
@@ -387,9 +431,16 @@ class StateMachine {
   }
 }
 
+/// Used to hide internal implementation details
+Type oldestAncestor(StateMachine stateMachine, Type? state) =>
+    stateMachine._oldestAncestor(state);
+
+StateDefinition<State>? findStateDefinition(
+        StateMachine stateMachine, Type? stateType) =>
+    stateMachine._findStateDefinition(stateType);
+
 class _QueuedEvent {
+  _QueuedEvent(this.event);
   Event event;
   final _completer = CompleterEx<void>();
-
-  _QueuedEvent(this.event);
 }

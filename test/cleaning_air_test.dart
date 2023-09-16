@@ -22,13 +22,13 @@ void main() {
   test('fork', () async {
     final watcher = MockWatcher();
     final machine = await createMachine(watcher);
-    expect(machine.isInState<MonitorAir>(), equals(true));
+    expect(await machine.isInState<MonitorAir>(), equals(true));
     machine.applyEvent(onBadAir);
     await machine.complete;
-    expect(machine.isInState<HandleFan>(), equals(true));
-    expect(machine.isInState<HandleLamp>(), equals(true));
-    expect(machine.isInState<CleanAir>(), equals(true));
-    expect(machine.isInState<MaintainAir>(), equals(true));
+    expect(await machine.isInState<HandleFan>(), equals(true));
+    expect(await machine.isInState<HandleLamp>(), equals(true));
+    expect(await machine.isInState<CleanAir>(), equals(true));
+    expect(await machine.isInState<MaintainAir>(), equals(true));
 
     final som = machine.stateOfMind;
     final paths = som.activeLeafStates();
@@ -60,16 +60,17 @@ void main() {
   test('join', () async {
     final watcher = MockWatcher();
     final machine = await createMachine(watcher);
-    expect(machine.isInState<MonitorAir>(), equals(true));
+    expect(await machine.isInState<MaintainAir>(), equals(true));
+    expect(await machine.isInState<MonitorAir>(), equals(true));
     verify(watcher.onEnter(MonitorAir, machine.initialEvent));
 
     /// trigger the fork
     machine.applyEvent(onBadAir);
     await machine.complete;
-    expect(machine.isInState<HandleFan>(), equals(true));
-    expect(machine.isInState<HandleLamp>(), equals(true));
-    expect(machine.isInState<CleanAir>(), equals(true));
-    expect(machine.isInState<MaintainAir>(), equals(true));
+    expect(await machine.isInState<HandleFan>(), equals(true));
+    expect(await machine.isInState<HandleLamp>(), equals(true));
+    expect(await machine.isInState<CleanAir>(), equals(true));
+    expect(await machine.isInState<MaintainAir>(), equals(true));
 
     verify(watcher.onExit(MonitorAir, onBadAir));
     verify(watcher.onEnter(HandleFan, onBadAir));
@@ -79,21 +80,21 @@ void main() {
     /// trigger the join
     machine.applyEvent(onFanRunning);
     await machine.complete;
-    expect(machine.isInState<HandleFan>(), equals(true));
-    expect(machine.isInState<HandleLamp>(), equals(true));
-    expect(machine.isInState<CleanAir>(), equals(true));
-    expect(machine.isInState<MaintainAir>(), equals(true));
+    expect(await machine.isInState<HandleFan>(), equals(true));
+    expect(await machine.isInState<HandleLamp>(), equals(true));
+    expect(await machine.isInState<CleanAir>(), equals(true));
+    expect(await machine.isInState<MaintainAir>(), equals(true));
 
     machine.applyEvent(onLampOn);
     await machine.complete;
-    expect(machine.isInState<HandleFan>(), equals(true));
-    expect(machine.isInState<HandleLamp>(), equals(true));
-    expect(machine.isInState<CleanAir>(), equals(true));
-    expect(machine.isInState<MaintainAir>(), equals(true));
+    expect(await machine.isInState<HandleFan>(), equals(true));
+    expect(await machine.isInState<HandleLamp>(), equals(true));
+    expect(await machine.isInState<CleanAir>(), equals(true));
+    expect(await machine.isInState<MaintainAir>(), equals(true));
 
     machine.applyEvent(onGoodAir);
     await machine.complete;
-    expect(machine.isInState<MonitorAir>(), equals(true));
+    expect(await machine.isInState<MonitorAir>(), equals(true));
 
     verify(watcher.onExit(HandleFan, onFanRunning));
     verify(watcher.onExit(HandleLamp, onLampOn));

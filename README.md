@@ -26,7 +26,7 @@ void main() {
   final machine = StateMachine.create((g) => g
     ..initialState(Solid())
     ..state<Solid>((b) => b
-      ..on<OnMelted, Liquid>(), sideEffect: (e) => print("I'm melting"))
+      ..on<OnMelted, Liquid>(sideEffect: (e) async => print("I'm melting"))
     ..state<Liquid>((b) {})
  ));
 
@@ -44,7 +44,7 @@ machine.applyEvent(OnMelted());
 # Documentation
 Full documentation is available on gitbooks at:
 
-https://noojee.gitbook.io/fsm2/
+https://fsm2.onepub.dev/
 
 
 
@@ -71,13 +71,17 @@ void main() {
     ..onTransition((t) => print(
         'Received Event ${t.event.runtimeType} in State ${t.fromState.runtimeType} transitioning to State ${t.toState.runtimeType}')));
 
-  print(machine.currentState is Solid); // TRUE
+  await machine.complete;
+
+  ///   machine.isInState<Hard>()
+
+  print(machine.isInSt<Solid>); // TRUE
 
   machine.transition(OnMelted());
-  print(machine.currentState is Liquid); // TRUE
+  print(machine.isInState<Liquid>); // TRUE
 
   machine.transition(OnFroze());
-  print(machine.currentState is Solid); // TRUE
+  print(machine.isInState<Solid>); // TRUE
 }
 
 ```

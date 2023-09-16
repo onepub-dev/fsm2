@@ -304,8 +304,6 @@ class SMCTransition {
   }
 
   /// Find the root of the SMCState tree.
-  // ignore: flutter_style_todos
-  /// TODO: consider passing done the root from the exporter.
   static SMCState getRoot(SMCState owner) {
     var parent = owner.parent;
 

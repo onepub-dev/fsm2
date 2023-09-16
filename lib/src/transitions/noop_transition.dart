@@ -6,23 +6,23 @@ import '../types.dart';
 import 'transition_definition.dart';
 import 'transition_notification.dart';
 
-/// When a valid event is passed to [StateMachine.applyEvent] but no [condition] method
+/// When a valid event is passed to [StateMachine.applyEvent]
+///  but no [condition] method
 /// evaluated to true so no transition will occur.
-/// Also used by Join transitions when not all of the join prerequisite events have been met.
+/// Also used by Join transitions when not all of the
+///  join prerequisite events have been met.
 ///
 /// The StateMachine will stay in [S] state.
 class NoOpTransitionDefinition<S extends State, E extends Event>
     extends TransitionDefinition<E> {
-  final Type eventType;
-
   /// no transition so [fromStateDefinition] == [targetStates].
-  NoOpTransitionDefinition(StateDefinition fromStateDefinition, this.eventType)
-      : super(fromStateDefinition);
+  NoOpTransitionDefinition(super.fromStateDefinition, this.eventType);
+  final Type eventType;
   @override
-  Future<StateOfMind> trigger(
-      Graph graph, StateOfMind stateOfMind, TransitionNotification _) async {
-    return Future.value(stateOfMind);
-  }
+  Future<StateOfMind> trigger(Graph graph, StateOfMind stateOfMind,
+          TransitionNotification transition,
+          {bool applySideEffects = true}) async =>
+      Future.value(stateOfMind);
 
   @override
   List<Type> get targetStates => [fromStateDefinition.stateType];
@@ -32,7 +32,6 @@ class NoOpTransitionDefinition<S extends State, E extends Event>
 
   @override
   List<TransitionNotification> transitions(
-      Graph graph, StateDefinition? from, Event event) {
-    return <TransitionNotification>[];
-  }
+          Graph graph, StateDefinition? from, Event event) =>
+      <TransitionNotification>[];
 }

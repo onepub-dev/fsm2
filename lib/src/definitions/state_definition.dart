@@ -194,13 +194,24 @@ class StateDefinition<S extends State> {
     assert(transitionChoices.isNotEmpty, 'choices cannot be empty');
     for (final transitionDefinition in transitionChoices) {
       final td = transitionDefinition;
-      if (td.condition(event)) {
-        /// pseudo states such as onJoin may still not be able to trigger.
+
+      final dtd = td as dynamic;
+      final c = dtd.condition as dynamic;
+      if (c.call(event) == true) {
         if (transitionDefinition.canTrigger(event)) {
           /// static transition
           return transitionDefinition;
         }
       }
+
+      // // ignore: unnecessary_cast
+      // if (td.condition(event as E)) {
+      //   /// pseudo states such as onJoin may still not be able to trigger.
+      //   if (transitionDefinition.canTrigger(event)) {
+      //     /// static transition
+      //     return transitionDefinition;
+      //   }
+      // }
     }
     return NoOpTransitionDefinition<S, E>(this, E);
   }
@@ -256,8 +267,8 @@ class StateDefinition<S extends State> {
     var transitionDefinitions = _eventTranstionsMap[E];
     transitionDefinitions ??= <TransitionDefinition<E>>[];
 
-    if (transitionDefinition.condition == noGuardCondition) {
-      _checkHasNoNullChoices(E);
+    if (transitionDefinition.condition == noopGuardCondition) {
+      _validateHasNoNoopConditions(E);
     }
 
     transitionDefinitions.add(transitionDefinition);
@@ -328,16 +339,27 @@ class StateDefinition<S extends State> {
             found || transition.triggerEvents.contains(event.runtimeType));
   }
 
-  void _checkHasNoNullChoices(Type eventType) {
+  void _validateHasNoNoopConditions(Type eventType) {
     if (_eventTranstionsMap[eventType] == null) {
       return;
     }
     for (final transitionDefinition in _eventTranstionsMap[eventType]!) {
       // darts generic typedefs are broken for inheritence
-      final a = transitionDefinition;
-      if (a.condition == noGuardCondition) {
+      // final a = transitionDefinition;
+
+      final dtd = transitionDefinition as dynamic;
+      // ignore: avoid_dynamic_calls
+      final c = dtd.condition as dynamic;
+
+      if (c == noopGuardCondition) {
         throw NullConditionMustBeLastException(eventType);
       }
+
+      // c.call(qe.event);
+
+      // if (a.condition == noopGuardCondition) {
+      //   throw NullConditionMustBeLastException(eventType);
+      // }
     }
   }
 

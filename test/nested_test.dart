@@ -23,8 +23,8 @@ void main() {
     final machine = await _createMachine<Alive>(watcher, human);
     await machine.complete;
 
-    expect(machine.isInState<Alive>(), equals(true));
-    expect(machine.isInState<Young>(), equals(true));
+    expect(await machine.isInState<Alive>(), equals(true));
+    expect(await machine.isInState<Young>(), equals(true));
   });
 
   test('traverse tree', () async {
@@ -37,15 +37,15 @@ void main() {
     }, includeInherited: false);
     expect(states.length, equals(14));
     expect(transitions.length, equals(8));
-    expect(machine.isInState<Alive>(), equals(true));
+    expect(await machine.isInState<Alive>(), equals(true));
   });
 
   test('Test no op transition', () async {
     final machine = await _createMachine<Alive>(watcher, human);
     machine.applyEvent(OnBirthday());
     await machine.complete;
-    expect(machine.isInState<Alive>(), equals(true));
-    expect(machine.isInState<Young>(), equals(true));
+    expect(await machine.isInState<Alive>(), equals(true));
+    expect(await machine.isInState<Young>(), equals(true));
     verifyInOrder([watcher.log('OnBirthday')]);
   });
 
@@ -55,8 +55,8 @@ void main() {
       machine.applyEvent(OnBirthday());
     }
     await machine.complete;
-    expect(machine.isInState<Alive>(), equals(true));
-    expect(machine.isInState<MiddleAged>(), equals(true));
+    expect(await machine.isInState<Alive>(), equals(true));
+    expect(await machine.isInState<MiddleAged>(), equals(true));
     verifyInOrder([watcher.log('OnBirthday')]);
   });
 
@@ -64,10 +64,10 @@ void main() {
     final machine = await _createMachine<Alive>(watcher, human);
     machine.applyEvent(OnBirthday());
     await machine.complete;
-    expect(machine.isInState<Young>(), equals(true));
+    expect(await machine.isInState<Young>(), equals(true));
     machine.applyEvent(OnDeath());
     await machine.complete;
-    expect(machine.isInState<Dead>(), equals(true));
+    expect(await machine.isInState<Dead>(), equals(true));
 
     verifyInOrder([watcher.log('OnBirthday')]);
   });
@@ -89,12 +89,12 @@ void main() {
     final machine = await _createMachine<Alive>(watcher, human);
     machine.applyEvent(OnDeath());
     await machine.complete;
-    expect(machine.isInState<Purgatory>(), equals(true));
+    expect(await machine.isInState<Purgatory>(), equals(true));
     machine.applyEvent(OnJudged(Judgement.morallyAmbiguous));
     await machine.complete;
-    expect(machine.isInState<Matrix>(), equals(true));
-    expect(machine.isInState<Dead>(), equals(true));
-    expect(machine.isInState<Purgatory>(), equals(true));
+    expect(await machine.isInState<Matrix>(), equals(true));
+    expect(await machine.isInState<Dead>(), equals(true));
+    expect(await machine.isInState<Purgatory>(), equals(true));
 
     /// We should be MiddleAged but Alive should not be a separate path.
     expect(machine.stateOfMind.activeLeafStates().length, 1);
@@ -118,8 +118,8 @@ void main() {
     await machine.complete;
 
     /// should be in both states.
-    expect(machine.isInState<InHeaven>(), equals(true));
-    expect(machine.isInState<Dead>(), equals(true));
+    expect(await machine.isInState<InHeaven>(), equals(true));
+    expect(await machine.isInState<Dead>(), equals(true));
   });
 
   test('calls onExit/onEnter', () async {

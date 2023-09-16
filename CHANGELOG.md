@@ -1,3 +1,12 @@
+# 3.0.0
+Breaking changes:
+StateMachine.isInState is now asynchronous
+Deprecated waitUntilQuiescent and replaced it with [StateMachine.complete]
+StateMachine will now set its initialState to the first [State] that is added
+if [intialState] isn't called. Previously it would throw a late initialisation 
+function.
+
+isInState is new asynchronise as it needs to wait for all outstanding events to complete before it checks the state.
 # 2.0.7
 Merged backports to masters.
 
@@ -88,7 +97,7 @@ Added missing logic to stop a join triggering until all events received.
 Cleaned up the public api a little, hiding some internal methods.
 Added logic in the exporter to handle transitions from states in two different branches on different pages.
 Create _SCMStatePath to describe states as a path.
-Fixed a bug where a coregion at the top level created its on virtualRoot rather than reusing the existing one.
+Fixed a bug where a coregion at the top level created its own virtualRoot rather than reusing the existing one.
 increased the page height and move the page no to the bottom.
 
 # 0.14.0

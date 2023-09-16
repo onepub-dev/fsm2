@@ -29,8 +29,8 @@ abstract class State {}
 /// icon  will be displayed when you export your statemachine to a diagram.
 class TerminalState extends State {}
 
-/// Used by the [StateMachine.history] to represent a pseudo 'first' event that
-/// that indicates how we got in the FSM initialState.
+/// Used by the [StateMachine.history] to represent a pseudo 'first' event 
+/// that indicates how we got into the FSM initialState.
 class InitialEvent extends Event {}
 
 /// Base class for all Events that you pass to the FSM.
@@ -54,7 +54,7 @@ class InitialEvent extends Event {}
 abstract class Event {}
 
 typedef GuardCondition<E> = bool Function(E event);
-bool noGuardCondition(Event v) => true;
+bool noopGuardCondition(Event v) => true;
 
 typedef BuildGraph = void Function(GraphBuilder);
 

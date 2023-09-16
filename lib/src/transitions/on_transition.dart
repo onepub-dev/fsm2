@@ -9,23 +9,19 @@ import 'transition_notification.dart';
 /// of an transition defined by [StateBuilder.on]
 class OnTransitionDefinition<S extends State, E extends Event,
     TOSTATE extends State> extends TransitionDefinition<E> {
-  /// If this [OnTransitionDefinition] is trigger [toState] will be the new [State]
-  Type toState;
+  OnTransitionDefinition(super.stateDefinition, GuardCondition<E> condition,
+      this.toState, SideEffect<E>? sideEffect,
+      {super.conditionLabel, super.sideEffectLabel})
+      : super(condition: condition, sideEffect: sideEffect);
 
-  OnTransitionDefinition(StateDefinition stateDefinition,
-      GuardCondition<E>? condition, this.toState, SideEffect<E>? sideEffect,
-      {String? conditionLabel, String? sideEffectLabel})
-      : super(stateDefinition,
-            condition: condition,
-            sideEffect: sideEffect,
-            conditionLabel: conditionLabel,
-            sideEffectLabel: sideEffectLabel);
+  /// If this [OnTransitionDefinition] is trigger [toState]
+  /// will be the new [State]
+  Type toState;
 
   @override
   List<Type> get targetStates => [toState];
 
   @override
-  // TODO: implement triggerEvents
   List<Type> get triggerEvents => [E];
 
   /// list of transitions that this definition will cause when triggered.
@@ -34,8 +30,9 @@ class OnTransitionDefinition<S extends State, E extends Event,
   @override
   List<TransitionNotification> transitions(
       Graph graph, StateDefinition? from, Event event) {
-    final transitions = <TransitionNotification>[];
-    transitions.add(buildTransitionNotification(graph, from, event as E));
+    final transitions = <TransitionNotification>[
+      buildTransitionNotification(graph, from, event as E)
+    ];
     return transitions;
   }
 
