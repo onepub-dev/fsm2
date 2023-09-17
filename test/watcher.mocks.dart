@@ -18,7 +18,6 @@ import 'watcher.dart' as i2;
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockWatcher extends i1.Mock implements i2.Watcher {
-  
   MockWatcher() {
     i1.throwOnMissingStub(this);
   }

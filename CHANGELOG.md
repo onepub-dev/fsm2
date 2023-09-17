@@ -1,6 +1,6 @@
 # 3.0.0
+Upgraded to Dart 3.x
 Breaking changes:
-StateMachine.isInState is now asynchronous
 Deprecated waitUntilQuiescent and replaced it with [StateMachine.complete]
 StateMachine will now set its initialState to the first [State] that is added
 if [intialState] isn't called. Previously it would throw a late initialisation 

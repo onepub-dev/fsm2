@@ -24,7 +24,6 @@ class ExportedPages {
 }
 
 class ExportedPage {
-
   ExportedPage(this.path) {
     final file = File(path);
     raf = file.openSync(mode: FileMode.write);

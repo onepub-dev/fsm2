@@ -40,9 +40,6 @@ class CoRegionDefinition<S extends State> extends StateDefinition<S> {
     _joinTargetState ??= joinTransitionDefinition.targetStates[0];
 
     /// All joins for a coregion must target the same state.
-    // ignore: flutter_style_todos
-    /// TODO: we could allow multiple targets by creating a map of target states
-    /// and the set of events required to trigger them. But that is for later.
     assert(_joinTargetState == joinTransitionDefinition.targetStates[0],
         'unexpected state');
 

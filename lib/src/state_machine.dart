@@ -122,7 +122,7 @@ class StateMachine {
   /// The base of the state tree.
   StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
 
-  /// 
+  ///
   TransitionDefinition<InitialEvent> get initialTransition =>
       OnTransitionDefinition(
           virtualRoot, noopGuardCondition, VirtualRoot, null);
