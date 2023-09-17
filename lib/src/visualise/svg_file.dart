@@ -24,9 +24,9 @@ class SvgFile {
 
   bool get hasChanged => _lastModified != lastModified;
 
-  int? get width => size!.width;
+  int get width => size!.width;
 
-  int? get height => size!.height;
+  int get height => size!.height;
 
   void reload() {}
 
@@ -66,7 +66,7 @@ class SvgFile {
     await _addInkscapeNamespace(pathTo);
 
     const xPos = 40;
-    final yPos = size!.height! + 20;
+    final yPos = size!.height + 20;
     final svgPageNo = '''
     <text
      xml:space="preserve"
@@ -141,11 +141,11 @@ class SvgFile {
 
     final widthAttribute = attributes[1];
     assert(widthAttribute.startsWith('width'), 'expected width');
-    size.width = getAttributeInt(widthAttribute);
+    size.width = getAttributeInt(widthAttribute) ?? 1000;
 
     final heightAttribute = attributes[2];
     assert(heightAttribute.startsWith('height'), 'expected height');
-    size.height = getAttributeInt(heightAttribute);
+    size.height = getAttributeInt(heightAttribute) ?? 500;
 
     return size;
   }

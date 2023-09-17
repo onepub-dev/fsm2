@@ -35,6 +35,11 @@ on the next line, plus another line at the end.\n
 ''';
     await doTest(input, expected);
   });
+
+  test('export', () async {
+    final machine = await buildMachine((e) => {});
+    machine.export('yaml_scalar.smcat');
+  });
 }
 
 Future<void> doTest(String input, String expected) async {
@@ -107,6 +112,7 @@ Future<StateMachine> buildMachine(void Function(OnChar) append) async =>
       /// Folding Block
       ..coregion<FoldingBlock>((b) => foldingBlockBuilder(b, append))
       ..onTransition(
+          // ignore: avoid_print
           (fromState, event, toState) => print('$fromState $event $toState ')));
 
 ///
@@ -249,6 +255,7 @@ class ReplaceNewLines extends State {}
 class Trim extends State {}
 
 // keep a single trailing  newline
+// ignore: avoid_classes_with_only_static_members
 class TrimClip extends State {
   static void trim() {}
 }
@@ -286,10 +293,12 @@ class OnBlockKeepChar extends OnChar {
 }
 
 class OnPlusChar extends OnChar {
+  // ignore: unreachable_from_main
   OnPlusChar(super.character);
 }
 
 class OnMinusChar extends OnChar {
+  // ignore: unreachable_from_main
   OnMinusChar(super.character);
 }
 

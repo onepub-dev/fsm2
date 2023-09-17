@@ -14,7 +14,7 @@ class TypingFormula implements State {}
 
 class Typing implements State {}
 
-class Idle implements State {}
+// class Idle implements State {}
 
 Future<StateMachine> createMachine(MockWatcher watcher) async {
   final machine = await StateMachine.create((g) => g
@@ -73,7 +73,7 @@ class PointSlot extends State {}
 
 class OnSlotSelection extends Event {}
 
-class PointReferencene extends State {}
+// class PointReferencene extends State {}
 
 class OnReferenceSelection extends Event {}
 
@@ -93,11 +93,13 @@ class Point extends State {}
 
 class Autocomplete extends State {}
 
-class OnBlur extends Event {}
+// class OnBlur extends Event {}
 
-class OnFocus extends Event {}
+// class OnFocus extends Event {}
 
 class OnValueChange implements Event {
+  // ignore: unreachable_from_main
   const OnValueChange({required this.isFormula});
+  // ignore: unreachable_from_main
   final bool isFormula;
 }

@@ -64,11 +64,11 @@ class Teenager implements State {}
 
 class Adult implements State {}
 
-class Taxes implements State {}
+// class Taxes implements State {}
 
 class Dead implements State {}
 
-class Adulthood implements State {}
+// class Adulthood implements State {}
 
 class Conception implements Event {}
 

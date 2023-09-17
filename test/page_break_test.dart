@@ -128,6 +128,7 @@ class OnDeath implements Event {}
 enum Judgement { good, bad, ugly }
 
 class OnJudged implements Event {
+  // ignore: unreachable_from_main
   OnJudged(this.judgement);
   Judgement judgement;
 }

@@ -3,6 +3,6 @@ class Size {
   Size.copyFrom(Size pageSize)
       : width = pageSize.width,
         height = pageSize.height;
-  int? width;
-  int? height;
+  int width;
+  int height;
 }

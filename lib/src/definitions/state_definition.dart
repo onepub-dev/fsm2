@@ -195,8 +195,15 @@ class StateDefinition<S extends State> {
     for (final transitionDefinition in transitionChoices) {
       final td = transitionDefinition;
 
+      /// dynamic is unavoidable as the event queue is untyped
+      /// but to call the guard condition we need the events
+      /// type or we need to break out of the type system
+      /// so we can call the condition without throwing an
+      /// invalid type exception (caused by typedef not supporting inheritance)
       final dtd = td as dynamic;
+      // ignore: avoid_dynamic_calls
       final c = dtd.condition as dynamic;
+      // ignore: avoid_dynamic_calls
       if (c.call(event) == true) {
         if (transitionDefinition.canTrigger(event)) {
           /// static transition
@@ -396,6 +403,9 @@ class StateDefinition<S extends State> {
 
   /// default implementation.
   bool canTrigger(Type event) => true;
+
+  @override
+  String toString() => 'StateDefinition(${this.stateType})';
 }
 
 /// used to hide internal api

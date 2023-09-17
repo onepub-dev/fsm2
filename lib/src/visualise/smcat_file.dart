@@ -29,9 +29,9 @@ class SMCatFile {
 
   SvgFile get svgFile => _svgFile;
 
-  int? get height => svgFile.height;
+  int get height => svgFile.height;
 
-  int? get width => svgFile.width;
+  int get width => svgFile.width;
 
   /// creates an Svg image from the smcat file.
   ///

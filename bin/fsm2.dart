@@ -4,7 +4,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:dcli/dcli.dart';
+import 'package:dcli_core/dcli_core.dart';
+import 'package:dcli_terminal/dcli_terminal.dart';
 import 'package:fsm2/src/util/file_util.dart';
 import 'package:fsm2/src/visualise/smcat_folder.dart';
 import 'package:fsm2/src/visualise/svg_file.dart';
@@ -65,11 +66,11 @@ Future<void> main(List<String> args) async {
   }
 
   if (parsed.wasParsed('verbose')) {
-    Settings().setVerbose(enabled: true);
+    await Settings().setVerbose(enabled: true);
   }
 
   if (parsed.wasParsed('install')) {
-    install();
+    await install();
     exit(0);
   }
 
@@ -120,17 +121,17 @@ No files found that needed generating. Use -f to regenerate all files.''');
   }
 }
 
-void install() {
-  if (which('npm').notfound) {
+Future<void> install() async {
+  if ((await which('npm')).notfound) {
     print(red('Please install npm and then try again'));
     exit(1);
   }
-  'npm install --global state-machine-cat'.start(privileged: true);
+  await Process.start('npm', ['install', '--global', 'state-machine-cat']);
 }
 
 void showUsage(ArgParser parser) {
   print('''
-Usage: ${DartScript.self.exeName} <base name of myfsm2>
+Usage: ${basename(Platform.executable)} <base name of myfsm2>
 Converts a set of smcat files into svg files.
 If your smcat file has multiple parts due to page breaks then each page will be processed.
 ${parser.usage}''');

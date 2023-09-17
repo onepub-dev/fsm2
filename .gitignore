@@ -19,3 +19,4 @@ test/*.gv
 test/smcat/*
 tool/*.smcat
 .failed_tracker
+test/src/stackoverflow/try2.dart

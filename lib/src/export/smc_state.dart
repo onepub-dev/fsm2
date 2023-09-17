@@ -241,9 +241,11 @@ class SMCState {
   }
 
   @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(covariant SMCState other) => hashCode == other.hashCode;
 
   @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => name.hashCode + label.hashCode + type.hashCode;
 
   @override

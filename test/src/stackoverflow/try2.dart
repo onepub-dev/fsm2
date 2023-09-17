@@ -5,6 +5,7 @@ class Event {}
 class QueuedEvent<E extends Event> {
   QueuedEvent(this.event, this.condition);
   E event;
+  // ignore: unreachable_from_main
   GuardCondition<E> condition;
 }
 

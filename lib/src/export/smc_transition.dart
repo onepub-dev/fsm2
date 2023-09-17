@@ -14,8 +14,9 @@ import 'smc_state.dart';
 
 @immutable
 class SMCTransition {
-  SMCTransition({required this.from, required this.to, required this.label})
-      : assert(from.name != to.name, 'from and to must have the same name');
+  const SMCTransition(
+      {required this.from, required this.to, required this.label});
+  // : assert(from.name != to.name, 'from and to must have the same name');
 
   /// names are case sensitive.
 

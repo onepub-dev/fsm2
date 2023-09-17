@@ -34,13 +34,13 @@ class Baking implements State {}
 
 class Heating implements State {}
 
-class LightOn implements State {}
+// class LightOn implements State {}
 
 class OnOpenDoor implements Event {}
 
 class OnCloseDoor implements Event {}
 
-class OnTurnOff implements Event {}
+// class OnTurnOff implements Event {}
 
 class OnToast implements Event {}
 

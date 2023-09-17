@@ -29,7 +29,7 @@ abstract class State {}
 /// icon  will be displayed when you export your statemachine to a diagram.
 class TerminalState extends State {}
 
-/// Used by the [StateMachine.history] to represent a pseudo 'first' event 
+/// Used by the [StateMachine.history] to represent a pseudo 'first' event
 /// that indicates how we got into the FSM initialState.
 class InitialEvent extends Event {}
 
@@ -51,7 +51,10 @@ class InitialEvent extends Event {}
 ///
 /// ..on<Heat, Liquid>(condition: (s,e) => applyHeatAndReturnTemp(e.joules) > 0)
 /// ```
-abstract class Event {}
+abstract class Event {
+  @override
+  String toString() => runtimeType.toString();
+}
 
 typedef GuardCondition<E> = bool Function(E event);
 bool noopGuardCondition(Event v) => true;

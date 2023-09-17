@@ -20,6 +20,7 @@ void main(List<String> args) async {
   machine.export('registration.smcat');
 }
 
+// ignore: unreachable_from_main
 void showUsage(ArgParser parser) {
   // ignore: avoid_print
   print('Usage: gen_smcat.dart -v -prompt <a questions>');
