@@ -122,7 +122,7 @@ No files found that needed generating. Use -f to regenerate all files.''');
 }
 
 Future<void> install() async {
-  if ((await which('npm')).notfound) {
+  if (which('npm').notfound) {
     print(red('Please install npm and then try again'));
     exit(1);
   }
