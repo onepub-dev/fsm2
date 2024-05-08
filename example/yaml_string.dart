@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:fsm2/fsm2.dart';
 
 ///
