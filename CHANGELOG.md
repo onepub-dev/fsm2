@@ -1,3 +1,7 @@
+# 3.1.0
+Upgraded to latest dcli 4.0
+Merge PR  from panghy which fixes #17 and #18.
+
 # 3.1.0-alpha.1
 Upgraded to dcli 4.0
 
