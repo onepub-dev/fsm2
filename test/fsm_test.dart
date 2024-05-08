@@ -29,7 +29,7 @@ void main() {
   });
 
   test('export', () async {
-    await core.withTempDir((tempDir) async {
+    await core.withTempDirAsync((tempDir) async {
       final pathTo = join(tempDir, 'fsm_test.smcat');
       await _createMachine<Solid>(watcher)
         ..analyse()

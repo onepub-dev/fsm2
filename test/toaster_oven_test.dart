@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 
 void main() {
   test('export', () async {
-    await core.withTempDir((tempDir) async {
+    await core.withTempDirAsync((tempDir) async {
       await _createMachine()
         ..analyse()
         ..export(join(tempDir, 'toaster_oven.smcat'));

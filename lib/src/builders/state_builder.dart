@@ -137,7 +137,7 @@ class StateBuilder<S extends State> {
   /// Every onJoin in a coregion must target the same external state.
   void onJoin<E extends Event, TOSTATE extends State>(
       {GuardCondition<E> condition = noopGuardCondition,
-      SideEffect? sideEffect}) {
+      SideEffect<E>? sideEffect}) {
     final onTransition = JoinTransitionDefinition<S, E, TOSTATE>(
         _stateDefinition, condition, sideEffect);
 
