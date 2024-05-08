@@ -40,8 +40,7 @@ void main() {
     // go into the coregion again.
     fsm.applyEvent(Fork());
     await fsm.complete;
-    // FAILS HERE with EndState->VirtualRoot
-    // We should still be in the coregion.
+    // if the coregion does not reset the join events, we will fail here.
     expect(await fsm.isInState<Coregion>(), equals(true),
         reason: fsm.stateOfMind.toString());
     fsm.applyEvent(ResolveStateB());
