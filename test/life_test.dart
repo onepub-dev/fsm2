@@ -7,7 +7,7 @@ import 'package:test/test.dart';
 late StateMachine machine;
 void main() {
   test('export', () async {
-    await core.withTempDir((tempDir) async {
+    await core.withTempDirAsync((tempDir) async {
       final pathToTest = join(tempDir, 'life_test.smcat');
 
       await _createMachine();

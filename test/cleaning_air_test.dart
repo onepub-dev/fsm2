@@ -121,7 +121,7 @@ void main() {
 
   test('export', () async {
     final watcher = MockWatcher();
-    await core.withTempDir((tempDir) async {
+    await core.withTempDirAsync((tempDir) async {
       final pathTo = join(tempDir, 'cleaning_air_test.smcat');
       (await createMachine(watcher)).export(pathTo);
       final lines =

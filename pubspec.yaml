@@ -10,7 +10,7 @@ dependencies:
   args: ^2.4.2
   completer_ex: ^4.0.0
   dcli_core: ^4.0.0-alpha.1
-  dcli_terminal: ^0.2.0
+  dcli_terminal: ^4.0.0-alpha.1
   logger: ^2.0.1
   meta: ^1.6.0
   path: ^1.7.0
@@ -18,7 +18,7 @@ dependencies:
   synchronized: ^3.0.0
   tree_iterator: ^3.0.0
 dev_dependencies: 
-  dcli: ^4.0.0-alpha.1
+  dcli: ^4.0.1-beta.4
   lint_hard: ^4.0.0
   mockito: ^5.0.0
   test: ^1.0.0
