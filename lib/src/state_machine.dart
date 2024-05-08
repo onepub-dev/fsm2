@@ -408,13 +408,13 @@ class StateMachine {
 
     /// we only apply exit and sideEffect to the stateOfMind
     /// for the first transition.
-    var applySideEffects = true;
+    final sideEffectsApplied = <StateDefinition>{};
     for (final transition in transitions) {
       // final _transition = cast(transition.event, transition)!;
       _stateOfMind = await transition.definition.trigger(
           _graph, _stateOfMind, transition,
-          applySideEffects: applySideEffects);
-      applySideEffects = false;
+          applySideEffects: !sideEffectsApplied.contains(transition.from));
+      sideEffectsApplied.add(transition.from!);
       _notifyListeners(transition);
     }
   }
