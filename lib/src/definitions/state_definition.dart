@@ -118,9 +118,9 @@ class StateDefinition<S extends State> {
   }
 
   /// callback used when we exiting this [State].
-  /// Provide provide a default no-op implementation.
+  /// Provides a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
-  OnExit onExit = (toState, event) => null;
+  OnExit onExit = (fromState, event) => null;
 
   /// Returns the first transition that can be triggered for
   ///  the given [event] from the
