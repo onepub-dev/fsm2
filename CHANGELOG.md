@@ -1,3 +1,8 @@
+# 3.1.1
+Fixed #18 - coregion resolves before all onJoin events are received (2nd time) when sideEffect resolves one state
+
+Again thanks to panghy for this patch.
+
 # 3.1.0
 Upgraded to latest dcli 4.0
 Merge PR  from panghy which fixes #17 and #18.
@@ -11,7 +16,7 @@ Breaking changes:
 Deprecated waitUntilQuiescent and replaced it with [StateMachine.complete]
 StateMachine will now set its initialState to the first [State] that is added
 if [intialState] isn't called. Previously it would throw a late initialisation 
-function.
+error.
 
 isInState is new asynchronise as it needs to wait for all outstanding events to complete before it checks the state.
 # 2.0.7
