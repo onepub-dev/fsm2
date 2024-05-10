@@ -145,7 +145,7 @@ bool analyse(Graph graph) {
 
   /// Check that all child joins of a coregion target the same external state
   /// and that they only target states that are external to the coregion
-  /// InitialStates MUST target a child state (i.e. they can't target a
+  /// InitialStates MUST target a child state (i.e. they can't target 
   /// grand children)
   for (final stateDefinition in stateDefinitionMap.values) {
     if (stateDefinition.initialState == null) {
