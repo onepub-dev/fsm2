@@ -4,6 +4,8 @@
 
 // part  'co_region_definition.dart';
 
+import 'package:meta/meta.dart';
+
 import '../transitions/join_transition.dart';
 import '../types.dart';
 import 'state_definition.dart';
@@ -22,6 +24,16 @@ class CoRegionDefinition<S extends State> extends StateDefinition<S> {
 
     /// true if all events have been received.
     return expectedJoinEvents.values.every((element) => element == true);
+  }
+
+  /// Clean up [expectedJoinEvents] when we exit the coregion.
+  @override
+  @mustCallSuper
+  Future<void> internalOnExit(Type fromState, Event? event) async {
+    await super.internalOnExit(fromState, event);
+    for (final key in expectedJoinEvents.keys) {
+      expectedJoinEvents[key] = false;
+    }
   }
 
   /// default implementation.
