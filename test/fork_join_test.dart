@@ -18,9 +18,9 @@ void main() {
             ..state<StateA>((b) => b.onJoin<ResolveStateA, EndState>())
             ..state<StateB>((b) => b.onJoin<ResolveStateB, EndState>()))
           ..state<EndState>((b) => b.on<GoBackToStart, CanFork>()),
-        production: true);
-    // go into the coregion
-    fsm.applyEvent(Fork());
+        production: true)
+      // go into the coregion
+      ..applyEvent(Fork());
     await fsm.complete;
     // we are now in the coregion
     expect(await fsm.isInState<Coregion>(), equals(true),
