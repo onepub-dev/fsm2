@@ -52,6 +52,12 @@ bool analyse(Graph graph) {
           /// this will be reported later.
           continue;
         }
+        if (!targetDefinition.isLeaf) {
+          allGood = false;
+          // ignore: avoid_print
+          print('State ${targetDefinition.stateType} is not a leaf state. '
+              'Only leaf states can be the target of a transition.');
+        }
         remainingStateMap
           ..remove(targetState)
 
