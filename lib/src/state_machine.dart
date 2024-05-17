@@ -247,35 +247,36 @@ class StateMachine {
   }
 
   /// dequeue the next event and transition it.
-  Future<void> _dispatch() async {
-    assert(_eventQueue.isNotEmpty, 'The event queue is in an invalid state');
-    final event = _eventQueue.first;
+  /// only one event can be processed at a time.
+  Future<void> _dispatch() async => _lock.synchronized(() async {
+      assert(_eventQueue.isNotEmpty, 'The event queue is in an invalid state');
+      final event = _eventQueue.first;
 
-    try {
-      log('FSM applying ${event.event}');
-      await _actualApplyEvent(event.event);
-      log('FSM applied ${event.event}');
-      event._completer.complete();
-    } on InvalidTransitionException catch (e) {
-      log('FSM InvalidTransitionException for ${event.event}');
-      if (production!) {
-        log('FSM InvalidTransitionException suppressed: $e');
-
+      try {
+        log('FSM applying ${event.event}');
+        await _actualApplyEvent(event.event);
+        log('FSM applied ${event.event}');
         event._completer.complete();
-      } else {
+      } on InvalidTransitionException catch (e) {
+        log('FSM InvalidTransitionException for ${event.event}');
+        if (production!) {
+          log('FSM InvalidTransitionException suppressed: $e');
+
+          event._completer.complete();
+        } else {
+          event._completer.completeError(e);
+        }
+        // ignore: avoid_catches_without_on_clauses
+      } catch (e) {
+        log('FSM Exception applying ${event.event}');
         event._completer.completeError(e);
+      } finally {
+        /// now we have finished processing the event
+        /// we can remove it from the queue.
+        log('FSM removing applied ${event.event} from eventQueue');
+        _eventQueue.removeFirst();
       }
-      // ignore: avoid_catches_without_on_clauses
-    } catch (e) {
-      log('FSM Exception applying ${event.event}');
-      event._completer.completeError(e);
-    } finally {
-      /// now we have finished processing the event
-      /// we can remove it from the queue.
-      log('FSM removing applied ${event.event} from eventQueue');
-      _eventQueue.removeFirst();
-    }
-  }
+    });
 
   /// Returns true if the event queue is empty
   bool get _isQuiescent => _eventQueue.isEmpty;
@@ -306,11 +307,8 @@ class StateMachine {
     }
   }
 
-  Future<void> _actualApplyEvent<E extends Event>(E event) async =>
-
-      /// only one transition at a time.
-      _lock.synchronized(() async {
-        var dispatched = false;
+  Future<void> _actualApplyEvent<E extends Event>(E event) async {
+    var dispatched = false;
         for (final stateDefinition in _stateOfMind.activeLeafStates()) {
           final transitionDefinition = await stateDefinition
               .findTriggerableTransition(stateDefinition.stateType, event);
@@ -331,7 +329,7 @@ class StateMachine {
         }
 
         _controller.add(_stateOfMind);
-      });
+  }
 
   /// Checks that every leaf in the [StateMachine] can be reached.
   /// Use this method during development to ensure your [StateMachine]
