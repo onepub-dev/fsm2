@@ -23,7 +23,7 @@ void main() {
   });
 
   test('Export', () async {
-    await core.withTempDir((tempDir) async {
+    await core.withTempDirAsync((tempDir) async {
       final pathTo = join(tempDir, 'page_break_test.smcat');
       final machine = await _createMachine<Alive>(watcher, human);
       machine.analyse();

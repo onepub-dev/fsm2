@@ -72,10 +72,10 @@ void main() {
     expect(await machine.isInState<CleanAir>(), equals(true));
     expect(await machine.isInState<MaintainAir>(), equals(true));
 
-    verify(watcher.onExit(MonitorAir, onBadAir));
-    verify(watcher.onEnter(HandleFan, onBadAir));
-    verify(watcher.onEnter(HandleLamp, onBadAir));
-    verify(watcher.onEnter(WaitForGoodAir, onBadAir));
+    verify(watcher.onExit(MonitorAir, onBadAir)).called(1);
+    verify(watcher.onEnter(HandleFan, onBadAir)).called(1);
+    verify(watcher.onEnter(HandleLamp, onBadAir)).called(1);
+    verify(watcher.onEnter(WaitForGoodAir, onBadAir)).called(1);
 
     /// trigger the join
     machine.applyEvent(onFanRunning);
@@ -96,10 +96,10 @@ void main() {
     await machine.complete;
     expect(await machine.isInState<MonitorAir>(), equals(true));
 
-    verify(watcher.onExit(HandleFan, onFanRunning));
-    verify(watcher.onExit(HandleLamp, onLampOn));
-    verify(watcher.onExit(WaitForGoodAir, onGoodAir));
-    verify(watcher.onEnter(MonitorAir, onGoodAir));
+    verify(watcher.onExit(HandleFan, onFanRunning)).called(1);
+    verify(watcher.onExit(HandleLamp, onLampOn)).called(1);
+    verify(watcher.onExit(WaitForGoodAir, onGoodAir)).called(1);
+    verify(watcher.onEnter(MonitorAir, onGoodAir)).called(1);
 
     /// check that no extraneous actions were performed.
     verifyNoMoreInteractions(watcher);
@@ -121,7 +121,7 @@ void main() {
 
   test('export', () async {
     final watcher = MockWatcher();
-    await core.withTempDir((tempDir) async {
+    await core.withTempDirAsync((tempDir) async {
       final pathTo = join(tempDir, 'cleaning_air_test.smcat');
       (await createMachine(watcher)).export(pathTo);
       final lines =

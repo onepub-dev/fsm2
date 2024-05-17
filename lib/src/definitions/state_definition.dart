@@ -102,10 +102,10 @@ class StateDefinition<S extends State> {
 
   /// This method is called when we exit this state to give the
   /// [StateDefinition] a chance to do any internal cleanup.
-  /// If you must call [_onExit] so that we can call the user
+  /// If you must call [internalOnExit] so that we can call the user
   /// defined [onExit] method.
   @mustCallSuper
-  Future<void> _onExit(Type fromState, Event? event) async {
+  Future<void> internalOnExit(Type fromState, Event? event) async {
     try {
       log('FSM onExit called for $stateType due to ${event.runtimeType}');
       await onExit(fromState, event);
@@ -118,9 +118,9 @@ class StateDefinition<S extends State> {
   }
 
   /// callback used when we exiting this [State].
-  /// Provide provide a default no-op implementation.
+  /// Provides a default no-op implementation.
   // ignore: prefer_function_declarations_over_variables
-  OnExit onExit = (toState, event) => null;
+  OnExit onExit = (fromState, event) => null;
 
   /// Returns the first transition that can be triggered for
   ///  the given [event] from the
@@ -414,7 +414,7 @@ Future<void> onEnter(StateDefinition sd, Type toState, Event? event) async {
 }
 
 Future<void> onExit(StateDefinition sd, Type fromState, Event? event) async {
-  await sd._onExit(fromState, event);
+  await sd.internalOnExit(fromState, event);
 }
 
 void addCoRegion<CO extends State>(

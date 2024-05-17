@@ -38,7 +38,7 @@ class UnknownStateException implements Exception {
   String toString() => message;
 }
 
-/// You have passed an State as an initialState that isn't either a
+/// You have passed a State as an initialState that isn't either a
 ///  top level state or a leaf state.
 class InvalidInitialStateException implements Exception {
   InvalidInitialStateException(this.message);
