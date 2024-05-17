@@ -1,12 +1,12 @@
 name: fsm2
-version: 3.1.0-alpha.1
+version: 3.2.0
 homepage: https://onepub.gitbook.io/fsm2/
 documentation: https://onepub.gitbook.io/fsm2/
 description: FSM2 provides an implementation of the core design aspects of the UML state diagrams allowing both declarative transitions and dynamic transitions along with Guard Conditions.
 repository: https://github.com/bsutton/fsm2
-environment: 
+environment:
   sdk: '>=3.0.0 <4.0.0'
-dependencies: 
+dependencies:
   args: ^2.4.2
   completer_ex: ^4.0.0
   dcli_core: ^4.0.0-alpha.1
@@ -17,10 +17,10 @@ dependencies:
   stacktrace_impl: ^2.0.1
   synchronized: ^3.0.0
   tree_iterator: ^3.0.0
-dev_dependencies: 
+dev_dependencies:
   dcli: ^4.0.0-alpha.1
   lint_hard: ^4.0.0
   mockito: ^5.0.0
   test: ^1.0.0
-executables: 
-  fsm2: 
+executables:
+  fsm2:

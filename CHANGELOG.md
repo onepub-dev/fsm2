@@ -1,3 +1,6 @@
+# 3.2.0
+- fix for #23 - double dispatch of events.
+
 # 3.1.0-alpha.1
 Upgraded to dcli 4.0
 
