@@ -1,4 +1,5 @@
 export 'src/builders/co_region_builder.dart';
+export 'src/builders/graph_builder.dart';
 export 'src/builders/state_builder.dart';
 export 'src/definitions/state_definition.dart'
     hide addCoRegion, onEnter, onExit;
