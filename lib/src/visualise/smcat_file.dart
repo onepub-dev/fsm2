@@ -36,6 +36,9 @@ class SMCatFile {
   /// creates an Svg image from the smcat file.
   ///
   /// Requires that the 'smcat' cli tools are installed.
+  /// 
+  /// If [force] is true, the conversion will be performed even if the
+  /// svg file already exists.
   ///
   /// Throws [SMCatException if the conversion fails]
   ///

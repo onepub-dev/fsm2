@@ -76,7 +76,7 @@ class JoinTransitionDefinition<S extends State, E extends Event,
 
     // Gather all of the other transition in the coregion defined by onJoins
     // ignore: flutter_style_todos
-    // TODO: what about states that don't have an onjoin do we need
+    // TODO: what about states that don't have an onjoin, do we need
     // create transitions for each of those?
     for (final join in coregion.joinTransitions) {
       final notification = join.buildTransitionNotification(graph);

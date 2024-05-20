@@ -1,3 +1,6 @@
+# 3.2.1
+- expose GraphBuilder as part of the public API.
+
 # 3.2.0
 - fix for #23 - double dispatch of events.
 
