@@ -53,7 +53,7 @@ abstract class TransitionDefinition<E extends Event> {
   ///
   /// Returns a transition label for use on exported diagrams. The
   /// label takes the standard UML2 form of:
-  /// ```
+  /// ```text
   /// transition[condition]/sideeffect
   /// ```
   /// If the transition supports multiple events we just take use
@@ -64,7 +64,7 @@ abstract class TransitionDefinition<E extends Event> {
   ///
   /// Returns a transition label for use on exported diagrams. The
   /// label takes the standard UML2 form of:
-  /// ```
+  /// ```text
   /// transition[condition]/sideeffect
   /// ```
   ///
@@ -301,6 +301,7 @@ abstract class TransitionDefinition<E extends Event> {
         log('FSM calling sideEffect due to ${transition.event} ');
         await sideEffect!(transition.event);
         log('FSM completed sideEffect due to ${transition.event} ');
+        // we rethrow so, so someone elses problem
         // ignore: avoid_catches_without_on_clauses
       } catch (e) {
         log('FSM sideEffect  due to ${transition.event} threw $e');

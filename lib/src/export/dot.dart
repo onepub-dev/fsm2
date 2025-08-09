@@ -11,6 +11,8 @@ import '../virtual_root.dart';
 ///
 /// Exports the [StateMachine] to dot notation which can then
 /// be used by xdot to display a diagram of the state machine.
+/// 
+/// ```bash
 ///
 /// apt install xdot
 ///
@@ -18,7 +20,6 @@ import '../virtual_root.dart';
 ///
 /// To visualise the resulting file graph run:
 ///
-/// ```
 /// xdot <path>
 /// ```
 class DotExporter {
@@ -157,7 +158,6 @@ class DotExporter {
 ${'\t' * level}subgraph cluster_$regionName {
 \t${'\t' * level}graph [label="$regionName", bgcolor="/bugn9/$level", fontsize="20" ];
 ''');
-      // ignore: parameter_assignments
       level++;
 
       /// put the parent state in the cluster box as well.

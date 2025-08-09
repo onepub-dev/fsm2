@@ -3,6 +3,8 @@ import '../types.dart';
 import 'state_builder.dart';
 
 class CoRegionBuilder<S extends State> extends StateBuilder<S> {
+  // [coRegion] is a [StateDefinition]
+  // ignore: matching_super_parameters
   CoRegionBuilder(super.parent, CoRegionDefinition<S> super.coRegion);
 
   // void onJoin<JS extends State>(BuildJoin<JS> buildJoin,

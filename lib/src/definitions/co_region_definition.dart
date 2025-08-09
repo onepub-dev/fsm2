@@ -23,7 +23,7 @@ class CoRegionDefinition<S extends State> extends StateDefinition<S> {
     expectedJoinEvents[event] = true;
 
     /// true if all events have been received.
-    return expectedJoinEvents.values.every((element) => element == true);
+    return expectedJoinEvents.values.every((element) => element);
   }
 
   /// Clean up [expectedJoinEvents] when we exit the coregion.
@@ -43,8 +43,7 @@ class CoRegionDefinition<S extends State> extends StateDefinition<S> {
   /// There can only be one join target state.
   Type? _joinTargetState;
 
-  List<JoinTransitionDefinition<State, Event, State>> joinTransitions =
-      <JoinTransitionDefinition>[];
+  final joinTransitions = <JoinTransitionDefinition>[];
 
   /// The onJoin transitions need to register with the owning coregion
   /// as they can be nested in a substate and we need to know about all of then.

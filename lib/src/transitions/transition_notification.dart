@@ -1,3 +1,6 @@
+// not part of the public api.
+// ignore_for_file: type_annotate_public_apis
+
 import '../definitions/state_definition.dart';
 import '../types.dart';
 import 'transition_definition.dart';
@@ -12,6 +15,6 @@ class TransitionNotification<E extends Event> {
   /// Some transitions (fork/join) cause multiple transitions to/from a state.
   /// We only want to trigger the onEnter/onExit methods once so these
   /// flags allow then onEnter/onExit methods to be skipped.
-  bool skipEnter = false;
-  bool skipExit = false;
+  var skipEnter = false;
+  var skipExit = false;
 }

@@ -9,7 +9,7 @@ import 'transition_notification.dart';
 /// of an transition defined by [StateBuilder.on]
 class OnTransitionDefinition<S extends State, E extends Event,
     TOSTATE extends State> extends TransitionDefinition<E> {
-  OnTransitionDefinition(super.stateDefinition, GuardCondition<E> condition,
+  OnTransitionDefinition(super.fromStateDefinition, GuardCondition<E> condition,
       this.toState, SideEffect<E>? sideEffect,
       {super.conditionLabel, super.sideEffectLabel})
       : super(condition: condition, sideEffect: sideEffect);

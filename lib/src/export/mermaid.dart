@@ -17,7 +17,7 @@ import '../types.dart';
 ///
 /// To visualise the resulting file graph run:
 ///
-/// ```
+/// ``` bash
 /// xdot <path>
 /// ```
 class MermaidExporter {
@@ -25,7 +25,9 @@ class MermaidExporter {
 
   /// creates a map of the terminal ordinals to what
   /// parent state they belong to.
+  /// ```dart
   /// var terminalsOwnedByRegion = <Type, List<int>>{};
+  /// ```
   MermaidExporter(this.stateMachine);
   final StateMachine stateMachine;
 
@@ -65,7 +67,6 @@ class MermaidExporter {
   String indent(int level) => '\t' * level;
 
   void writeRegion(RandomAccessFile raf, StateDefinition<State> sd, int level) {
-    // ignore: parameter_assignments
     level++;
 
     /// Delcare the enter/exit points for the region
@@ -86,7 +87,6 @@ class MermaidExporter {
   }
 
   void writeState(RandomAccessFile raf, StateDefinition<State> sd, int level) {
-    // ignore: parameter_assignments
     level++;
     raf.writeStringSync('${indent(level)}${sd.stateType}\n');
 

@@ -13,7 +13,7 @@ void main() {
   }, skip: false);
 }
 
-Future<StateMachine> _createMachine() async => StateMachine.create((g) => g
+Future<StateMachine> _createMachine()  => StateMachine.create((g) => g
   ..initialState<DoorClosed>()
   ..state<DoorClosed>((b) => b
     ..on<OnBake, Baking>()

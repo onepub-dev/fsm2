@@ -21,21 +21,23 @@ import 'smc_transition.dart';
 ///
 /// To visualise the resulting file graph run:
 ///
-/// ```
+/// ``` bash
 /// run: smcat <path>
 /// ```
 
 class SMCatExporter implements Exporter {
   /// creates a map of the terminal ordinals to what
   /// parent state they belong to.
+  /// ```dart
   /// var terminalsOwnedByRegion = <Type, List<int>>{};
+  /// ```
   SMCatExporter(this.stateMachine);
   final StateMachine stateMachine;
-  final SMCState virtualRoot = SMCState.root(name: 'initial', pageBreak: false);
+  final virtualRoot = SMCState.root(name: 'initial', pageBreak: false);
 
   /// we need to suppress any duplicate transitions which can
   /// happen when we are forking.
-  Set<SMCTransition> seenTransitions = <SMCTransition>{};
+  final seenTransitions = <SMCTransition>{};
 
   final exports = ExportedPages();
 

@@ -1,6 +1,8 @@
 @Timeout(Duration(minutes: 30))
 library;
 
+import 'dart:developer';
+
 import 'package:dcli/dcli.dart';
 import 'package:dcli_core/dcli_core.dart' as core;
 import 'package:fsm2/fsm2.dart';
@@ -51,10 +53,8 @@ void main() {
         .map((sd) => sd.stateType)
         .toList();
     expect(types, equals([WaitForGoodAir, CleanAir, MaintainAir, VirtualRoot]));
-    // ignore: avoid_print
-    print('done1');
-    // ignore: avoid_print
-    print('done2');
+    log('done1');
+    log('done2');
   }, skip: false);
 
   test('join', () async {
@@ -115,8 +115,7 @@ void main() {
 
     expect(types, equals([MonitorAir, MaintainAir, VirtualRoot]));
 
-    // ignore: avoid_print
-    print(som);
+    log(som.toString());
   }, skip: false);
 
   test('export', () async {
@@ -135,18 +134,21 @@ void main() {
 Future<StateMachine> createMachine(MockWatcher watcher) async {
   late StateMachine machine;
 
+  // used during debugging
   // ignore: unused_local_variable
   var lightOn = false;
+  // used during debugging
   // ignore: unused_local_variable
   var fanOn = false;
 
+  // used during debugging
   // ignore: join_return_with_assignment
   machine = await StateMachine.create((g) => g
     ..initialState<MaintainAir>()
     ..state<MaintainAir>((b) => b
       ..state<MonitorAir>((b) => b
-        ..onEnter((s, e) async => watcher.onEnter(s, e))
-        ..onExit((s, e) async => watcher.onExit(s, e))
+        ..onEnter((s, e) => watcher.onEnter(s, e))
+        ..onExit((s, e) => watcher.onExit(s, e))
         ..onFork<OnBadAir>(
             (b) => b
               ..target<HandleFan>()
@@ -187,8 +189,8 @@ Future<StateMachine> createMachine(MockWatcher watcher) async {
             ..on<OnTurnLampOff, LampOff>(
                 sideEffect: (e) async => lightOn = false)))
         ..state<WaitForGoodAir>((b) => b
-          ..onEnter((s, e) async => watcher.onEnter(s, e))
-          ..onExit((s, e) async => watcher.onExit(s, e))
+          ..onEnter((s, e) => watcher.onEnter(s, e))
+          ..onExit((s, e) => watcher.onExit(s, e))
           ..onJoin<OnGoodAir, MonitorAir>())))
     ..onTransition((s, e, st) {}));
 
@@ -196,7 +198,6 @@ Future<StateMachine> createMachine(MockWatcher watcher) async {
 }
 
 var _smcGraph = '''
-
 MaintainAir {
 	MonitorAir {
 		MonitorAir => ]MonitorAir.fork : OnBadAir;
@@ -232,40 +233,6 @@ MaintainAir {
 	MonitorAir.initial => MonitorAir;
 };
 initial => MaintainAir : MaintainAir;''';
-
-// ignore: unused_element
-var _graph = '''
-stateDiagram-v2
-    [*] --> MaintainAir
-    state MaintainAir {
-        [*] --> MonitorAir 
-        
-        CleanAir --> MonitorAir : onGoodAir 
-        MonitorAir  --> CleanAir : OnBadAir
-
-        state CleanAir {
-        [*] --> HandleEquipment
-        HandleEquipment --> [*]
-        state HandleEquipment {
-            HandleLamp
-            HandleFan 
-            WaitForGoodAir
-
-            state BBB <<fork>> 
-              [*] --> BBB 
-              BBB --> HandleLamp
-              BBB --> HandleFan
-              BBB --> WaitForGoodAir
-
-            state AAA <<join>>
-              HandleLamp --> AAA
-              HandleFan --> AAA
-              WaitForGoodAir --> AAA
-              AAA --> [*] 
-        }
-        }
-    }
-    ''';
 
 class MonitorAir extends State {}
 

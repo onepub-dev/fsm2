@@ -1,3 +1,4 @@
+// this is a cli app
 // ignore_for_file: avoid_print
 
 import 'package:fsm2/fsm2.dart';
@@ -26,7 +27,7 @@ class YamlStringParser {
   }
 
   /// Build the FSM to parse yaml scalar strings
-  Future<StateMachine> buildMachine() async => StateMachine.create((g) => g
+  Future<StateMachine> buildMachine() => StateMachine.create((g) => g
     ..initialState<Start>()
     ..state<Start>((b) => b
       // allow leading whitespace.
@@ -292,6 +293,8 @@ class OnChar extends Event {
   String get asString => String.fromCharCode(character);
 
   @override
+  // performance isn't an issue here as this will primarily
+  // be used for debugging.
   // ignore: no_runtimetype_tostring
   String toString() => '$runtimeType: $asString';
 }

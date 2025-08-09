@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import 'package:dcli_core/dcli_core.dart' as core;
 import 'package:fsm2/fsm2.dart';
 import 'package:path/path.dart' hide equals;
@@ -42,10 +44,8 @@ Future<StateMachine> createMachine() async {
           ..onEnter((s, e) async => fetchUserStatus())
           ..on<OnForceRegistration, RegistrationRequired>(
               sideEffect: (e) async => RegistrationWizard.restart())
-          // ignore: avoid_print
           ..on<OnMissingApiKey, RegistrationRequired>(
-              // ignore: avoid_print
-              sideEffect: (e) async => print('hi'))
+              sideEffect: (e) async => dev.log('hi'))
           ..on<OnHasApiKey, Registered>())
 
         /// Registered is normally the final state we are looking for
@@ -268,7 +268,6 @@ void fetchUserDetails() {}
 
 void fetchUserStatus() {}
 
-// ignore: avoid_classes_with_only_static_members
 class RegistrationWizard {
   static void restart() {}
 
@@ -344,6 +343,7 @@ class OnRegistrationType implements Event {
 
 void log(StateDefinition? from, Event? event, StateDefinition? to) {}
 
+// we may use later on.
 // ignore: unused_element
 var _graph = '''
 

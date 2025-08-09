@@ -22,12 +22,6 @@ import 'package:path/path.dart';
 Future<void> main(List<String> args) async {
   final parser = ArgParser()
     ..addFlag(
-      'verbose',
-      abbr: 'v',
-      negatable: false,
-      help: 'Logs additional details to the cli',
-    )
-    ..addFlag(
       'help',
       abbr: 'h',
       negatable: false,
@@ -63,10 +57,6 @@ Future<void> main(List<String> args) async {
 
   if (parsed.wasParsed('help')) {
     showUsage(parser);
-  }
-
-  if (parsed.wasParsed('verbose')) {
-    await Settings().setVerbose(enabled: true);
   }
 
   if (parsed.wasParsed('install')) {

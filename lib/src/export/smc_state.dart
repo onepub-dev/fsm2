@@ -1,3 +1,6 @@
+// Not part of our public api
+// ignore_for_file: type_annotate_public_apis
+
 import '../definitions/state_definition.dart';
 import '../state_machine.dart';
 import '../types.dart';
@@ -26,7 +29,8 @@ class SMCState {
   SMCState.root({required this.name, required this.pageBreak, String? label})
       : type = SMCStateType.root,
         parent = null,
-        _label = label ?? name;
+        _label = label ?? name,
+        pageNo = 0;
 
   SMCState.pseudo(
       {required this.parent,
@@ -34,7 +38,8 @@ class SMCState {
       required this.type,
       required this.pageBreak,
       String? label})
-      : _label = label ?? name;
+      : _label = label ?? name,
+        pageNo = 0;
 
   ///
   /// Build the SMSState tree
@@ -83,18 +88,18 @@ class SMCState {
 
   late final bool pageBreak;
 
-  /// the page no. this SMCState appears.
+  /// the page no. this SMCState appears on.
   /// A state with a page break will actually appear on two pages.
   ///
   /// It will appear on the page of its parent and it will
   /// also be the 'top level' state on the new page.
   /// This [pageNo] refers to the page that its parent is on.
-  int pageNo = 0;
+  int pageNo;
 
   /// for a region one of its child are the initial state.
   String? initialChildState;
-  List<SMCTransition> transitions = <SMCTransition>[];
-  List<SMCState> children = <SMCState>[];
+  var transitions = <SMCTransition>[];
+  var children = <SMCState>[];
 
   /// We say that the state where the page break occurs 'straddles'
   /// two pages. We call this a 'straddle' state.
@@ -177,7 +182,6 @@ class SMCState {
 
     /// children will be on a new page so reset indent.
     if (pageBreak) {
-      // ignore: parameter_assignments
       indent = 0;
     }
 
@@ -241,12 +245,20 @@ class SMCState {
   }
 
   @override
+  // we only hash in immutable fields.
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  bool operator ==(covariant SMCState other) => hashCode == other.hashCode;
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SMCState &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          label == other.label &&
+          type == other.type;
 
   @override
+  // we only hash in immutable fields.
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => name.hashCode + label.hashCode + type.hashCode;
+  int get hashCode => Object.hash(name, label, type);
 
   @override
   String toString() => name;
@@ -274,23 +286,23 @@ class SMCState {
 
     final ancestor = _findCommonAncestor(ourPath, otherPath);
 
-    late final SMCState _to;
-    late final SMCState _from;
+    late final SMCState to0;
+    late final SMCState from;
 
     for (final state in ourPath.path) {
       if (state.parent == ancestor) {
-        _from = state;
+        from = state;
         break;
       }
     }
 
     for (final state in otherPath.path) {
       if (state.parent == ancestor) {
-        _to = state;
+        to0 = state;
         break;
       }
     }
-    return Branches(from: _from, to: _to);
+    return Branches(from: from, to: to0);
   }
 
   SMCState? _findCommonAncestor(
@@ -358,7 +370,7 @@ class _SMCStatePath {
   }
 
   /// list of states
-  List<SMCState> path = <SMCState>[];
+  var path = <SMCState>[];
 
   /// true if the passed state is in the path.
   bool isInPath(SMCState state) => path.contains(state);

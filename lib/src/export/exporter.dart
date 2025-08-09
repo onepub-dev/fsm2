@@ -12,7 +12,7 @@ abstract class Exporter {
 
 class ExportedPages {
   /// The set of page files that have been exported.
-  List<ExportedPage> pages = <ExportedPage>[];
+  final pages = <ExportedPage>[];
 
   void add(String file) {
     pages.add(ExportedPage(file));

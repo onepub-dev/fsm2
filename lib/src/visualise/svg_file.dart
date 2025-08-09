@@ -1,3 +1,6 @@
+// part of our public api
+// ignore_for_file: omit_obvious_property_types
+
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -173,10 +176,12 @@ class SvgFile {
   }
 
   @override
+  // whilst the class is mutable [pathTo] isn't.
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => pathTo.hashCode;
 
   @override
+  // whilst the class is mutable [pathTo] isn't.
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(covariant SvgFile other) => pathTo == other.pathTo;
 
@@ -202,9 +207,11 @@ class SvgFile {
 
       backupFile.renameSync(svgPath);
       log('replace complete $svgPath');
+      // we rethrow so not our problem.
       // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
-      log('Excepton in replace: $e, $st');
+      log('Exception in replace: $e, $st');
+      rethrow;
     }
   }
 

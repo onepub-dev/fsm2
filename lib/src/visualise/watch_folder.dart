@@ -29,7 +29,6 @@ class WatchFolder {
   /// Watches the folder for any changes which involve a file ending
   /// in .[extension]
   Future<void> watch() async {
-    // ignore: avoid_print
     log('watching $pathTo');
     Directory(pathTo).watch().listen(_controller.add);
 
@@ -40,7 +39,7 @@ class WatchFolder {
   late StreamSubscription<FileSystemEvent> subscriber;
 
   Future<void> _startDispatcher() async {
-    subscriber = _controller.stream.listen((event) async {
+    subscriber = _controller.stream.listen((event) {
       // serialise the events
       // otherwise we end up trying to move multiple files
       // at once and that doesn't work.

@@ -1,3 +1,6 @@
+// this is a public api so all types must be explicit
+// ignore_for_file: omit_obvious_property_types
+
 import 'dart:developer';
 
 import 'package:meta/meta.dart';
@@ -58,6 +61,8 @@ class StateDefinition<S extends State> {
 
   bool get isVirtualRoot => stateType == VirtualRoot;
 
+  // I don't remember why we did it this way but its now part of the
+  // public api.
   // ignore: use_setters_to_change_properties
   void setParent<P extends State>(StateDefinition<P> parent) {
     // log('set parent = ${parent.stateType} on ${stateType} ${hashCode}');
@@ -88,6 +93,7 @@ class StateDefinition<S extends State> {
       log('FSM onEnter called for $stateType due to ${event.runtimeType}');
       await onEnter(fromState, event);
       log('FSM onEnter completed for $stateType due to ${event.runtimeType}');
+      // We don't know the set of Exceptions.
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       log('FSM onEnter threw $e for $stateType due to ${event.runtimeType}');
@@ -110,6 +116,7 @@ class StateDefinition<S extends State> {
       log('FSM onExit called for $stateType due to ${event.runtimeType}');
       await onExit(fromState, event);
       log('FSM onExit completed for $stateType due to ${event.runtimeType}');
+      // we don't know the set of exceptions and we are rethrowing anyway.
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       log('FSM onExit threw $e for $stateType due to ${event.runtimeType}');
@@ -201,8 +208,10 @@ class StateDefinition<S extends State> {
       /// so we can call the condition without throwing an
       /// invalid type exception (caused by typedef not supporting inheritance)
       final dtd = td as dynamic;
+      // see above
       // ignore: avoid_dynamic_calls
       final c = dtd.condition as dynamic;
+      // see above
       // ignore: avoid_dynamic_calls
       if (c.call(event) == true) {
         if (transitionDefinition.canTrigger(event)) {
@@ -355,6 +364,7 @@ class StateDefinition<S extends State> {
       // final a = transitionDefinition;
 
       final dtd = transitionDefinition as dynamic;
+      // see above
       // ignore: avoid_dynamic_calls
       final c = dtd.condition as dynamic;
 

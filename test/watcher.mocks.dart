@@ -2,6 +2,7 @@
 // in fsm2/test/mock_watcher.dart.
 // Do not manually edit this file.
 
+// generated code.
 // ignore_for_file: inference_failure_on_instance_creation
 
 import 'dart:async' as i3;
@@ -11,6 +12,7 @@ import 'package:mockito/mockito.dart' as i1;
 
 import 'watcher.dart' as i2;
 
+// generated code
 // ignore_for_file: comment_references
 // ignore_for_file: unnecessary_parenthesis
 

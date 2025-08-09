@@ -15,8 +15,7 @@ class GraphBuilder {
   Type? _initialState;
   final _stateDefinitions = <StateDefinition>[];
   final List<TransitionListener> _onTransitionListeners = [];
-  final StateDefinition<VirtualRoot> virtualRoot =
-      StateDefinition<VirtualRoot>(VirtualRoot);
+  final virtualRoot = StateDefinition<VirtualRoot>(VirtualRoot);
 
   String? _initialStateLabel;
 

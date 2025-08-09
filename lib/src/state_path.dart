@@ -68,12 +68,10 @@ class PartialStatePath {
   int get hashCode => _path.fold(0, _calcHash);
 
   int _calcHash(int hash, StateDefinition<State>? def) {
-    var _hash = hash;
-
     if (def != null) {
-      return _hash += def.stateType.hashCode;
+      return hash += def.stateType.hashCode;
     } else {
-      return _hash;
+      return hash;
     }
   }
 }

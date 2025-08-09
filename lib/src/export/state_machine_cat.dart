@@ -18,7 +18,7 @@ import '../types.dart';
 ///
 /// To visualise the resulting file graph run:
 ///
-/// ```
+/// ```bash
 /// xdot <path>
 /// ```
 class StartMachineCatExporter {
@@ -26,7 +26,9 @@ class StartMachineCatExporter {
 
   /// creates a map of the terminal ordinals to what
   /// parent state they belong to.
+  /// ```dart
   /// var terminalsOwnedByRegion = <Type, List<int>>{};
+  /// ```
   StartMachineCatExporter(this.stateMachine);
   final StateMachine stateMachine;
 
@@ -72,7 +74,6 @@ class StartMachineCatExporter {
   String indent(int level) => '\t' * (level - 1);
 
   void writeRegion(RandomAccessFile raf, StateDefinition<State> sd, int level) {
-    // ignore: parameter_assignments
     level++;
 
     /// start the region
@@ -112,7 +113,6 @@ class StartMachineCatExporter {
   }
 
   void writeState(RandomAccessFile raf, StateDefinition<State> sd, int level) {
-    // ignore: parameter_assignments
     level++;
     raf.writeStringSync('${indent(level)}${sd.stateType}');
 
@@ -138,7 +138,7 @@ class StartMachineCatExporter {
       //   writeJoin(raf, sd, transition, level, pseudoStateId);
       // }
     }
-    if (firstpass == false) {
+    if (!firstpass) {
       raf.writeStringSync('${indent(level)}\n');
     }
   }

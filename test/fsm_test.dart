@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dcli/dcli.dart';
 import 'package:dcli_core/dcli_core.dart' as core;
 import 'package:fsm2/fsm2.dart';
@@ -130,18 +132,18 @@ initial => Solid : Solid;''';
 
 Future<StateMachine> _createMachine<S extends State>(
   MockWatcher watcher,
-) async =>
+) =>
     StateMachine.create(
         (g) => g
           ..initialState<S>()
           ..state<Solid>((b) => b
             ..on<OnMelted, Liquid>(
                 sideEffect: (e) async => watcher.log(onMeltedMessage))
-            ..onEnter((s, e) async => watcher.onEnter(s, e))
-            ..onExit((s, e) async => watcher.onExit(s, e)))
+            ..onEnter((s, e) => watcher.onEnter(s, e))
+            ..onExit((s, e) => watcher.onExit(s, e)))
           ..state<Liquid>((b) => b
-            ..onEnter((s, e) async => watcher.onEnter(s, e))
-            ..onExit((s, e) async => watcher.onExit(s, e))
+            ..onEnter((s, e) => watcher.onEnter(s, e))
+            ..onExit((s, e) => watcher.onExit(s, e))
             ..on<OnFroze, Solid>(
                 sideEffect: (e) async => watcher.log(onFrozenMessage))
             ..on<OnVaporized, Gas>(
@@ -149,8 +151,7 @@ Future<StateMachine> _createMachine<S extends State>(
           ..state<Gas>((b) => b
             ..on<OnCondensed, Liquid>(
                 sideEffect: (e) async => watcher.log(onCondensedMessage)))
-          // ignore: avoid_print
-          ..onTransition((from, event, to) => print('$from $event $to ')),
+          ..onTransition((from, event, to) => log('$from $event $to ')),
         production: true);
 
 const onMeltedMessage = 'onMeltedMessage';

@@ -1,3 +1,6 @@
+// part of our public api
+// ignore_for_file: omit_obvious_property_types
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -36,7 +39,7 @@ class SMCatFile {
   /// creates an Svg image from the smcat file.
   ///
   /// Requires that the 'smcat' cli tools are installed.
-  /// 
+  ///
   /// If [force] is true, the conversion will be performed even if the
   /// svg file already exists.
   ///

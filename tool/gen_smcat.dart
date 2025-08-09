@@ -1,4 +1,6 @@
 #! /usr/bin/env dcli
+// this is a cli script
+// ignore_for_file: avoid_print
 
 import 'dart:io';
 
@@ -20,11 +22,10 @@ void main(List<String> args) async {
   machine.export('registration.smcat');
 }
 
+// for later.
 // ignore: unreachable_from_main
 void showUsage(ArgParser parser) {
-  // ignore: avoid_print
   print('Usage: gen_smcat.dart -v -prompt <a questions>');
-  // ignore: avoid_print
   print(parser.usage);
   exit(1);
 }

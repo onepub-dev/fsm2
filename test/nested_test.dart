@@ -79,6 +79,7 @@ void main() {
       machine.applyEvent(OnBirthday());
       await machine.complete;
       fail('InvalidTransitionException not thrown');
+      // handled in the expect.
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       expect(e, isA<InvalidTransitionException>());
@@ -170,13 +171,13 @@ void main() {
 Future<StateMachine> _createMachine<S extends State>(
   MockWatcher watcher,
   Human human,
-) async {
+) {
   final machine = StateMachine.create((g) => g
     ..initialState<S>()
     ..state<Alive>((b) => b
       ..initialState<Young>()
-      ..onEnter((s, e) async => watcher.onEnter(s, e))
-      ..onExit((s, e) async => watcher.onExit(s, e))
+      ..onEnter((s, e) => watcher.onEnter(s, e))
+      ..onExit((s, e) => watcher.onExit(s, e))
       ..on<OnBirthday, Young>(
           condition: (e) => human.age < 18,
           sideEffect: (e) async => human.age++)
@@ -187,16 +188,15 @@ Future<StateMachine> _createMachine<S extends State>(
           condition: (e) => human.age < 80,
           sideEffect: (e) async => human.age++)
       ..on<OnDeath, Purgatory>()
-      ..state<Young>((b) => b..onExit((s, e) async => watcher.onExit(s, e)))
-      ..state<MiddleAged>(
-          (b) => b..onEnter((s, e) async => watcher.onEnter(s, e)))
+      ..state<Young>((b) => b..onExit((s, e) => watcher.onExit(s, e)))
+      ..state<MiddleAged>((b) => b..onEnter((s, e) => watcher.onEnter(s, e)))
       ..state<Old>((b) => b))
     ..state<Dead>((b) => b
-      ..onEnter((s, e) async => watcher.onEnter(s, e))
+      ..onEnter((s, e) => watcher.onEnter(s, e))
 
       /// ..initialState<InHeaven>()
       ..state<Purgatory>((b) => b
-        ..onEnter((s, e) async => watcher.onEnter(s, e))
+        ..onEnter((s, e) => watcher.onEnter(s, e))
         ..on<OnJudged, Buddhist>(
             condition: (e) => e.judgement == Judgement.good)
         ..on<OnJudged, Catholic>(condition: (e) => e.judgement == Judgement.bad)
@@ -215,7 +215,9 @@ Future<StateMachine> _createMachine<S extends State>(
 }
 
 class Human {
-  int age = 0;
+  // not part of our public api
+  // ignore: type_annotate_public_apis
+  var age = 0;
 }
 
 class Alive extends State {}

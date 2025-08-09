@@ -248,7 +248,7 @@ class StateMachine {
 
   /// dequeue the next event and transition it.
   /// only one event can be processed at a time.
-  Future<void> _dispatch() async => _lock.synchronized(() async {
+  Future<void> _dispatch()  => _lock.synchronized(() async {
         assert(
             _eventQueue.isNotEmpty, 'The event queue is in an invalid state');
         final event = _eventQueue.first;
@@ -267,6 +267,7 @@ class StateMachine {
           } else {
             event._completer.completeError(e);
           }
+          // the specific cathc is handled in the completeError
           // ignore: avoid_catches_without_on_clauses
         } catch (e) {
           log('FSM Exception applying ${event.event}');
@@ -356,7 +357,7 @@ class StateMachine {
   ///
   /// To visualise the resulting file graph run:
   ///
-  /// ```
+  /// ```bash
   /// xdot <path>
   /// ```
   ExportedPages export(String path) {

@@ -1,3 +1,6 @@
+// this is designed to be called from cli apps.
+// ignore_for_file: avoid_print
+
 import 'definitions/state_definition.dart';
 import 'graph.dart';
 import 'types.dart';
@@ -71,11 +74,9 @@ bool analyse(Graph graph) {
 
   if (remainingStateMap.isNotEmpty) {
     allGood = false;
-    // ignore: avoid_print
     print('Error: The following States cannot be reached.');
 
     for (final state in remainingStateMap.values) {
-      // ignore: avoid_print
       print('Error: State: ${state.stateType}');
     }
   }
@@ -85,7 +86,6 @@ bool analyse(Graph graph) {
   for (final stateDefinition in graph.stateDefinitions.values) {
     if (seen.contains(stateDefinition.stateType)) {
       allGood = false;
-      // ignore: avoid_print
       print(
           '''Error: Found duplicate state ${stateDefinition.stateType}. Each state MUST only appear once in the FSM.''');
     }
@@ -110,7 +110,6 @@ bool analyse(Graph graph) {
         final toStateDefinition = graph.stateDefinitions[targetState];
         if (toStateDefinition == null) {
           allGood = false;
-          // ignore: avoid_print
           print('Found transition to non-existant state $targetState.');
           continue;
         }
@@ -129,14 +128,12 @@ bool analyse(Graph graph) {
     if (stateDefinition.isCoRegion) {
       if (stateDefinition.childStateDefinitions.isEmpty) {
         allGood = false;
-        // ignore: avoid_print
         print(
             '''Found coregion ${stateDefinition.stateType} which has no children.''');
       }
 
       if (stateDefinition.childStateDefinitions.length == 1) {
         allGood = false;
-        // ignore: avoid_print
         print(
             '''Found coregion ${stateDefinition.stateType} which has a single child. CoRegions must have at least two chilren.''');
       }
@@ -153,7 +150,6 @@ bool analyse(Graph graph) {
     }
     if (!stateDefinition.isDirectChild(stateDefinition.initialState!)) {
       allGood = false;
-      // ignore: avoid_print
       print(
           '''The initialState for ${stateDefinition.stateType} must target a child. ${stateDefinition.initialState} is not a child.''');
     }

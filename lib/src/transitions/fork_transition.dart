@@ -7,7 +7,7 @@ import 'transition_notification.dart';
 
 class ForkTransitionDefinition<S extends State, E extends Event>
     extends TransitionDefinition<E> {
-  ForkTransitionDefinition(super.stateDefinition, this.definition,
+  ForkTransitionDefinition(super.fromStateDefinition, this.definition,
       GuardCondition<E> condition, SideEffect<E>? sideEffect,
       {super.conditionLabel, super.sideEffectLabel})
       : super(condition: condition, sideEffect: sideEffect);
@@ -31,10 +31,8 @@ class ForkTransitionDefinition<S extends State, E extends Event>
     for (final targetState in targetStates) {
       final targetDefinition = graph.findStateDefinition(targetState);
 
-      final _event = event as E;
-
       final notification =
-          TransitionNotification<E>(this, from, _event, targetDefinition);
+          TransitionNotification<E>(this, from, event as E, targetDefinition);
       if (notification.event != event) {
         notification.skipExit = true;
       }

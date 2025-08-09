@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:fsm2/fsm2.dart';
 import 'package:test/test.dart';
 
@@ -49,8 +51,7 @@ Future<StateMachine> createMachine(MockWatcher watcher) async {
         ..state<Autocomplete>((b) => b)
         // Point mode state-mahcine
         ..state<Point>((b) => b)))
-    // ignore: avoid_print
-    ..onTransition((from, e, to) => print(
+    ..onTransition((from, e, to) => log(
         '''Received Event $e in State ${from!.stateType} transitioning to State ${to!.stateType}''')));
 
   return machine;

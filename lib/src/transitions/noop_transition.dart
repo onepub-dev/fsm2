@@ -21,7 +21,7 @@ class NoOpTransitionDefinition<S extends State, E extends Event>
   @override
   Future<StateOfMind> trigger(Graph graph, StateOfMind stateOfMind,
           TransitionNotification transition,
-          {bool applySideEffects = true}) async =>
+          {bool applySideEffects = true})  =>
       Future.value(stateOfMind);
 
   @override
