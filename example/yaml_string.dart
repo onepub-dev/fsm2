@@ -287,8 +287,9 @@ class OnEmitChar extends OnChar {
 class OnApplyTrim extends Event {}
 
 class OnChar extends Event {
-  OnChar(this.character);
   int character;
+
+  OnChar(this.character);
 
   String get asString => String.fromCharCode(character);
 

@@ -11,11 +11,16 @@ import '../types.dart';
 import 'state_definition.dart';
 
 class CoRegionDefinition<S extends State> extends StateDefinition<S> {
-  CoRegionDefinition(super.stateType);
-
   /// List of Events that must be received for the join to trigger.
   /// As we receive each one we set the value to true.
   final expectedJoinEvents = <Type, bool>{};
+
+  /// There can only be one join target state.
+  Type? _joinTargetState;
+
+  final joinTransitions = <JoinTransitionDefinition>[];
+
+  CoRegionDefinition(super.stateType);
 
   /// Marks a Join event as received and returns true if all required
   /// events have been received.
@@ -39,11 +44,6 @@ class CoRegionDefinition<S extends State> extends StateDefinition<S> {
   /// default implementation.
   @override
   bool canTrigger(Type event) => _onReceived(event);
-
-  /// There can only be one join target state.
-  Type? _joinTargetState;
-
-  final joinTransitions = <JoinTransitionDefinition>[];
 
   /// The onJoin transitions need to register with the owning coregion
   /// as they can be nested in a substate and we need to know about all of then.

@@ -12,6 +12,18 @@ typedef OnFolderChanged = void Function(
 /// Used to manage/monitor a folder containing files with the given extension.
 ///
 class WatchFolder {
+  String pathTo;
+
+  String extension;
+
+  bool recursive;
+
+  OnFolderChanged onChanged;
+
+  final _controller = StreamController<FileSystemEvent>();
+
+  late StreamSubscription<FileSystemEvent> subscriber;
+
   /// The file [extension] to filter what we are interested in.
   /// The [extension] should NOT start with a period.
   WatchFolder(
@@ -19,12 +31,6 @@ class WatchFolder {
       required this.extension,
       required this.onChanged,
       this.recursive = false});
-  String pathTo;
-  String extension;
-
-  bool recursive;
-
-  OnFolderChanged onChanged;
 
   /// Watches the folder for any changes which involve a file ending
   /// in .[extension]
@@ -34,9 +40,6 @@ class WatchFolder {
 
     await _startDispatcher();
   }
-
-  final _controller = StreamController<FileSystemEvent>();
-  late StreamSubscription<FileSystemEvent> subscriber;
 
   Future<void> _startDispatcher() async {
     subscriber = _controller.stream.listen((event) {
@@ -85,8 +88,6 @@ class WatchFolder {
   void onModifyEvent(FileSystemModifyEvent event) {
     _onChanged(event.path, FolderChangeAction.modify);
   }
-
-  // String lastDeleted;
 
   void onDeleteEvent(FileSystemDeleteEvent event) {
     // // ignore: avoid_print

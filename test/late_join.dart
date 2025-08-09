@@ -66,6 +66,7 @@ class OnBlur extends Event {}
 class OnFocus extends Event {}
 
 class OnValueChange implements Event {
-  const OnValueChange({required this.isFormula});
   final bool isFormula;
+
+  const OnValueChange({required this.isFormula});
 }

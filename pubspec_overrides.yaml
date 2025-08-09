@@ -1,0 +1,3 @@
+dependency_overrides:
+  lint_hard:
+    path: ../lint_hard

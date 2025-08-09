@@ -14,9 +14,8 @@ import 'watch_folder.dart';
 /// Used to manage/monitor a folder containing smcat files.
 ///
 class SMCatFolder {
-  /// [folderPath] is the name of the folder holding the smcat files.
-  SMCatFolder({required this.folderPath, required this.basename});
   String folderPath;
+
   String basename;
 
   final lock = Lock();
@@ -27,6 +26,9 @@ class SMCatFolder {
   /// when we see a mod we want to delay the generation as we often
   /// see multiple modifications when a file is being updated.
   final _toGenerate = <SMCatFile>[];
+
+  /// [folderPath] is the name of the folder holding the smcat files.
+  SMCatFolder({required this.folderPath, required this.basename});
 
   /// returns the list of smcat files in this folder that match
   /// the passed basename.

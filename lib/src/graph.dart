@@ -4,13 +4,10 @@ import 'types.dart';
 import 'virtual_root.dart';
 
 class Graph {
-  Graph(this.virtualRoot, this.initialState, this.topStateDefinitions,
-      this.onTransitionListeners, this.initialStateLabel)
-      : stateDefinitions =
-            _expandStateDefinitions(virtualRoot, topStateDefinitions);
-
   StateDefinition<VirtualRoot> virtualRoot;
+
   Type? initialState;
+
   String? initialStateLabel;
 
   /// a full set of stateDefinitions including nested and coregions.
@@ -21,6 +18,11 @@ class Graph {
 
   /// List of listeners to call each time we transition to a new state.
   final List<TransitionListener> onTransitionListeners;
+
+  Graph(this.virtualRoot, this.initialState, this.topStateDefinitions,
+      this.onTransitionListeners, this.initialStateLabel)
+      : stateDefinitions =
+            _expandStateDefinitions(virtualRoot, topStateDefinitions);
 
   /// searches the entire tree of [StateDefinition] looking for a matching
   /// state.

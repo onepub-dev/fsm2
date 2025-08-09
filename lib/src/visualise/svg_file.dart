@@ -12,18 +12,20 @@ import 'progress.dart';
 import 'size.dart';
 
 class SvgFile {
-  SvgFile(this.pathTo) {
-    pageNo = extractPageNo(pathTo);
-    lastModified;
-  }
   final String pathTo;
 
   late final int pageNo;
 
   bool _hasSize = false;
+
   Size? _size;
 
   DateTime? _lastModified;
+
+  SvgFile(this.pathTo) {
+    pageNo = extractPageNo(pathTo);
+    lastModified;
+  }
 
   bool get hasChanged => _lastModified != lastModified;
 

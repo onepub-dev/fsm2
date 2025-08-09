@@ -14,18 +14,20 @@ import 'smc_state.dart';
 
 @immutable
 class SMCTransition {
-  const SMCTransition(
-      {required this.from, required this.to, required this.label});
+  /// names are case sensitive.
   // : assert(from.name != to.name, 'from and to must have the same name');
 
-  /// names are case sensitive.
 
   /// The State Type.
   final SMCState from;
 
   /// The State Type.
   final SMCState to;
+
   final String? label;
+
+  const SMCTransition(
+      {required this.from, required this.to, required this.label});
 
   /// A single [TransitionDefinition] can result in multiple transition lines.
   static List<SMCTransition> build(StateMachine stateMachine, SMCState owner,
@@ -228,7 +230,6 @@ class SMCTransition {
     }
   }
 
-  // /// Adds a direct link between two states which MUST be on the same page.
   static void addDirectTransition(
       SMCState from, SMCState to, int commonPage, SMCTransition orginal) {
     assert(from.pageNo == to.pageNo, 'to and from must be on the same page');

@@ -22,5 +22,6 @@ dev_dependencies:
   lint_hard: ^6.1.1
   mockito: ^5.0.0
   test: ^1.0.0
+
 executables:
   fsm2:

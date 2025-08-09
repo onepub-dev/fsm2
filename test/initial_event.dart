@@ -101,8 +101,7 @@ class Autocomplete extends State {}
 class OnValueChange implements Event {
   // part of testing
   // ignore: unreachable_from_main
-  const OnValueChange({required this.isFormula});
-  // part of testing
-  // ignore: unreachable_from_main
   final bool isFormula;
+
+  const OnValueChange({required this.isFormula});
 }

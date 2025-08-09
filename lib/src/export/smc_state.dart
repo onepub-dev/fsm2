@@ -26,6 +26,38 @@ enum SMCStateType {
 }
 
 class SMCState {
+  late final SMCState? parent;
+
+  late final StateDefinition<State> sd;
+
+  late final String name;
+
+  late final String? _label;
+
+  late final SMCStateType type;
+
+  /// If true then this state and all child states will
+  /// be written to new page file.
+  /// We say that the state where the page break occurs 'straddles'
+  /// two pages. We call this a 'straddle' state.
+
+  late final bool pageBreak;
+
+  /// the page no. this SMCState appears on.
+  /// A state with a page break will actually appear on two pages.
+  ///
+  /// It will appear on the page of its parent and it will
+  /// also be the 'top level' state on the new page.
+  /// This [pageNo] refers to the page that its parent is on.
+  int pageNo;
+
+  /// for a region one of its child are the initial state.
+  String? initialChildState;
+
+  var transitions = <SMCTransition>[];
+
+  var children = <SMCState>[];
+
   SMCState.root({required this.name, required this.pageBreak, String? label})
       : type = SMCStateType.root,
         parent = null,
@@ -75,31 +107,6 @@ class SMCState {
       }
     }
   }
-  late final SMCState? parent;
-  late final StateDefinition<State> sd;
-  late final String name;
-  late final String? _label;
-  late final SMCStateType type;
-
-  /// If true then this state and all child states will
-  /// be written to new page file.
-  /// We say that the state where the page break occurs 'straddles'
-  /// two pages. We call this a 'straddle' state.
-
-  late final bool pageBreak;
-
-  /// the page no. this SMCState appears on.
-  /// A state with a page break will actually appear on two pages.
-  ///
-  /// It will appear on the page of its parent and it will
-  /// also be the 'top level' state on the new page.
-  /// This [pageNo] refers to the page that its parent is on.
-  int pageNo;
-
-  /// for a region one of its child are the initial state.
-  String? initialChildState;
-  var transitions = <SMCTransition>[];
-  var children = <SMCState>[];
 
   /// We say that the state where the page break occurs 'straddles'
   /// two pages. We call this a 'straddle' state.
@@ -358,6 +365,9 @@ class SMCState {
 
 /// describes the set of ancestors to a state.
 class _SMCStatePath {
+  /// list of states
+  var path = <SMCState>[];
+
   _SMCStatePath.fromState(SMCState state) {
     var parent = state;
     while (!parent.isRoot) {
@@ -368,9 +378,6 @@ class _SMCStatePath {
     // add the virtual root.
     path.add(parent);
   }
-
-  /// list of states
-  var path = <SMCState>[];
 
   /// true if the passed state is in the path.
   bool isInPath(SMCState state) => path.contains(state);

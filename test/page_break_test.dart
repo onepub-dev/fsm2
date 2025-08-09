@@ -129,10 +129,11 @@ class OnDeath implements Event {}
 enum Judgement { good, bad, ugly }
 
 class OnJudged implements Event {
+  Judgement judgement;
+
   // testing
   // ignore: unreachable_from_main
   OnJudged(this.judgement);
-  Judgement judgement;
 }
 // testing
 // ignore: unused_element

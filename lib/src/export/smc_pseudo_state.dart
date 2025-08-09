@@ -9,13 +9,13 @@ class SMCPseudoState extends SMCState {
 }
 
 class SMCInitialState extends SMCPseudoState {
+  static const initial = 'initial';
   SMCInitialState(SMCState parent, Type stateType)
       : super(
           parent: parent,
           name: stateType.toString(),
           type: SMCStateType.initial,
         );
-  static const initial = 'initial';
 
   @override
   String get name => ']${super.name}.$initial';
@@ -23,12 +23,12 @@ class SMCInitialState extends SMCPseudoState {
 
 /// Will be represented as a UML2 fork 'bar' in the diagram
 class SMCForkState extends SMCPseudoState {
+  static const fork = 'fork';
   SMCForkState(SMCState parent, Type stateType)
       : super(
             parent: parent,
             name: stateType.toString(),
             type: SMCStateType.fork);
-  static const fork = 'fork';
 
   @override
   String get name => ']${super.name}.$fork';
@@ -36,22 +36,24 @@ class SMCForkState extends SMCPseudoState {
 
 /// Will be represented as a UML2 join 'bar' in the diagram
 class SMCJoinState extends SMCPseudoState {
+  static const join = 'join';
+
   SMCJoinState(SMCState parent, Type stateType)
       : super(
             parent: parent,
             name: stateType.toString(),
             type: SMCStateType.join);
-  static const join = 'join';
 
   @override
   String get name => ']${super.name}.$join';
 }
 
 class SMCTerminalState extends SMCPseudoState {
+  static const finalState = 'final';
+
   SMCTerminalState(SMCState parent, Type type)
       : super(
             parent: parent, name: type.toString(), type: SMCStateType.terminal);
-  static const finalState = 'final';
 
   @override
   String get name => ']${super.name}.$finalState';

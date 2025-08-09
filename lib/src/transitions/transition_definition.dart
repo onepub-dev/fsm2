@@ -10,12 +10,6 @@ import 'transition_notification.dart';
 
 /// Defines FSM transition: the change from one state to another.
 abstract class TransitionDefinition<E extends Event> {
-  TransitionDefinition(this.fromStateDefinition,
-      {this.condition = noopGuardCondition,
-      this.sideEffect,
-      this.conditionLabel,
-      this.sideEffectLabel});
-
   /// The state this transition is attached to.
   final StateDefinition<State> fromStateDefinition;
 
@@ -41,6 +35,12 @@ abstract class TransitionDefinition<E extends Event> {
   /// given the [sideEffect]
   /// a descriptive label.  @See [label]
   final String? sideEffectLabel;
+
+  TransitionDefinition(this.fromStateDefinition,
+      {this.condition = noopGuardCondition,
+      this.sideEffect,
+      this.conditionLabel,
+      this.sideEffectLabel});
 
   /// list of the target states the will be transitioned into.
   List<Type> get targetStates;

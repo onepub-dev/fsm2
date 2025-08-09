@@ -255,8 +255,9 @@ class OnDeath extends Event {}
 enum Judgement { good, bad, ugly, morallyAmbiguous }
 
 class OnJudged implements Event {
-  OnJudged(this.judgement);
   Judgement judgement;
+
+  OnJudged(this.judgement);
 }
 
 var _graph = '''

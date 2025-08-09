@@ -11,15 +11,17 @@ import 'progress.dart';
 import 'svg_file.dart';
 
 class SMCatFile {
+  String pathTo;
+
+  int pageNo = 0;
+
+  late SvgFile _svgFile;
+
   SMCatFile(this.pathTo) {
     pageNo = extractPageNo(pathTo);
 
     _svgFile = SvgFile(svgPath);
   }
-  String pathTo;
-  int pageNo = 0;
-
-  late SvgFile _svgFile;
 
   String get svgPath {
     final basename = getBasename(pathTo);
@@ -101,8 +103,8 @@ class SMCatFile {
 }
 
 class SMCatException implements Exception {
-  SMCatException(this.message);
   String message;
+  SMCatException(this.message);
 
   @override
   String toString() => message;

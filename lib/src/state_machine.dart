@@ -29,6 +29,33 @@ import 'virtual_root.dart';
 ///
 ///
 class StateMachine {
+  /// only one transition can be happening at at time.
+  final _lock = Lock();
+
+  @visibleForTesting
+  final initialEvent = InitialEvent();
+
+  /// If production mode is off then we track
+  /// each transition to aid with debugging.
+  /// The first entry in the history will be the initial
+  /// state.
+  /// In production mode the list is empty.
+  final history = <Tracker>[];
+
+  /// To avoid deadlocks if an event is generated during
+  /// a transition we queue transitions.
+  final _eventQueue = Queue<_QueuedEvent>();
+
+  /// Returns [Stream] of [StateOfMind].
+  final StreamController<StateOfMind> _controller =
+      StreamController.broadcast();
+
+  final Graph _graph;
+
+  var _stateOfMind = StateOfMind();
+
+  final bool? production;
+
   /// internal ctor
   StateMachine._(this._graph, {this.production}) {
     var initialState = _graph.initialState;
@@ -91,33 +118,6 @@ class StateMachine {
           ''''The top level initialState $initialState must lead to a leaf state.''');
     }
   }
-
-  /// only one transition can be happening at at time.
-  final _lock = Lock();
-
-  @visibleForTesting
-  final initialEvent = InitialEvent();
-
-  /// If production mode is off then we track
-  /// each transition to aid with debugging.
-  /// The first entry in the history will be the initial
-  /// state.
-  /// In production mode the list is empty.
-  final history = <Tracker>[];
-
-  /// To avoid deadlocks if an event is generated during
-  /// a transition we queue transitions.
-  final _eventQueue = Queue<_QueuedEvent>();
-
-  /// Returns [Stream] of [StateOfMind].
-  final StreamController<StateOfMind> _controller =
-      StreamController.broadcast();
-
-  final Graph _graph;
-
-  var _stateOfMind = StateOfMind();
-
-  final bool? production;
 
   /// The base of the state tree.
   StateDefinition<VirtualRoot> get virtualRoot => _graph.virtualRoot;
@@ -440,8 +440,9 @@ StateDefinition<State>? findStateDefinition(
     stateMachine._findStateDefinition(stateType);
 
 class _QueuedEvent {
-  _QueuedEvent(this.event);
-
   Event event;
+
   final _completer = CompleterEx<void>();
+
+  _QueuedEvent(this.event);
 }

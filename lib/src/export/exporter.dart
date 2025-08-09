@@ -24,18 +24,20 @@ class ExportedPages {
 }
 
 class ExportedPage {
-  ExportedPage(this.path) {
+  final String path;
+
+late RandomAccessFile raf;
+
+ExportedPage(this.path) {
     final file = File(path);
     raf = file.openSync(mode: FileMode.write);
   }
-  final String path;
-  late RandomAccessFile raf;
 
-  void write(String string) {
+void write(String string) {
     raf.writeStringSync(string);
   }
 
-  void close() {
+void close() {
     raf.closeSync();
   }
 }

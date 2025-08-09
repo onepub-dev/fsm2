@@ -23,13 +23,14 @@ import '../types.dart';
 class MermaidExporter {
   // var terminalStateOrdinal = 1;
 
+  final StateMachine stateMachine;
+
   /// creates a map of the terminal ordinals to what
   /// parent state they belong to.
   /// ```dart
   /// var terminalsOwnedByRegion = <Type, List<int>>{};
   /// ```
   MermaidExporter(this.stateMachine);
-  final StateMachine stateMachine;
 
   void export(String path) {
     // await stateMachine.traverseTree((stateDefinition,

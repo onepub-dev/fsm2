@@ -9,14 +9,14 @@ import 'transition_notification.dart';
 /// of an transition defined by [StateBuilder.on]
 class OnTransitionDefinition<S extends State, E extends Event,
     TOSTATE extends State> extends TransitionDefinition<E> {
+  /// If this [OnTransitionDefinition] is trigger [toState]
+  /// will be the new [State]
+  Type toState;
+
   OnTransitionDefinition(super.fromStateDefinition, GuardCondition<E> condition,
       this.toState, SideEffect<E>? sideEffect,
       {super.conditionLabel, super.sideEffectLabel})
       : super(condition: condition, sideEffect: sideEffect);
-
-  /// If this [OnTransitionDefinition] is trigger [toState]
-  /// will be the new [State]
-  Type toState;
 
   @override
   List<Type> get targetStates => [toState];

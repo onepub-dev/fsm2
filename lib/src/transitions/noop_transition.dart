@@ -15,9 +15,11 @@ import 'transition_notification.dart';
 /// The StateMachine will stay in [S] state.
 class NoOpTransitionDefinition<S extends State, E extends Event>
     extends TransitionDefinition<E> {
+  final Type eventType;
+
   /// no transition so [fromStateDefinition] == [targetStates].
   NoOpTransitionDefinition(super.fromStateDefinition, this.eventType);
-  final Type eventType;
+
   @override
   Future<StateOfMind> trigger(Graph graph, StateOfMind stateOfMind,
           TransitionNotification transition,

@@ -12,14 +12,15 @@ import 'graph_builder.dart';
 ///
 /// Instance of this class is passed to [GraphBuilder.state] method.
 class StateBuilder<S extends State> {
-  StateBuilder(StateDefinition parent, this._stateDefinition) {
-    _stateDefinition.setParent(parent);
-  }
   final StateDefinition<S> _stateDefinition;
 
   /// The initial state for the substate
   /// If there are no child states then this is just 'this'.
   Type _initialState = _UndefinedInitialState;
+
+  StateBuilder(StateDefinition parent, this._stateDefinition) {
+    _stateDefinition.setParent(parent);
+  }
 
   /// Places a page break into the export file rendering all nested
   /// states on a new page.

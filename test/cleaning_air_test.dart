@@ -255,8 +255,9 @@ class WaitForGoodAir extends State {}
 class MaintainAir extends State {}
 
 class OnBadAir extends Event {
-  OnBadAir(this.quality);
   int quality;
+
+  OnBadAir(this.quality);
 }
 
 class OnTurnLampOff extends Event {}

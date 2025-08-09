@@ -26,13 +26,8 @@ import 'smc_transition.dart';
 /// ```
 
 class SMCatExporter implements Exporter {
-  /// creates a map of the terminal ordinals to what
-  /// parent state they belong to.
-  /// ```dart
-  /// var terminalsOwnedByRegion = <Type, List<int>>{};
-  /// ```
-  SMCatExporter(this.stateMachine);
   final StateMachine stateMachine;
+
   final virtualRoot = SMCState.root(name: 'initial', pageBreak: false);
 
   /// we need to suppress any duplicate transitions which can
@@ -40,6 +35,13 @@ class SMCatExporter implements Exporter {
   final seenTransitions = <SMCTransition>{};
 
   final exports = ExportedPages();
+
+  /// creates a map of the terminal ordinals to what
+  /// parent state they belong to.
+  /// ```dart
+  /// var terminalsOwnedByRegion = <Type, List<int>>{};
+  /// ```
+  SMCatExporter(this.stateMachine);
 
   ExportedPages export(String path) => _save(path);
 

@@ -23,14 +23,17 @@ import '../virtual_root.dart';
 /// xdot <path>
 /// ```
 class DotExporter {
-  DotExporter(this.stateMachine);
   final StateMachine stateMachine;
+
   final _edgePaths = <_EdgePath>[];
+
   var _terminalStateOrdinal = 1;
 
   /// creates a map of the terminal ordinals to what
   /// parent state they belong to.
   final _terminalsOwnedByRegion = <Type, List<int>>{};
+
+  DotExporter(this.stateMachine);
 
   Future<void> export(String path) async {
     await stateMachine
@@ -133,21 +136,6 @@ class DotExporter {
     }
   }
 
-// digraph fsm2 {
-//         Alive -> Young [label="OnBirthday"];
-//         Alive -> MiddleAged [label="OnBirthday"];
-//         Alive -> Old [label="OnBirthday"];
-//         Alive -> Dead [label="OnDeath", lhead="clusterDead", compound=true];
-//         Dead -> InHeaven [label="OnGood"];
-//         Dead -> InHeaven [label="OnGood"];
-//         Dead -> InHell [label="OnBad"];
-//       subgraph clusterDead {
-//                 graph [label="Dead", compound=true];
-//           Dead, InHeaven; InHell;
-//         }
-// }
-// ~
-
   /// Each regions (nested or concurrent) we write as a graphwiz 'subgraph'
   void _writeRegion(RandomAccessFile raf, StateDefinition region, int level) {
     if (region.nestedStateDefinitions.isNotEmpty) {
@@ -234,9 +222,9 @@ ${'\t' * level}subgraph cluster_$regionName {
 /// for the purposes of writing out each
 /// transition to the dotx file.
 class _EdgePath {
-  _EdgePath(this.first) : last = first;
   _Edge first;
   _Edge last;
+  _EdgePath(this.first) : last = first;
 
   void append(_Edge node) {
     last.next = node;
@@ -246,21 +234,27 @@ class _EdgePath {
 
 /// Describes an event that transition from one state to another
 class _Edge {
-  _Edge(this.fromDefinition, this.event, this.toDefinition,
-      {required this.terminal, this.region}) {
-    log('''edge ${fromDefinition.stateType}:$event -> ${toDefinition!.stateType}''');
-  }
   StateDefinition fromDefinition;
+
   Type event;
+
   StateDefinition? toDefinition;
+
   String? guard;
+
   String? region;
 
   /// If the toState is a terminal state (no events leave the state)
   bool terminal;
 
   _Edge? next;
+
   _Edge? prev;
+
+  _Edge(this.fromDefinition, this.event, this.toDefinition,
+      {required this.terminal, this.region}) {
+    log('''edge ${fromDefinition.stateType}:$event -> ${toDefinition!.stateType}''');
+  }
 
   /// true if the toState is a terminal state.
   bool get isDestinationTerminal => terminal;

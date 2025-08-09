@@ -17,8 +17,6 @@ import 'co_region_definition.dart';
 
 /// A [StateDefinition] represents a state defined in the statemachine builder.
 class StateDefinition<S extends State> {
-  StateDefinition(this.stateType);
-
   /// Optional label used when visualising the FSM.
   String? onEnterLabel;
 
@@ -36,9 +34,6 @@ class StateDefinition<S extends State> {
   /// is a link to the parent of this state.
   /// If this is not a nested state then parent will be null.
   StateDefinition? _parent;
-
-  /// The parent of this state in the FSM tree.
-  StateDefinition? get parent => _parent;
 
   /// The Type of the [State] that this [StateDefinition] is for.
   final Type stateType;
@@ -58,6 +53,21 @@ class StateDefinition<S extends State> {
   /// List of State definitions for the set of immediate children of this state.
   /// The are in the same order as the builder declares them.
   final List<StateDefinition> childStateDefinitions = [];
+
+  /// callback used when we enter toState.
+  /// Provides a default no-op implementation.
+  // ignore: prefer_function_declarations_over_variables
+  OnEnter onEnter = (toState, event) => null;
+
+  /// callback used when we exiting this [State].
+  /// Provides a default no-op implementation.
+  // ignore: prefer_function_declarations_over_variables
+  OnExit onExit = (fromState, event) => null;
+
+  StateDefinition(this.stateType);
+
+  /// The parent of this state in the FSM tree.
+  StateDefinition? get parent => _parent;
 
   bool get isVirtualRoot => stateType == VirtualRoot;
 
@@ -101,11 +111,6 @@ class StateDefinition<S extends State> {
     }
   }
 
-  /// callback used when we enter toState.
-  /// Provides a default no-op implementation.
-  // ignore: prefer_function_declarations_over_variables
-  OnEnter onEnter = (toState, event) => null;
-
   /// This method is called when we exit this state to give the
   /// [StateDefinition] a chance to do any internal cleanup.
   /// If you must call [internalOnExit] so that we can call the user
@@ -123,11 +128,6 @@ class StateDefinition<S extends State> {
       rethrow;
     }
   }
-
-  /// callback used when we exiting this [State].
-  /// Provides a default no-op implementation.
-  // ignore: prefer_function_declarations_over_variables
-  OnExit onExit = (fromState, event) => null;
 
   /// Returns the first transition that can be triggered for
   ///  the given [event] from the

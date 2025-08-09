@@ -14,15 +14,15 @@ import 'virtual_root.dart';
 /// a path which starts from an active leaf.
 @immutable
 class PartialStatePath {
+  /// List of states from the leaf (stored as the first element in the array)
+  ///  to the root state.
+  final List<StateDefinition> _path;
+
   PartialStatePath() : this._internal();
 
   PartialStatePath._internal() : _path = <StateDefinition>[];
 
   const PartialStatePath.fromPath(this._path);
-
-  /// List of states from the leaf (stored as the first element in the array)
-  ///  to the root state.
-  final List<StateDefinition> _path;
 
   /// Returns the [StateDefinition] for the tip of the branch.
   /// Throws a StateError if you try to access [leaf] for an

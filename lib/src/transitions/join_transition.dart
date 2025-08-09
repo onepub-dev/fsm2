@@ -13,6 +13,14 @@ import 'transition_notification.dart';
 ///  for the parent [coregion]
 class JoinTransitionDefinition<S extends State, E extends Event,
     TOSTATE extends State> extends TransitionDefinition<E> {
+  final JoinDefinition<S> definition;
+
+  /// The ancestor coregion this join is associated with.
+  late CoRegionDefinition coregion;
+
+  /// used to trigger the last event that triggered this transition.
+  late E _triggeredBy;
+
   /// For a Join transition the 'to' State is the parent [coregion].
   JoinTransitionDefinition(StateDefinition<State> parentStateDefinition,
       GuardCondition<E> condition, SideEffect<E>? sideEffect,
@@ -40,15 +48,6 @@ class JoinTransitionDefinition<S extends State, E extends Event,
           '''onJoin for ${parentStateDefinition.stateType} MUST have a coregion anscestor.''');
     }
   }
-  final JoinDefinition<S> definition;
-
-  // bool _hasTriggered = false;
-
-  /// The ancestor coregion this join is associated with.
-  late CoRegionDefinition coregion;
-
-  /// used to trigger the last event that triggered this transition.
-  late E _triggeredBy;
 
   @override
   bool canTrigger(E event) {
