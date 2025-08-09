@@ -1,3 +1,9 @@
+# 3.3.0
+- upgraded to dart 3.3.0
+- upgraded to new lint hard that has fields at the top of classes.
+- upgraded dependencies fixed lints.
+- removed try2.
+
 # 3.2.1
 - expose GraphBuilder as part of the public API.
 
