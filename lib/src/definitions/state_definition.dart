@@ -266,8 +266,9 @@ class StateDefinition<S extends State> {
       transitionDefinitions.addAll(transitions);
     }
 
-    /// add inherited transitions.
-    if (includeInherited) {
+    /// add inherited transitions unless we are the [VirtualRoot]
+    /// as the [VirtualRoot] has no parents.
+    if (includeInherited && stateType != VirtualRoot) {
       var parent = this.parent!;
       while (parent.stateType != VirtualRoot) {
         transitionDefinitions.addAll(parent.getTransitions());
@@ -415,7 +416,7 @@ class StateDefinition<S extends State> {
   bool canTrigger(Type event) => true;
 
   @override
-  String toString() => 'StateDefinition(${this.stateType})';
+  String toString() => 'StateDefinition($stateType)';
 }
 
 /// used to hide internal api
