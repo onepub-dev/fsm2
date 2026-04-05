@@ -21,17 +21,23 @@ import 'state_machine.dart';
 ///       ...
 /// )
 /// ```
-abstract class State {}
+abstract class State {
+  const State();
+}
 
 /// Special class used to represent the terminal state of the FSM.
 /// If you add an 'on' transition to [TerminalState] then an
 ///  transition arrow to a terminal state
 /// icon  will be displayed when you export your statemachine to a diagram.
-class TerminalState extends State {}
+class TerminalState extends State {
+  const TerminalState();
+}
 
 /// Used by the [StateMachine.history] to represent a pseudo 'first' event
 /// that indicates how we got into the FSM initialState.
-class InitialEvent extends Event {}
+class InitialEvent extends Event {
+  const InitialEvent();
+}
 
 /// Base class for all Events that you pass to the FSM.
 ///
@@ -52,6 +58,7 @@ class InitialEvent extends Event {}
 /// ..on<Heat, Liquid>(condition: (s,e) => applyHeatAndReturnTemp(e.joules) > 0)
 /// ```
 abstract class Event {
+  const Event();
   @override
   String toString() => runtimeType.toString();
 }

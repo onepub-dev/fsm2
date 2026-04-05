@@ -1,5 +1,5 @@
 name: fsm2
-version: 3.3.0
+version: 3.3.2
 homepage: https://onepub.gitbook.io/fsm2/
 documentation: https://onepub.gitbook.io/fsm2/
 description: FSM2 provides an implementation of the core design aspects of the UML state diagrams allowing both declarative transitions and dynamic transitions along with Guard Conditions.
@@ -25,3 +25,4 @@ dev_dependencies:
 
 executables:
   fsm2:
+publish_to: https://onepub.dev/api/jbbxpsdavu/
