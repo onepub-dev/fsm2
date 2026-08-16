@@ -82,7 +82,7 @@ class SMCatFolder {
         try {
           final svgFile = await file.convert(force: false, progress: log);
           _generatedController.add(svgFile);
-        } on SMCatException catch (e, _) {
+        } on SMCatException catch (_) {
           /// already logged.
         }
       }

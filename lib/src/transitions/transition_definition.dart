@@ -20,6 +20,9 @@ abstract class TransitionDefinition<E extends Event> {
   /// to be evaulated against an event, so any other [condition]
   /// that returns true
   /// will be fired in preference to a null [condition].
+  // Dart doesn't yet support declaring E invariant. This callback is only
+  // invoked with the event type associated with this transition.
+  // ignore: unsafe_variance
   final GuardCondition<E> condition;
 
   /// An optional label used only on the exported diagrams to
@@ -29,6 +32,9 @@ abstract class TransitionDefinition<E extends Event> {
 
   /// The [SideEffect] function to call when this choice is
   /// selected as the transition.
+  // Dart doesn't yet support declaring E invariant. This callback is only
+  // invoked with the event type associated with this transition.
+  // ignore: unsafe_variance
   final SideEffect<E>? sideEffect;
 
   /// An optional label used only on the exported diagrams to
@@ -302,7 +308,6 @@ abstract class TransitionDefinition<E extends Event> {
         await sideEffect!(transition.event);
         log('FSM completed sideEffect due to ${transition.event} ');
         // we rethrow so, so someone elses problem
-        // ignore: avoid_catches_without_on_clauses
       } catch (e) {
         log('FSM sideEffect  due to ${transition.event} threw $e');
         rethrow;

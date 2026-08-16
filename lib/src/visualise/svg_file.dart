@@ -210,7 +210,6 @@ class SvgFile {
       backupFile.renameSync(svgPath);
       log('replace complete $svgPath');
       // we rethrow so not our problem.
-      // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       log('Exception in replace: $e, $st');
       rethrow;

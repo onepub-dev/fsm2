@@ -16,7 +16,7 @@ class StateBuilder<S extends State> {
 
   /// The initial state for the substate
   /// If there are no child states then this is just 'this'.
-  Type _initialState = _UndefinedInitialState;
+  var _initialState = _UndefinedInitialState;
 
   StateBuilder(StateDefinition parent, this._stateDefinition) {
     _stateDefinition.setParent(parent);

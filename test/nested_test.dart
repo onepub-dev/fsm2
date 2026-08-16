@@ -216,7 +216,6 @@ Future<StateMachine> _createMachine<S extends State>(
 
 class Human {
   // not part of our public api
-  // ignore: type_annotate_public_apis
   var age = 0;
 }
 

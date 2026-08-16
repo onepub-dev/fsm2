@@ -43,13 +43,13 @@ void main() {
 Future<StateMachine> _createMachine<S extends State>(
   MockWatcher watcher,
   Human human,
-)  {
+) {
   final machine = StateMachine.create((g) => g
     ..initialState<S>()
     ..state<Alive>((b) => b
       ..initialState<Young>()
-      ..onEnter((s, e)  => watcher.onEnter(s, e))
-      ..onExit((s, e)  => watcher.onExit(s, e))
+      ..onEnter((s, e) => watcher.onEnter(s, e))
+      ..onExit((s, e) => watcher.onExit(s, e))
       ..on<OnBirthday, Young>(
           condition: (e) => human.age < 18,
           sideEffect: (e) async => human.age++)
@@ -60,18 +60,17 @@ Future<StateMachine> _createMachine<S extends State>(
           condition: (e) => human.age < 80,
           sideEffect: (e) async => human.age++)
       ..on<OnDeath, Purgatory>()
-      ..state<Young>((b) => b..onExit((s, e)  => watcher.onExit(s, e)))
-      ..state<MiddleAged>(
-          (b) => b..onEnter((s, e)  => watcher.onEnter(s, e)))
+      ..state<Young>((b) => b..onExit((s, e) => watcher.onExit(s, e)))
+      ..state<MiddleAged>((b) => b..onEnter((s, e) => watcher.onEnter(s, e)))
       ..state<Old>((b) => b))
     ..state<Dead>((b) => b
       ..pageBreak
-      ..onEnter((s, e)  => watcher.onEnter(s, e))
+      ..onEnter((s, e) => watcher.onEnter(s, e))
 
       /// ..initialState<InHeaven>()
       ..state<Purgatory>((b) => b
         ..pageBreak
-        ..onEnter((s, e)  => watcher.onEnter(s, e))
+        ..onEnter((s, e) => watcher.onEnter(s, e))
         ..on<OnJudged, Buddhist>(
             condition: (e) => e.judgement == Judgement.good,
             conditionLabel: 'good')
@@ -92,7 +91,6 @@ Future<StateMachine> _createMachine<S extends State>(
 
 class Human {
   // not part of our public api
-  // ignore: type_annotate_public_apis
   var age = 0;
 }
 
@@ -135,8 +133,8 @@ class OnJudged implements Event {
   // ignore: unreachable_from_main
   OnJudged(this.judgement);
 }
+
 // testing
-// ignore: unused_element
 var _graphs = <String>[
   /// page 1
   '''

@@ -198,6 +198,7 @@ Future<StateMachine> createMachine(MockWatcher watcher) async {
 }
 
 var _smcGraph = '''
+
 MaintainAir {
 	MonitorAir {
 		MonitorAir => ]MonitorAir.fork : OnBadAir;

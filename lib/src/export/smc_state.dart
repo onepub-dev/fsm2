@@ -1,5 +1,4 @@
 // Not part of our public api
-// ignore_for_file: type_annotate_public_apis
 
 import '../definitions/state_definition.dart';
 import '../state_machine.dart';

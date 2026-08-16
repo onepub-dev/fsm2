@@ -56,12 +56,10 @@ class StateDefinition<S extends State> {
 
   /// callback used when we enter toState.
   /// Provides a default no-op implementation.
-  // ignore: prefer_function_declarations_over_variables
   OnEnter onEnter = (toState, event) => null;
 
   /// callback used when we exiting this [State].
   /// Provides a default no-op implementation.
-  // ignore: prefer_function_declarations_over_variables
   OnExit onExit = (fromState, event) => null;
 
   StateDefinition(this.stateType);
@@ -104,7 +102,6 @@ class StateDefinition<S extends State> {
       await onEnter(fromState, event);
       log('FSM onEnter completed for $stateType due to ${event.runtimeType}');
       // We don't know the set of Exceptions.
-      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       log('FSM onEnter threw $e for $stateType due to ${event.runtimeType}');
       rethrow;
@@ -122,7 +119,6 @@ class StateDefinition<S extends State> {
       await onExit(fromState, event);
       log('FSM onExit completed for $stateType due to ${event.runtimeType}');
       // we don't know the set of exceptions and we are rethrowing anyway.
-      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       log('FSM onExit threw $e for $stateType due to ${event.runtimeType}');
       rethrow;
@@ -177,13 +173,13 @@ class StateDefinition<S extends State> {
   /// returns a [NoOpTransitionDefinition] if none of
   /// the transitions would be triggered
   /// or if there where no transitions for [event].
-  Future<TransitionDefinition> _evaluateTransitions<E extends Event>(
-      E event) async {
+  Future<TransitionDefinition<E>> _evaluateTransitions<E extends Event>(
+      E event) {
     final transitionChoices = _eventTranstionsMap[event.runtimeType]
         as List<TransitionDefinition<E>>?;
 
     if (transitionChoices == null) {
-      return NoOpTransitionDefinition<S, E>(this, E);
+      return Future.value(NoOpTransitionDefinition<S, E>(this, E));
     }
 
     return _evaluateConditions(transitionChoices, event);

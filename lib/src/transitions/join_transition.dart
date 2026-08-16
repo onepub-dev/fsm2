@@ -24,13 +24,10 @@ class JoinTransitionDefinition<S extends State, E extends Event,
   /// For a Join transition the 'to' State is the parent [coregion].
   JoinTransitionDefinition(StateDefinition<State> parentStateDefinition,
       GuardCondition<E> condition, SideEffect<E>? sideEffect,
-      {String? conditionLabel, String? sideEffectLabel})
+      {super.conditionLabel, super.sideEffectLabel})
       : definition = JoinDefinition(TOSTATE),
         super(parentStateDefinition,
-            condition: condition,
-            sideEffect: sideEffect,
-            conditionLabel: conditionLabel,
-            sideEffectLabel: sideEffectLabel) {
+            condition: condition, sideEffect: sideEffect) {
     definition.addEvent(E);
 
     var parent = parentStateDefinition;

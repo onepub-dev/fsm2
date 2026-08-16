@@ -3,7 +3,7 @@
 // Do not manually edit this file.
 
 // generated code.
-// ignore_for_file: inference_failure_on_instance_creation
+// ignore_for_file: inference_failure_on_instance_creation, no_dynamic_casts
 
 import 'dart:async' as i3;
 

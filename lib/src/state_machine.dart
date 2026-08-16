@@ -33,7 +33,7 @@ class StateMachine {
   final _lock = Lock();
 
   @visibleForTesting
-  final initialEvent = InitialEvent();
+  final initialEvent = const InitialEvent();
 
   /// If production mode is off then we track
   /// each transition to aid with debugging.
@@ -128,19 +128,21 @@ class StateMachine {
           virtualRoot, noopGuardCondition, VirtualRoot, null);
 
   Future<bool> _loadStateOfMind(StateDefinition<State> initialState) async {
-    await initialState.onEnter(initialState.stateType, initialEvent);
+    var state = initialState;
+    while (true) {
+      await state.onEnter(state.stateType, initialEvent);
 
-    final transition = TransitionNotification(
-        initialTransition, virtualRoot, initialEvent, initialState);
-    _notifyListeners(transition);
-    if (initialState.isLeaf) {
-      addPath(_stateOfMind, StatePath.fromLeaf(_graph, initialState.stateType));
-      return true;
-    } else {
+      final transition = TransitionNotification(
+          initialTransition, virtualRoot, initialEvent, state);
+      _notifyListeners(transition);
+      if (state.isLeaf) {
+        addPath(_stateOfMind, StatePath.fromLeaf(_graph, state.stateType));
+        return true;
+      }
+
       /// search child for a leaf.
-      final child = initialState.findStateDefintion(initialState.initialState,
-          includeChildren: false)!;
-      return _loadStateOfMind(child);
+      state =
+          state.findStateDefintion(state.initialState, includeChildren: false)!;
     }
   }
 
@@ -248,7 +250,7 @@ class StateMachine {
 
   /// dequeue the next event and transition it.
   /// only one event can be processed at a time.
-  Future<void> _dispatch()  => _lock.synchronized(() async {
+  Future<void> _dispatch() => _lock.synchronized(() async {
         assert(
             _eventQueue.isNotEmpty, 'The event queue is in an invalid state');
         final event = _eventQueue.first;

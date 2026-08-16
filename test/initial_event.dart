@@ -103,5 +103,7 @@ class OnValueChange implements Event {
   // ignore: unreachable_from_main
   final bool isFormula;
 
+  // part of testing
+  // ignore: unreachable_from_main
   const OnValueChange({required this.isFormula});
 }
