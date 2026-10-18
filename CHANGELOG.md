@@ -1,3 +1,6 @@
+# 3.4.0
+- upgraded to dcli 10.x
+
 # 3.3.3
 - relesed 3.3.2
 - fixed a bug when traversing the tree. We were trying to access the parent state when the current state was the VirtualRoot which has no parents.
