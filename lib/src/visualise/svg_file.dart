@@ -189,30 +189,33 @@ class SvgFile {
 
   Future<void> replace(
       String svgPath, String existing, String replacement) async {
+    Directory? staging;
     try {
       log('replace on $svgPath');
-      final svgFile = File(svgPath);
       final lines = load();
 
-      final backupPath = '$svgPath.bak';
-      final backupFile = File(backupPath);
-      final backup = backupFile.openWrite();
+      // Keep staging private and on the same filesystem as the destination.
+      staging = await Directory(dirname(svgPath)).createTemp('.fsm2-svg-');
+      final stagedFile = File(join(staging.path, 'replacement.svg'));
+      await stagedFile.writeAsString(lines
+          .map((line) => '${line.replaceAll(existing, replacement)}\n')
+          .join());
 
-      for (final line in lines) {
-        backup.writeln(line.replaceAll(existing, replacement));
-      }
-
-      await backup.flush();
-      await backup.close();
-
-      svgFile.deleteSync();
-
-      backupFile.renameSync(svgPath);
+      // Rename replaces a destination symlink without writing to its target.
+      await stagedFile.rename(svgPath);
       log('replace complete $svgPath');
       // we rethrow so not our problem.
     } catch (e, st) {
       log('Exception in replace: $e, $st');
       rethrow;
+    } finally {
+      if (staging != null) {
+        try {
+          await staging.delete(recursive: true);
+        } catch (e, st) {
+          log('Exception cleaning replacement staging directory: $e, $st');
+        }
+      }
     }
   }
 

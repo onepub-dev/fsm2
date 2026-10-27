@@ -5,6 +5,7 @@ import '../state_machine.dart';
 import 'exporter.dart';
 import 'smc_state.dart';
 import 'smc_transition.dart';
+import 'smcat_transition_label.dart';
 
 /// Class exports a [StateMachine] to a state-machine-cat notation
 ///  file so that the FMS can be visualised.
@@ -47,6 +48,11 @@ class SMCatExporter implements Exporter {
 
   ExportedPages _save(String path) {
     final smcRoot = _build();
+    final initialLabel =
+        smcatTransitionLabel(stateMachine.initialStateLabel.toString());
+
+    // Validate every generated label before opening or truncating any pages.
+    _validateTransitionLabels(smcRoot);
 
     _openPageFiles(smcRoot, path);
 
@@ -55,12 +61,24 @@ class SMCatExporter implements Exporter {
 
     final ancestor = oldestAncestor(stateMachine, stateMachine.initialState);
 
-    write('initial => $ancestor : ${stateMachine.initialStateLabel};',
+    write('initial => $ancestor : $initialLabel;',
         page: 0, indent: 0, endOfLine: true);
 
     _closePageFiles();
 
     return exports;
+  }
+
+  void _validateTransitionLabels(SMCState node) {
+    for (final transition in node.transitions) {
+      final label = transition.label;
+      if (label != null && label.isNotEmpty) {
+        smcatTransitionLabel(label);
+      }
+    }
+    for (final child in node.children) {
+      _validateTransitionLabels(child);
+    }
   }
 
   SMCState _build() {

@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-/// returns the filename without any extension and without a path.
+/// Returns the filename without its extension or a canonical page suffix.
 String getBasename(String pathTo) {
   var basename = p.basenameWithoutExtension(pathTo);
-  if (basename.contains('.')) {
+  if (extractPageNo(pathTo) != 0) {
     basename = p.basenameWithoutExtension(basename);
   }
   return basename;
@@ -15,17 +15,20 @@ String getBasename(String pathTo) {
 ///
 /// name.1.xxx
 ///
-/// If the filename doesn't contain a page no. then 0 is returned.
+/// Only canonical positive integers are page numbers; otherwise 0 is returned.
 ///
 int extractPageNo(String filename) {
   final extension = p.extension(p.basenameWithoutExtension(filename));
 
-  var nPageNo = 0;
-  if (extension.startsWith('.')) {
-    nPageNo = int.tryParse(extension.substring(1)) ?? 0;
+  if (!extension.startsWith('.')) {
+    return 0;
   }
-
-  return nPageNo;
+  final suffix = extension.substring(1);
+  final pageNo = int.tryParse(suffix);
+  if (pageNo == null || pageNo <= 0 || pageNo.toString() != suffix) {
+    return 0;
+  }
+  return pageNo;
 }
 
 bool exists(String pathTo) => File(pathTo).existsSync();

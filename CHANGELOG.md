@@ -1,3 +1,8 @@
+# 3.4.1
+- Prevent SVG conversion from following a predictable backup symlink and overwriting another file.
+- Keep dotted diagram filenames and CLI basenames distinct when selecting SVG outputs.
+- Encode SMCAT labels so application text cannot add diagram statements. Labels that need quoting and end in a backslash now fail before output files are opened.
+
 # 3.4.0
 - upgraded to dcli 10.x
 

@@ -11,12 +11,12 @@ import '../visualise/smcat_file.dart';
 import 'exporter.dart';
 import 'smc_pseudo_state.dart';
 import 'smc_state.dart';
+import 'smcat_transition_label.dart';
 
 @immutable
 class SMCTransition {
   /// names are case sensitive.
   // : assert(from.name != to.name, 'from and to must have the same name');
-
 
   /// The State Type.
   final SMCState from;
@@ -135,7 +135,8 @@ class SMCTransition {
 
   void write(Exporter exporter, {required int? page, required int indent}) {
     if (label != null && label!.isNotEmpty) {
-      exporter.write('$from => $to : $label;', page: page, indent: indent);
+      exporter.write('$from => $to : ${smcatTransitionLabel(label!)};',
+          page: page, indent: indent);
     } else {
       exporter.write('$from => $to ;', page: page, indent: indent);
     }

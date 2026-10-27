@@ -77,8 +77,10 @@ Future<void> main(List<String> args) async {
   final force = parsed.wasParsed('force');
 
   final pathTo = parsed.rest[0];
+  final basenameToGenerate =
+      extension(pathTo) == '.smcat' ? getBasename(pathTo) : basename(pathTo);
   final folder =
-      SMCatFolder(folderPath: dirname(pathTo), basename: getBasename(pathTo));
+      SMCatFolder(folderPath: dirname(pathTo), basename: basenameToGenerate);
   await generate(folder, show: show, watch: watch, force: force);
 }
 
